@@ -259,7 +259,7 @@
     "nodemon": "1.4.1",
     "prettier": "git+https://github.com/Automattic/calypso-prettier.git#calypso-1.5",
     "react-addons-test-utils": "15.4.0",
-    "react-codemod": "jsnmoon/react-codemod#2017-06-12-fix",
+    "react-codemod": "github:reactjs/react-codemod#d8a1d474b6b208cfdbec339b672617270ef78ac5",
     "react-test-env": "0.2.0",
     "readline-sync": "1.4.5",
     "sinon": "1.17.7",
