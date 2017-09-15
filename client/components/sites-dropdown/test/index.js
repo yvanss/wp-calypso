@@ -32,18 +32,30 @@ describe( 'index', function() {
 	describe( 'component rendering', function() {
 		it( 'should render a dropdown component initially closed', function() {
 			const sitesDropdown = shallow( <SitesDropdown /> );
-			expect( sitesDropdown.hasClass( 'sites-dropdown' ) ).to.be.true;
-			expect( sitesDropdown.hasClass( 'is-open' ) ).to.be.false;
+			expect( sitesDropdown.hasClass( 'sites-dropdown' ) ).to.equal( true );
+			expect( sitesDropdown.hasClass( 'is-open' ) ).to.equal( false );
 		} );
 
-		it( 'should toggle the dropdown, when it is clicked', function() {
+		it( 'with multiple sites, should toggle the dropdown when it is clicked', function() {
 			const toggleOpenSpy = sinon.spy( SitesDropdown.prototype, 'toggleOpen' );
-			const sitesDropdown = shallow( <SitesDropdown /> );
+			const sitesDropdown = shallow( <SitesDropdown siteCount={ 2 } /> );
 
 			sitesDropdown.find( '.sites-dropdown__selected' ).simulate( 'click' );
-
 			sinon.assert.calledOnce( toggleOpenSpy );
-			expect( sitesDropdown.hasClass( 'is-open' ) ).to.be.true;
+			expect( sitesDropdown.hasClass( 'has-multiple-sites' ) ).to.equal( true );
+			expect( sitesDropdown.hasClass( 'is-open' ) ).to.equal( true );
+
+			toggleOpenSpy.restore();
+		} );
+
+		it( 'with only one site, nothing should happen when it is clicked', function() {
+			const toggleOpenSpy = sinon.spy( SitesDropdown.prototype, 'toggleOpen' );
+			const sitesDropdown = shallow( <SitesDropdown siteCount={ 1 } /> );
+
+			sitesDropdown.find( '.sites-dropdown__selected' ).simulate( 'click' );
+			sinon.assert.calledOnce( toggleOpenSpy );
+			expect( sitesDropdown.hasClass( 'has-multiple-sites' ) ).to.equal( false );
+			expect( sitesDropdown.hasClass( 'is-open' ) ).to.equal( false );
 
 			toggleOpenSpy.restore();
 		} );
