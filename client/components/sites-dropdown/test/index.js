@@ -38,7 +38,7 @@ describe( 'index', function() {
 
 		it( 'with multiple sites, should toggle the dropdown when it is clicked', function() {
 			const toggleOpenSpy = sinon.spy( SitesDropdown.prototype, 'toggleOpen' );
-			const sitesDropdown = shallow( <SitesDropdown siteCount={ 2 } /> );
+			const sitesDropdown = shallow( <SitesDropdown hasMultipleSites={ true } /> );
 
 			sitesDropdown.find( '.sites-dropdown__selected' ).simulate( 'click' );
 			sinon.assert.calledOnce( toggleOpenSpy );
@@ -50,7 +50,7 @@ describe( 'index', function() {
 
 		it( 'with only one site, nothing should happen when it is clicked', function() {
 			const toggleOpenSpy = sinon.spy( SitesDropdown.prototype, 'toggleOpen' );
-			const sitesDropdown = shallow( <SitesDropdown siteCount={ 1 } /> );
+			const sitesDropdown = shallow( <SitesDropdown hasMultipleSites={ false } /> );
 
 			sitesDropdown.find( '.sites-dropdown__selected' ).simulate( 'click' );
 			sinon.assert.calledOnce( toggleOpenSpy );
