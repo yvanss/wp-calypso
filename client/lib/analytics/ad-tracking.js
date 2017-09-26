@@ -194,6 +194,7 @@ function setUpTwitterGlobal() {
 }
 
 function loadTrackingScripts( callback ) {
+	debug( 'Loading tracking scripts' );
 	hasStartedFetchingScripts = true;
 
 	async.parallel( [
@@ -229,6 +230,8 @@ function loadTrackingScripts( callback ) {
 		}
 	], function( errors ) {
 		if ( ! some( errors ) ) {
+			debug( 'Completed loading ad tracking scripts' );
+
 			// init Facebook's tracking global
 			window.fbq( 'init', TRACKING_IDS.facebookInit );
 
