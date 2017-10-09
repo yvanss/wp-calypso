@@ -33,28 +33,33 @@ class TwoStep extends Component {
 		translate: PropTypes.func.isRequired,
 	};
 
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
+
 	state = {
 		initialized: false,
 		doingSetup: false,
 	};
 
 	componentDidMount() {
+		this._isMounted = true;
 		debug( this.constructor.displayName + ' React component is mounted.' );
 		this.props.userSettings.on( 'change', this.onUserSettingsChange );
 		this.props.userSettings.fetchSettings();
 	}
 
 	componentWillUnmount() {
+		this._isMounted = false;
 		debug( this.constructor.displayName + ' React component is unmounting.' );
 		this.props.userSettings.off( 'change', this.onUserSettingsChange );
 	}
 
 	onUserSettingsChange = () => {
-		// NOTE: This was removed to transform to React.Component.
-		// Ensure no behavior change from this omission.
-		// if ( ! this.isMounted() ) {
-		// 	return;
-		// }
+		if ( ! this._isMounted ) {
+			return;
+		}
 
 		if ( ! this.state.initialized ) {
 			this.setState( {

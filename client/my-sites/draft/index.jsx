@@ -56,12 +56,25 @@ class Draft extends Component {
 		showAuthor: false,
 	};
 
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
+
 	state = {
 		fullImage: false,
 		showPopoverMenu: false,
 		isRestoring: false,
 		hasError: false,
 	};
+
+	componentDidMount() {
+		this._isMounted = true;
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
 
 	toggleImageState = () => {
 		this.setState( { fullImage: ! this.state.fullImage } );
@@ -74,7 +87,7 @@ class Draft extends Component {
 		} );
 
 		const updateStatus = function( error ) {
-			if ( ! this.isMounted() ) {
+			if ( ! this._isMounted ) {
 				return;
 			}
 
@@ -100,7 +113,7 @@ class Draft extends Component {
 		} );
 
 		const updateStatus = function( error ) {
-			if ( ! this.isMounted() ) {
+			if ( ! this._isMounted ) {
 				return;
 			}
 
