@@ -1,35 +1,44 @@
 /**
- * External dependencies
- *
  * @format
  */
 
+/**
+ * External dependencies
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import PureRenderMixin from 'react-pure-render/mixin';
 
-var TokenInput = React.createClass( {
-	propTypes: {
+export default class TokenInput extends React.PureComponent {
+	static propTypes = {
 		onChange: PropTypes.func,
 		onBlur: PropTypes.func,
 		value: PropTypes.string,
 		placeholder: PropTypes.string,
 		disabled: PropTypes.bool,
-	},
+	};
 
-	getDefaultProps: function() {
-		return {
-			onChange: function() {},
-			onBlur: function() {},
-			value: '',
-			disabled: false,
-			placeholder: '',
-		};
-	},
+	static defaultProps = {
+		onChange: function() {},
+		onBlur: function() {},
+		value: '',
+		disabled: false,
+		placeholder: '',
+	};
 
-	mixins: [ PureRenderMixin ],
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
 
-	render: function() {
+	componentDidMount() {
+		this._isMounted = true;
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
+
+	render() {
 		const props = { ...this.props, onChange: this._onChange };
 		const { value, placeholder } = props;
 		const size =
@@ -38,23 +47,21 @@ var TokenInput = React.createClass( {
 		return (
 			<input ref="input" type="text" { ...props } size={ size } className="token-field__input" />
 		);
-	},
+	}
 
-	focus: function() {
-		if ( this.isMounted() ) {
+	focus = () => {
+		if ( this._isMounted ) {
 			this.refs.input.focus();
 		}
-	},
+	};
 
-	hasFocus: function() {
-		return this.isMounted() && this.refs.input === document.activeElement;
-	},
+	hasFocus = () => {
+		return this._isMounted && this.refs.input === document.activeElement;
+	};
 
-	_onChange: function( event ) {
+	_onChange = event => {
 		this.props.onChange( {
 			value: event.target.value,
 		} );
-	},
-} );
-
-module.exports = TokenInput;
+	};
+}

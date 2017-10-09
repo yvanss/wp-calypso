@@ -11,24 +11,32 @@ import classNames from 'classnames';
 /**
  * Internal dependencies
  */
-var StatUpdateIndicator = React.createClass( {
-	propTypes: {
+export default class StatUpdateIndicator extends React.Component {
+	static propTypes = {
 		children: PropTypes.node.isRequired,
 		updateOn: PropTypes.oneOfType( [ PropTypes.string, PropTypes.number, PropTypes.bool ] )
 			.isRequired,
-	},
+	};
 
-	getInitialState: function() {
-		return {
-			updating: ! this.props.updateOn,
-		};
-	},
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
 
-	componentDidMount: function() {
+	state = {
+		updating: ! this.props.updateOn,
+	};
+
+	componentDidMount() {
+		this._isMounted = true;
 		this.clearTheUpdate();
-	},
+	}
 
-	componentWillReceiveProps: function( nextProps ) {
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
+
+	componentWillReceiveProps( nextProps ) {
 		if ( this.props.updateOn !== nextProps.updateOn ) {
 			clearTimeout( this.clearingUpdateTimeout );
 
@@ -37,14 +45,14 @@ var StatUpdateIndicator = React.createClass( {
 			} );
 			this.clearTheUpdate();
 		}
-	},
+	}
 
-	clearTheUpdate: function() {
+	clearTheUpdate = () => {
 		clearTimeout( this.clearingUpdateTimeout );
 
 		this.clearingUpdateTimeout = setTimeout(
 			function() {
-				if ( ! this.isMounted() ) {
+				if ( ! this._isMounted ) {
 					return;
 				}
 
@@ -54,16 +62,14 @@ var StatUpdateIndicator = React.createClass( {
 			}.bind( this ),
 			800
 		);
-	},
+	};
 
-	render: function() {
+	render() {
 		var className = classNames( {
 			'stat-update-indicator': true,
 			'is-updating': this.state.updating,
 		} );
 
 		return <span className={ className }>{ this.props.children }</span>;
-	},
-} );
-
-module.exports = StatUpdateIndicator;
+	}
+}

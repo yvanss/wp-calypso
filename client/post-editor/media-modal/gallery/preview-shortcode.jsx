@@ -15,20 +15,31 @@ import classNames from 'classnames';
 import { generateGalleryShortcode } from 'lib/media/utils';
 import GalleryShortcode from 'components/gallery-shortcode';
 
-export default React.createClass( {
-	displayName: 'EditorMediaModalGalleryPreviewShortcode',
+export default class EditorMediaModalGalleryPreviewShortcode extends React.Component {
+	static displayName = 'EditorMediaModalGalleryPreviewShortcode';
 
-	propTypes: {
+	static propTypes = {
 		siteId: PropTypes.number,
 		settings: PropTypes.object,
-	},
+	};
 
-	getInitialState() {
-		return {
-			isLoading: true,
-			shortcode: generateGalleryShortcode( this.props.settings ),
-		};
-	},
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
+
+	state = {
+		isLoading: true,
+		shortcode: generateGalleryShortcode( this.props.settings ),
+	};
+
+	componentDidMount() {
+		this._isMounted = true;
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
 
 	componentWillReceiveProps( nextProps ) {
 		const shortcode = generateGalleryShortcode( nextProps.settings );
@@ -40,17 +51,17 @@ export default React.createClass( {
 			isLoading: true,
 			shortcode,
 		} );
-	},
+	}
 
-	setLoaded() {
-		if ( ! this.isMounted() ) {
+	setLoaded = () => {
+		if ( ! this._isMounted ) {
 			return;
 		}
 
 		this.setState( {
 			isLoading: false,
 		} );
-	},
+	};
 
 	render() {
 		const { siteId, settings } = this.props;
@@ -66,5 +77,5 @@ export default React.createClass( {
 				</GalleryShortcode>
 			</div>
 		);
-	},
-} );
+	}
+}

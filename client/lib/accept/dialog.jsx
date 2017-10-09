@@ -14,29 +14,40 @@ import classnames from 'classnames';
  */
 import Dialog from 'components/dialog';
 
-const AcceptDialog = React.createClass( {
-	propTypes: {
+class AcceptDialog extends React.Component {
+	static propTypes = {
 		translate: PropTypes.func,
 		message: PropTypes.node,
 		onClose: PropTypes.func.isRequired,
 		confirmButtonText: PropTypes.node,
 		cancelButtonText: PropTypes.node,
 		options: PropTypes.object,
-	},
+	};
 
-	getInitialState: function() {
-		return { isVisible: true };
-	},
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
 
-	onClose: function( action ) {
+	state = { isVisible: true };
+
+	componentDidMount() {
+		this._isMounted = true;
+	}
+
+	componentWillUnmount() {
+		this._isMounted = false;
+	}
+
+	onClose = action => {
 		this.props.onClose( 'accept' === action );
 
-		if ( this.isMounted() ) {
+		if ( this._isMounted ) {
 			this.setState( { isVisible: false } );
 		}
-	},
+	};
 
-	getActionButtons: function() {
+	getActionButtons = () => {
 		const { options } = this.props;
 		const isScary = options && options.isScary;
 		const additionalClassNames = classnames( { 'is-scary': isScary } );
@@ -56,9 +67,9 @@ const AcceptDialog = React.createClass( {
 				additionalClassNames,
 			},
 		];
-	},
+	};
 
-	render: function() {
+	render() {
 		if ( ! this.state.isVisible ) {
 			return null;
 		}
@@ -73,7 +84,7 @@ const AcceptDialog = React.createClass( {
 				{ this.props.message }
 			</Dialog>
 		);
-	},
-} );
+	}
+}
 
 export default localize( AcceptDialog );

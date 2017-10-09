@@ -6,6 +6,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import createReactClass from 'create-react-class';
 import { reject } from 'lodash';
 import classNames from 'classnames';
 import { localize } from 'i18n-calypso';
@@ -25,7 +26,11 @@ import CartPlanAd from './cart-plan-ad';
 import { isCredits } from 'lib/products-values';
 import TrackComponentView from 'lib/analytics/track-component-view';
 
-const PopoverCart = React.createClass( {
+/* eslint-disable react/prefer-es6-class */
+const PopoverCart = createReactClass( {
+	/* eslint-enable react/prefer-es6-class */
+	displayName: 'PopoverCart',
+
 	propTypes: {
 		cart: PropTypes.object.isRequired,
 		selectedSite: PropTypes.oneOfType( [ PropTypes.object, PropTypes.bool ] ).isRequired,
@@ -37,6 +42,18 @@ const PopoverCart = React.createClass( {
 		onKeepSearchingClick: PropTypes.func.isRequired,
 	},
 
+	_isMounted: false,
+
+	mixins: [ CartMessagesMixin ],
+
+	componentDidMount() {
+		this._isMounted = true;
+	},
+
+	componentWillUnmount() {
+		this._isMounted = false;
+	},
+
 	itemCount: function() {
 		if ( ! this.props.cart.hasLoadedFromServer ) {
 			return;
@@ -44,8 +61,6 @@ const PopoverCart = React.createClass( {
 
 		return reject( this.props.cart.products, isCredits ).length;
 	},
-
-	mixins: [ CartMessagesMixin ],
 
 	render: function() {
 		let countBadge;
@@ -146,7 +161,7 @@ const PopoverCart = React.createClass( {
 	onClose: function() {
 		// Since this callback can fire after the user navigates off the page, we
 		// we need to check if it's mounted to prevent errors.
-		if ( ! this.isMounted() ) {
+		if ( ! this._isMounted ) {
 			return;
 		}
 

@@ -14,14 +14,20 @@ const debug = debugFactory( 'calypso:olark:chatbox' );
  */
 import OlarkEvents from 'lib/olark-events';
 
-module.exports = React.createClass( {
-	displayName: 'OlarkChatBox',
+export default class OlarkChatBox extends React.Component {
+	static displayName = 'OlarkChatBox';
+
+	constructor() {
+		super();
+		this._isMounted = false;
+	}
 
 	/**
 	 * Initialize our component by binding to all of the necessary olark events.
 	 */
-	componentDidMount: function() {
+	componentDidMount() {
 		debug( 'mounted' );
+		this._isMounted = true;
 
 		// Bind to the onReady event so we know when we can grab and bind the olark widget to our component
 		OlarkEvents.on( 'api.chat.onReady', this.bindOlarkWidget );
@@ -31,13 +37,14 @@ module.exports = React.createClass( {
 
 		// Lets bind to the onShrink event so we can make sure that our chatbox is always visible by re-expanding it
 		OlarkEvents.on( 'api.box.onShrink', this.expandChatbox );
-	},
+	}
 
 	/**
 	 * Handle the shutdown of our component by unbinding from all of the events we listened to and return the chat
 	 * widget to its original DOM parent.
 	 */
-	componentWillUnmount: function() {
+	componentWillUnmount() {
+		this._isMounted = false;
 		OlarkEvents.off( 'api.chat.onReady', this.bindOlarkWidget );
 		OlarkEvents.off( 'api.box.onHide', this.showChatbox );
 		OlarkEvents.off( 'api.box.onShrink', this.expandChatbox );
@@ -46,36 +53,36 @@ module.exports = React.createClass( {
 		this.releaseOlarkWidget();
 
 		debug( 'unmounted' );
-	},
+	}
 
 	/**
 	 * Use the Olark API to show the chatbox
 	 */
-	showChatbox: function() {
+	showChatbox = () => {
 		var olarkApi = window.olark;
 
 		olarkApi( 'api.box.show' );
-	},
+	};
 
 	/**
 	 * Use the Olark API to expand the chatbox
 	 */
-	expandChatbox: function() {
+	expandChatbox = () => {
 		var olarkApi = window.olark;
 
 		olarkApi( 'api.box.expand' );
-	},
+	};
 
 	/**
 	 * Take control of the olark widget by removing it from its DOM parent and adding it to our DOM node so that we can make it look inlined.
 	 * This is also a callback for the api.chat.onReady event
 	 */
-	bindOlarkWidget: function() {
+	bindOlarkWidget = () => {
 		var olarkWidget,
 			dom = window.document;
 
 		// Check if our component is still mounted
-		if ( ! this.isMounted() ) {
+		if ( ! this._isMounted ) {
 			// If this component was unmounted before the api.chat.onReady event is fired then don't try to bind it to our component.
 			// I'm unsure if removing the event listener before it is fired will make this unnecessary but this is double insurance
 			return;
@@ -101,12 +108,12 @@ module.exports = React.createClass( {
 		this.olarkDOMNode = ReactDom.findDOMNode( this ).appendChild( olarkWidget );
 
 		debug( 'bind the olark chat widget' );
-	},
+	};
 
 	/**
 	 * Change the olark widgets parent back to the body element.
 	 */
-	releaseOlarkWidget: function() {
+	releaseOlarkWidget = () => {
 		// If we don't find the widget in our node then it was never added and we have no need to go any further.
 		if ( ! this.olarkDOMNode ) {
 			return;
@@ -122,13 +129,13 @@ module.exports = React.createClass( {
 		conversationDiv.scrollTop = scrollTop;
 
 		debug( 'release the olark chat widget' );
-	},
+	};
 
 	/**
 	 * Render our chatbox container div
 	 * @return {object} jsx object
 	 */
-	render: function() {
+	render() {
 		return <div className="olark-chatbox__container" />;
-	},
-} );
+	}
+}
