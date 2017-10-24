@@ -24,6 +24,7 @@ import ExistingSite from 'signup/steps/design-type-with-store/existing-site';
 import NavigationLink from 'signup/navigation-link';
 import QueryProductsList from 'components/data/query-products-list';
 import { getAvailableProductsList } from 'state/products-list/selectors';
+import { getThemeForDesignType } from 'signup/utils';
 import { getTld } from 'lib/domains';
 
 class SiteOrDomain extends Component {
@@ -142,6 +143,7 @@ class SiteOrDomain extends Component {
 		const domain = this.getDomainName();
 		const productSlug = this.getDomainProductSlug( domain );
 		const domainItem = cartItems.domainRegistration( { productSlug, domain } );
+		const themeSlugWithRepo = getThemeForDesignType( designType );
 		const siteUrl = domain;
 
 		SignupActions.submitSignupStep(
@@ -154,7 +156,7 @@ class SiteOrDomain extends Component {
 				isPurchasingItem: true,
 			},
 			[],
-			{ designType, domainItem, siteUrl }
+			{ designType, domainItem, siteUrl, themeSlugWithRepo }
 		);
 
 		if ( designType === 'domain' ) {
@@ -173,7 +175,7 @@ class SiteOrDomain extends Component {
 			goToNextStep();
 		} else {
 			SignupActions.submitSignupStep( { stepName: 'site-picker', wasSkipped: true }, [], {} );
-			goToStep( 'themes' );
+			goToStep( 'plans-site-selected' );
 		}
 	};
 

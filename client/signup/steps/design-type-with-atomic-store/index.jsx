@@ -29,6 +29,8 @@ import { getSignupDependencyStore } from 'state/signup/dependency-store/selector
 import { DESIGN_TYPE_STORE } from 'signup/constants';
 import PressableStoreStep from '../design-type-with-store/pressable-store';
 
+import { getThemeForDesignType } from 'signup/utils';
+
 class DesignTypeWithAtomicStoreStep extends Component {
 	state = { showStore: false };
 	setPressableStore = ref => ( this.pressableStore = ref );
@@ -109,8 +111,11 @@ class DesignTypeWithAtomicStoreStep extends Component {
 			return;
 		}
 
+		const themeSlugWithRepo = getThemeForDesignType( designType );
+
 		SignupActions.submitSignupStep( { stepName: this.props.stepName }, [], {
 			designType,
+			themeSlugWithRepo,
 		} );
 
 		this.props.goToNextStep();

@@ -61,7 +61,7 @@ const flows = {
 	},
 
 	business: {
-		steps: [ 'design-type', 'themes', 'domains', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'user' ],
 		destination: function( dependencies ) {
 			return '/plans/select/business/' + dependencies.siteSlug;
 		},
@@ -73,7 +73,7 @@ const flows = {
 	},
 
 	premium: {
-		steps: [ 'design-type', 'themes', 'domains', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'user' ],
 		destination: function( dependencies ) {
 			return '/plans/select/premium/' + dependencies.siteSlug;
 		},
@@ -85,7 +85,7 @@ const flows = {
 	},
 
 	personal: {
-		steps: [ 'design-type', 'themes', 'domains', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'user' ],
 		destination: function( dependencies ) {
 			return '/plans/select/personal/' + dependencies.siteSlug;
 		},
@@ -94,7 +94,7 @@ const flows = {
 	},
 
 	free: {
-		steps: [ 'design-type', 'themes', 'domains', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'user' ],
 		destination: getSiteDestination,
 		description: 'Create an account and a blog and default to the free plan.',
 		lastModified: '2016-06-02',
@@ -155,7 +155,7 @@ const flows = {
 	},
 
 	subdomain: {
-		steps: [ 'design-type', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getSiteDestination,
 		description: 'Provide a vertical for subdomains',
 		lastModified: '2016-10-31',
@@ -169,7 +169,7 @@ const flows = {
 	},
 
 	surveystep: {
-		steps: [ 'survey', 'design-type', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'survey', 'design-type', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getSiteDestination,
 		description: 'The current best performing flow in AB tests',
 		lastModified: '2016-05-23',
@@ -192,7 +192,7 @@ const flows = {
 	},
 
 	'delta-blog': {
-		steps: [ 'design-type', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getSiteDestination,
 		description:
 			'A copy of the `blog` flow for the Delta email campaigns. Half of users who go ' +
@@ -201,7 +201,7 @@ const flows = {
 	},
 
 	'delta-site': {
-		steps: [ 'design-type', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getSiteDestination,
 		description:
 			'A copy of the `website` flow for the Delta email campaigns. Half of users who go ' +
@@ -210,7 +210,7 @@ const flows = {
 	},
 
 	desktop: {
-		steps: [ 'design-type', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'design-type', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getPostsDestination,
 		description: 'Signup flow for desktop app',
 		lastModified: '2016-05-30',
@@ -224,7 +224,7 @@ const flows = {
 	},
 
 	pressable: {
-		steps: [ 'design-type-with-store', 'themes', 'domains', 'plans', 'user' ],
+		steps: [ 'design-type-with-store', /* 'themes', */ 'domains', 'plans', 'user' ],
 		destination: getSiteDestination,
 		description: 'Signup flow for testing the pressable-store step',
 		lastModified: '2016-06-27',
@@ -245,7 +245,12 @@ const flows = {
 
 if ( config.isEnabled( 'signup/atomic-store-flow' ) ) {
 	flows[ 'atomic-store' ] = {
-		steps: [ 'design-type-with-atomic-store', 'themes', 'domains', 'plans-atomic-store', 'user' ],
+		steps: [
+			'design-type-with-atomic-store',
+			/* 'themes', */ 'domains',
+			'plans-atomic-store',
+			'user',
+		],
 		destination: getSiteDestination,
 		description: 'Signup flow for creating an online store with an Atomic site',
 		lastModified: '2017-09-27',
@@ -267,7 +272,7 @@ if ( config.isEnabled( 'signup/wpcc' ) ) {
 
 if ( config.isEnabled( 'signup/domain-first-flow' ) ) {
 	flows[ 'domain-first' ] = {
-		steps: [ 'site-or-domain', 'site-picker', 'themes', 'plans-site-selected', 'user' ],
+		steps: [ 'site-or-domain', 'site-picker', /* 'themes', */ 'plans-site-selected', 'user' ],
 		destination: getSiteDestination,
 		description: 'An experimental approach for WordPress.com/domains',
 		disallowResume: true,
