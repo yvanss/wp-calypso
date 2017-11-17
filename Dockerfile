@@ -23,8 +23,7 @@ COPY    ./.babelrc               \
 ENV     CALYPSO_ENV=production \
         NODE_ENV=production \
         NODE_PATH=/calypso/server:/calypso/client
-RUN     npm install --prod
-RUN     touch node_modules
+RUN     npm install --prod && touch node_modules && npm run build
 # RUN     npm run build-devdocs:components-usage-stats
 # RUN     npm run build-devdocs:components-usage-stats:_env
 # RUN     npm run build-devdocs:index
@@ -33,7 +32,7 @@ RUN     touch node_modules
 # RUN     npm run build-client-if-prod
 # RUN     npm run build-client-if-desktop
 # RUN     npm run build-css
-RUN     npm run build
+# RUN     npm run build
 
 
 
