@@ -1,4 +1,5 @@
 *.md
+*.swp
 .editorconfig
 .esformatter
 .eslines.json
@@ -9,7 +10,6 @@
 .github
 .gitignore
 .jsfmtrc
-.npmrc
 .vscode
 build
 circle.yml

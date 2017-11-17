@@ -1,5 +1,3 @@
-
-
 FROM    node:8.9.1 AS build
 WORKDIR /calypso
 COPY    ./env-config.sh /tmp/env-config.sh
@@ -11,6 +9,7 @@ COPY    ./docs     ./docs
 COPY    ./public   ./public
 COPY    ./server   ./server
 COPY    ./.babelrc               \
+        ./.npmrc                 \
         ./.nvmrc                 \
         ./.rtlcssrc              \
         ./index.js               \
@@ -24,7 +23,8 @@ COPY    ./.babelrc               \
 ENV     CALYPSO_ENV=production \
         NODE_ENV=production \
         NODE_PATH=/calypso/server:/calypso/client
-RUN     npm install --production
+RUN     npm install --prod
+RUN     touch node_modules
 # RUN     npm run build-devdocs:components-usage-stats
 # RUN     npm run build-devdocs:components-usage-stats:_env
 # RUN     npm run build-devdocs:index
@@ -37,16 +37,20 @@ RUN     npm run build
 
 
 
-FROM    node:8.9.1
+FROM    node:8.9.1 AS filter
+COPY    --from=build /calypso/node_modules /calypso/node_modules
+COPY    --from=build /calypso/build        /calypso/build
+COPY    --from=build /calypso/public       /calypso/public
+RUN     chown -R nobody /calypso
+
+
+
+FROM    node:8.9.1-alpine
 LABEL   maintainer="Automattic"
 WORKDIR /calypso
 COPY    ./env-config.sh /tmp/env-config.sh
 ENV     CALYPSO_ENV=production \
         NODE_ENV=production
-COPY    --from=build ./build ./build
-RUN     npm install source-map-support
-RUN     chown -R nobody /calypso
-RUN     ls -la .
-RUN     ls -la build
-USER    nobody
+COPY    --from=filter /calypso /calypso
+# USER    nobody
 CMD     [ "node", "build/bundle.js" ]
