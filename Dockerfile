@@ -44,6 +44,7 @@ COPY    ./env-config.sh /tmp/env-config.sh
 ENV     CALYPSO_ENV=production \
         NODE_ENV=production
 COPY    --from=build ./build ./build
+RUN     npm install source-map-support
 RUN     chown -R nobody /calypso
 RUN     ls -la .
 RUN     ls -la build
