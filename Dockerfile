@@ -4,6 +4,7 @@ ENV     CALYPSO_ENV=wpcalypso \
         NODE_PATH=/calypso/server:/calypso/client
 WORKDIR /calypso
 COPY    ./env-config.sh /tmp/env-config.sh
+RUN     chmod u+x /tmp/env-config.sh && /tmp/env-config.sh && rm /tmp/env-config.sh
 COPY    ./npm-shrinkwrap.json    \
         ./package.json           \
         ./
@@ -40,9 +41,12 @@ RUN     npm run build
 FROM    node:8.9.1 AS filter
 COPY    --from=build /calypso/config       /calypso/config
 COPY    --from=build /calypso/node_modules /calypso/node_modules
-COPY    --from=build /calypso/build        /calypso/build
 COPY    --from=build /calypso/public       /calypso/public
-COPY    --from=build /calypso/server       /calypso/server
+COPY    --from=build /calypso/server        /calypso/server
+COPY    --from=build /calypso/build        /calypso/build
+# COPY    --from=build \
+#         ./stats.json \
+#         /calypso/
 RUN     chown -R nobody /calypso
 
 
@@ -51,9 +55,10 @@ FROM    node:8.9.1-alpine
 LABEL   maintainer="Automattic"
 ENV     CALYPSO_ENV=wpcalypso \
         NODE_ENV=wpcalypso    \
-        NODE_PATH=/calypso/server:/calypso/client
+        NODE_PATH=/calypso/server
 WORKDIR /calypso
 COPY    ./env-config.sh /tmp/env-config.sh
+RUN     chmod u+x /tmp/env-config.sh && /tmp/env-config.sh && rm /tmp/env-config.sh
 COPY    --from=filter /calypso /calypso
 # USER    nobody
 CMD     ["node", "build/bundle.js" ]
