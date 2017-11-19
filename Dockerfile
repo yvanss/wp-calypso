@@ -25,16 +25,7 @@ COPY    ./public   ./public
 COPY    ./server   ./server
 COPY    ./config   ./config
 COPY    ./client   ./client
-RUN     npm run build
-# RUN     npm run build-devdocs:components-usage-stats
-# RUN     npm run build-devdocs:components-usage-stats:_env
-# RUN     npm run build-devdocs:index
-# RUN     npm run build-devdocs:index:_env
-# RUN     npm run build-server
-# RUN     npm run build-client-if-prod
-# RUN     npm run build-client-if-desktop
-# RUN     npm run build-css
-# RUN     npm run build
+RUN     CALYPSO_ENV=production npm run build
 
 
 
@@ -42,7 +33,7 @@ FROM    node:8.9.1 AS filter
 COPY    --from=build /calypso/config       /calypso/config
 COPY    --from=build /calypso/node_modules /calypso/node_modules
 COPY    --from=build /calypso/public       /calypso/public
-COPY    --from=build /calypso/server        /calypso/server
+COPY    --from=build /calypso/server       /calypso/server
 COPY    --from=build /calypso/build        /calypso/build
 # COPY    --from=build \
 #         ./stats.json \
@@ -60,5 +51,6 @@ WORKDIR /calypso
 COPY    ./env-config.sh /tmp/env-config.sh
 RUN     chmod u+x /tmp/env-config.sh && /tmp/env-config.sh && rm /tmp/env-config.sh
 COPY    --from=filter /calypso /calypso
-# USER    nobody
+USER    nobody
+RUN     export NODE_ENV=production
 CMD     ["node", "build/bundle.js" ]
