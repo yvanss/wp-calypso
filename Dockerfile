@@ -20,6 +20,7 @@ COPY    ./.babelrc               \
         ./webpack.config.node.js \
         ./
 COPY    ./bin      ./bin
+COPY    ./docs     ./docs
 COPY    ./assets   ./assets
 COPY    ./public   ./public
 COPY    ./server   ./server
