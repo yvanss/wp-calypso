@@ -32,12 +32,9 @@ RUN     CALYPSO_ENV=production npm run build
 FROM    node:8.9.1 AS filter
 COPY    --from=build /calypso/config       /calypso/config
 COPY    --from=build /calypso/node_modules /calypso/node_modules
-COPY    --from=build /calypso/public       /calypso/public
 COPY    --from=build /calypso/server       /calypso/server
 COPY    --from=build /calypso/build        /calypso/build
-# COPY    --from=build \
-#         ./stats.json \
-#         /calypso/
+COPY    --from=build /calypso/public       /calypso/public
 RUN     chown -R nobody /calypso
 
 

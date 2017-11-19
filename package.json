@@ -201,7 +201,7 @@
     "predashboard": "npm run -s install-if-deps-outdated",
     "dashboard": "cross-env DASHBOARD=1 webpack-dashboard -- npm start",
     "distclean": "npm run -s clean && npm run -s rm -- node_modules",
-    "docker": "docker run -it --name wp-calypso --rm -p 80:3000 wp-calypso-multi-step",
+    "docker": "docker run -it --name wp-calypso-multi-step --rm -p 80:3000 wp-calypso-multi-step",
     "env": "cross-env NODE_PATH=$NODE_PATH:server:client:.",
     "eslint-branch": "node bin/eslint-branch.js",
     "install-if-deps-outdated": "node bin/install-if-deps-outdated.js",
