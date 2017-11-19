@@ -19,18 +19,21 @@ COPY    ./.babelrc               \
         ./webpack.config.js      \
         ./webpack.config.node.js \
         ./
-COPY    ./bin      ./bin
-COPY    ./docs     ./docs
-COPY    ./assets   ./assets
-COPY    ./public   ./public
-COPY    ./server   ./server
-COPY    ./config   ./config
-COPY    ./client   ./client
+COPY    ./.github ./.github
+COPY    ./assets  ./assets
+COPY    ./bin     ./bin
+COPY    ./client  ./client
+COPY    ./config  ./config
+COPY    ./docs    ./docs
+COPY    ./public  ./public
+COPY    ./server  ./server
 RUN     CALYPSO_ENV=production npm run build
 
 
 
 FROM    node:8.9.1 AS filter
+COPY    --from=build /calypso/.github      /calypso/.github
+COPY    --from=build /calypso/docs         /calypso/docs
 COPY    --from=build /calypso/config       /calypso/config
 COPY    --from=build /calypso/node_modules /calypso/node_modules
 COPY    --from=build /calypso/server       /calypso/server
