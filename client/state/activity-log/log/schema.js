@@ -86,5 +86,8 @@ export const logItemsSchema = {
 				},
 			},
 		},
+		oldestItemTs: {
+			type: [ 'null', 'integer' ],
+		},
 	},
 };
