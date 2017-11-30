@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import { assign, filter, isEqual, pickBy, without, omit } from 'lodash';
+import { assign, filter, get, isEqual, pickBy, without, omit } from 'lodash';
 import debugFactory from 'debug';
 const debug = debugFactory( 'calypso:posts:post-edit-store' );
 import emitter from 'lib/mixins/emitter';
@@ -34,6 +34,8 @@ var _initialRawContent = null,
 	_rawContent = null,
 	_savedPost = null,
 	PostEditStore;
+
+let _revisionIds = [];
 
 function resetState() {
 	debug( 'Reset state' );
@@ -92,6 +94,7 @@ function updatePost( post ) {
 	_post = _savedPost;
 	_isNew = false;
 	_loadingError = null;
+	_revisionIds = get( post, 'revisions', _revisionIds );
 
 	// To ensure that edits made while an update is inflight are not lost, we need to apply them to the updated post.
 	_queue.forEach( function( change ) {
@@ -372,6 +375,10 @@ PostEditStore = {
 
 	isLoading: function() {
 		return _isLoading;
+	},
+
+	getRevisionIds: function() {
+		return _revisionIds;
 	},
 
 	isAutosaving: function() {

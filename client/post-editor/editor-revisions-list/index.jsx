@@ -8,7 +8,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import { findIndex, get, head, isEmpty, map } from 'lodash';
+import { findIndex, get, head, includes, isEmpty, map, reject } from 'lodash';
 
 /**
  * Internal dependencies
@@ -18,6 +18,8 @@ import EditorRevisionsListItem from './item';
 import { selectPostRevision } from 'state/posts/revisions/actions';
 import { getPostRevision, getPostRevisionsSelectedRevisionId } from 'state/selectors';
 import KeyboardShortcuts from 'lib/keyboard-shortcuts';
+
+import PostEditStore from 'lib/posts/post-edit-store';
 
 class EditorRevisionsList extends PureComponent {
 	static propTypes = {
@@ -35,8 +37,8 @@ class EditorRevisionsList extends PureComponent {
 	};
 
 	trySelectingFirstRevision = () => {
-		const { revisions } = this.props;
-		if ( ! revisions.length ) {
+		const { revisions, newRevisionIds } = this.props;
+		if ( isEmpty( revisions ) || ! isEmpty( newRevisionIds ) ) {
 			return;
 		}
 		const firstRevision = head( revisions );
@@ -106,16 +108,25 @@ class EditorRevisionsList extends PureComponent {
 	};
 
 	render() {
-		const { postId, revisions, selectedRevisionId, siteId } = this.props;
-		const classes = classNames( 'editor-revisions-list', {
-			'is-loading': isEmpty( revisions ),
-		} );
+		const { postId, revisions, selectedRevisionId, siteId, newRevisionIds } = this.props;
 
 		return (
-			<div className={ classes }>
+			<div className="editor-revisions-list">
 				<EditorRevisionsListHeader numRevisions={ revisions.length } />
 				<div className="editor-revisions-list__scroller">
 					<ul className="editor-revisions-list__list">
+						{ isEmpty( revisions ) &&
+							isEmpty( newRevisionIds ) && (
+								<div className={ 'editor-revisions-list__revision-placeholder' } />
+							) }
+						{ map( newRevisionIds, revisionId => {
+							return (
+								<div
+									key={ 'new-' + revisionId }
+									className="editor-revisions-list__revision-placeholder"
+								/>
+							);
+						} ) }
 						{ map( revisions, revision => {
 							const itemClasses = classNames( 'editor-revisions-list__revision', {
 								'is-selected': revision.id === selectedRevisionId,
@@ -137,15 +148,21 @@ class EditorRevisionsList extends PureComponent {
 	}
 }
 
+const filterNewRevisionsIds = ( newRevisionIds, revisions ) =>
+	reject( newRevisionIds, x => includes( map( revisions, 'id' ), x ) );
+
 export default connect(
 	( state, { revisions } ) => {
 		const selectedRevisionId = getPostRevisionsSelectedRevisionId( state );
 		const selectedIdIndex = findIndex( revisions, { id: selectedRevisionId } );
 		const nextRevisionId = selectedRevisionId && get( revisions, [ selectedIdIndex - 1, 'id' ] );
 		const prevRevisionId = selectedRevisionId && get( revisions, [ selectedIdIndex + 1, 'id' ] );
+		const revisionIds = PostEditStore.getRevisionIds();
+		const newRevisionIds = filterNewRevisionsIds( revisionIds, revisions );
 
 		return {
 			selectedRevision: getPostRevision( state, selectedRevisionId ),
+			newRevisionIds,
 			nextRevisionId,
 			prevRevisionId,
 			selectedRevisionId,

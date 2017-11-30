@@ -76,6 +76,20 @@
 	display: inline;
 }
 
+.editor-revisions-list__revision-placeholder {
+	display: block;
+	padding: 8px 16px;
+	border-bottom: 1px solid #d9e3ea;
+	border-right: 1px solid #d9e3ea;
+
+	&:before {
+		content: '';
+		display: block;
+		height: 43px;
+		@include placeholder(23%);
+	}
+}
+
 .editor-revisions-list__load-revision {
 	width: 100%;
 }
