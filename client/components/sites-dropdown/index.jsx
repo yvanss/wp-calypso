@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { noop, get } from 'lodash';
+import { noop, get } from 'lodash';
 import Gridicon from 'gridicons';
 
 /**
@@ -80,44 +80,40 @@ export class SitesDropdown extends PureComponent {
 
 	render() {
 		return (
-			<div className={ classNames(
-				'sites-dropdown',
-				{ 'is-open': this.state.open },
-				{ 'has-multiple-sites': this.props.hasMultipleSites }
-				) }>
+			<div
+				className={ classNames(
+					'sites-dropdown',
+					{ 'is-open': this.state.open },
+					{ 'has-multiple-sites': this.props.hasMultipleSites }
+				) }
+			>
 				<div className="sites-dropdown__wrapper">
-					<div
-						className="sites-dropdown__selected"
-						onClick={ this.toggleOpen } >
-						{
-							this.props.isPlaceholder
-							? <SitePlaceholder />
-							: <Site siteId={ this.state.selectedSiteId } indicator={ false } />
-						}
-						{
-							this.props.hasMultipleSites &&
-							<Gridicon icon="chevron-down" />
-						}
+					<div className="sites-dropdown__selected" onClick={ this.toggleOpen }>
+						{ this.props.isPlaceholder ? (
+							<SitePlaceholder />
+						) : (
+							<Site siteId={ this.state.selectedSiteId } indicator={ false } />
+						) }
+						{ this.props.hasMultipleSites && <Gridicon icon="chevron-down" /> }
 					</div>
-					{ this.props.hasMultipleSites && this.state.open &&
-						<SiteSelector
-							autoFocus={ true }
-							onClose={ this.onClose }
-							onSiteSelect={ this.selectSite }
-							selected={ this.state.selectedSiteId }
-							hideSelected={ true }
-							filter={ this.props.filter && this.siteFilter }
-						/>
-					) }
+					{ this.props.hasMultipleSites &&
+						this.state.open && (
+							<SiteSelector
+								autoFocus={ true }
+								onClose={ this.onClose }
+								onSiteSelect={ this.selectSite }
+								selected={ this.state.selectedSiteId }
+								hideSelected={ true }
+								filter={ this.props.filter && this.siteFilter }
+							/>
+						) }
 				</div>
 			</div>
 		);
 	}
 }
 
-export default connect(
-	( state ) => ( {
-		primarySiteId: getPrimarySiteId( state ),
-		hasMultipleSites: get( getCurrentUser( state ), 'site_count', 1 ) > 1,
-	} )
-)( SitesDropdown );
+export default connect( state => ( {
+	primarySiteId: getPrimarySiteId( state ),
+	hasMultipleSites: get( getCurrentUser( state ), 'site_count', 1 ) > 1,
+} ) )( SitesDropdown );
