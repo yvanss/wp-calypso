@@ -1,6 +1,9 @@
 /**
  * External depedencies
+ *
+ * @format
  */
+
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { localize } from 'i18n-calypso';
@@ -18,6 +21,7 @@ class Reviews extends Component {
 	static propTypes = {
 		params: PropTypes.shape( {
 			filter: PropTypes.string,
+			productId: PropTypes.string,
 		} ),
 		className: PropTypes.string,
 	};
@@ -27,10 +31,13 @@ class Reviews extends Component {
 		const classes = classNames( 'reviews__list', className );
 
 		return (
-			<Main className={ classes }>
+			<Main className={ classes } wideLayout>
 				<SidebarNavigation />
-				<ActionHeader breadcrumbs={ ( <span>{ translate( 'Reviews' ) }</span> ) } />
-				<ReviewsList currentStatus={ params && params.filter } />
+				<ActionHeader breadcrumbs={ <span>{ translate( 'Reviews' ) }</span> } />
+				<ReviewsList
+					productId={ params && params.productId && Number( params.productId ) }
+					currentStatus={ params && params.filter }
+				/>
 			</Main>
 		);
 	}

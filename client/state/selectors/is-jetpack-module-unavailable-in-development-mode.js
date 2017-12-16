@@ -1,13 +1,16 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { includes } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import createSelector from 'lib/create-selector';
-import { getJetpackModulesRequiringConnection } from './';
+import getJetpackModulesRequiringConnection from './get-jetpack-modules-requiring-connection';
 
 /**
  * Returns true if the module is unavailable in development mode. False if not.

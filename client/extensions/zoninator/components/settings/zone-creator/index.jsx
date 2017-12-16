@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -17,15 +20,14 @@ import { addZone } from '../../../state/zones/actions';
 import { settingsPath } from '../../../app/util';
 
 class ZoneCreator extends PureComponent {
-
 	static propTypes = {
 		addZone: PropTypes.func.isRequired,
 		siteId: PropTypes.number,
 		siteSlug: PropTypes.string,
 		translate: PropTypes.func.isRequired,
-	}
+	};
 
-	save = ( form, data ) => this.props.addZone( this.props.siteId, form, data );
+	save = ( form, data ) => this.props.addZone( this.props.siteId, this.props.siteSlug, form, data );
 
 	render() {
 		const { siteSlug, translate } = this.props;
@@ -47,10 +49,7 @@ const connectComponent = connect(
 		siteId: getSelectedSiteId( state ),
 		siteSlug: getSelectedSiteSlug( state ),
 	} ),
-	{ addZone },
+	{ addZone }
 );
 
-export default flowRight(
-	connectComponent,
-	localize,
-)( ZoneCreator );
+export default flowRight( connectComponent, localize )( ZoneCreator );

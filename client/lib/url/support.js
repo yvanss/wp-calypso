@@ -1,3 +1,4 @@
+/** @format */
 const root = 'https://support.wordpress.com';
 
 export default {
@@ -23,6 +24,14 @@ export default {
 	DOMAIN_HELPER_PREFIX: `${ root }/domain-helper/?host=`,
 	DOMAIN_REGISTRATION_AGREEMENTS: `${ root }/domain-registration-agreements/`,
 	DOMAINS: `${ root }/domains`,
+	INCOMING_DOMAIN_TRANSFER_STATUSES_PENDING_CONFIRMATION: `${ root }/incoming-domain-transfer/status-and-failed-transfers/#confirmation`,
+	INCOMING_DOMAIN_TRANSFER_STATUSES_IN_PROGRESS: `${ root }/incoming-domain-transfer/status-and-failed-transfers/#pending`,
+	INCOMING_DOMAIN_TRANSFER_STATUSES_FAILED: `${ root }/incoming-domain-transfer/status-and-failed-transfers/#failed`,
+	INCOMING_DOMAIN_TRANSFER_STATUSES_CANCEL: `${ root }/incoming-domain-transfer/status-and-failed-transfers/#cancel`,
+	INCOMING_DOMAIN_TRANSFER: `${ root }/incoming-domain-transfer/`,
+	INCOMING_DOMAIN_TRANSFER_PREPARE_UNLOCK: `${ root }/incoming-domain-transfer/prepare-domain-for-transfer/#unlock`,
+	INCOMING_DOMAIN_TRANSFER_PREPARE_PRIVACY: `${ root }/incoming-domain-transfer/prepare-domain-for-transfer/#privacy`,
+	INCOMING_DOMAIN_TRANSFER_PREPARE_AUTH_CODE: `${ root }/incoming-domain-transfer/prepare-domain-for-transfer/#auth-code`,
 	EMAIL_FORWARDING: `${ root }/email-forwarding`,
 	EMAIL_VALIDATION_AND_VERIFICATION: `${ root }/domains/register-domain/#email-validation-and-verification`,
 	EMPTY_SITE: `${ root }/empty-site/`,
@@ -76,5 +85,5 @@ export default {
 	USERS: `${ root }/category/users`,
 	USER_ROLES: `${ root }/user-roles`,
 	VIDEOS: `${ root }/videos`,
-	WPCC: `${ root }/wpcc-faq`
+	WPCC: `${ root }/wpcc-faq`,
 };

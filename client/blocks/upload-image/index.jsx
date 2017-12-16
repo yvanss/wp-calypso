@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import classnames from 'classnames';
@@ -20,8 +23,9 @@ import {
 	ERROR_UPLOADING_IMAGE,
 } from './constants';
 import { AspectRatios } from 'state/ui/editor/image-editor/constants';
-import { getSelectedSiteId } from 'state/ui/selectors';
 import { getMediaItem } from 'state/selectors';
+import { getSelectedSiteId } from 'state/ui/selectors';
+import { getSite } from 'state/sites/selectors';
 import Dialog from 'components/dialog';
 import FilePicker from 'components/file-picker';
 import { resetAllImageEditorState } from 'state/ui/editor/image-editor/actions';
@@ -86,14 +90,17 @@ class UploadImage extends Component {
 		const { translate } = this.props;
 
 		const fileName = files[ 0 ].name;
-		const extension = path.extname( fileName ).toLowerCase().substring( 1 );
+		const extension = path
+			.extname( fileName )
+			.toLowerCase()
+			.substring( 1 );
 
 		if ( ALLOWED_FILE_EXTENSIONS.indexOf( extension ) === -1 ) {
 			this.handleError(
 				ERROR_UNSUPPORTED_FILE,
 				translate(
-					'File you are trying to upload is not supported. Please select a valid image file.',
-				),
+					'File you are trying to upload is not supported. Please select a valid image file.'
+				)
 			);
 
 			return;
@@ -116,7 +123,7 @@ class UploadImage extends Component {
 		if ( errorCode === ERROR_UPLOADING_IMAGE ) {
 			if ( error.length && error[ 0 ] === ValidationErrors.SERVER_ERROR ) {
 				message = translate(
-					'File could not be uploaded because an error occurred while uploading.',
+					'File could not be uploaded because an error occurred while uploading.'
 				);
 			}
 		}
@@ -145,7 +152,7 @@ class UploadImage extends Component {
 	};
 
 	uploadImage( imageBlob, imageEditorProps ) {
-		const { siteId } = this.props;
+		const { site } = this.props;
 
 		const { fileName, mimeType } = imageEditorProps;
 
@@ -165,7 +172,7 @@ class UploadImage extends Component {
 		MediaStore.on( 'change', this.handleMediaStoreChange );
 
 		// Upload the image.
-		MediaActions.add( siteId, item );
+		MediaActions.add( site, item );
 
 		this.setState( { isUploading: true } );
 	}
@@ -238,9 +245,9 @@ class UploadImage extends Component {
 		const media = isEditingDefaultImage
 			? defaultImage
 			: {
-				src: selectedImage,
-				file: selectedImageName,
-			};
+					src: selectedImage,
+					file: selectedImageName,
+				};
 
 		return (
 			<Dialog additionalClassNames={ classes } isVisible={ true }>
@@ -325,9 +332,7 @@ class UploadImage extends Component {
 			<FilePicker accept="image/*" onPick={ this.receiveFiles }>
 				<div className="upload-image__image-picker">
 					<Gridicon icon="add-image" size={ 36 } />
-					<span>
-						{ addAnImageText || translate( 'Add an Image' ) }
-					</span>
+					<span>{ addAnImageText || translate( 'Add an Image' ) }</span>
 				</div>
 			</FilePicker>
 		);
@@ -436,10 +441,11 @@ export default connect(
 
 		return {
 			siteId,
+			site: getSite( state, siteId ),
 			defaultImage,
 		};
 	},
 	{
 		resetAllImageEditorState,
-	},
+	}
 )( localize( UploadImage ) );

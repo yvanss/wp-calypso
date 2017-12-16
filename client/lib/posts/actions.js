@@ -1,24 +1,28 @@
+/** @format */
+
 /**
  * External dependencies
  */
-var debug = require( 'debug' )( 'calypso:posts' ),
-	store = require( 'store' );
+
+import store from 'store';
 import { assign, clone, defer, fromPairs } from 'lodash';
+import debugFactory from 'debug';
 
 /**
  * Internal dependencies
  */
-var wpcom = require( 'lib/wp' ),
-	PostsStore = require( './posts-store' ),
-	PostEditStore = require( './post-edit-store' ),
-	postListStoreFactory = require( './post-list-store-factory' ),
-	PreferencesStore = require( 'lib/preferences/store' ),
-	sites = require( 'lib/sites-list' )(),
-	utils = require( './utils' ),
-	versionCompare = require( 'lib/version-compare' ),
-	Dispatcher = require( 'dispatcher' ),
-	stats = require( './stats' );
+import wpcom from 'lib/wp';
+import PostsStore from './posts-store';
+import PostEditStore from './post-edit-store';
+import postListStoreFactory from './post-list-store-factory';
+import PreferencesStore from 'lib/preferences/store';
+import utils from './utils';
+import versionCompare from 'lib/version-compare';
+import Dispatcher from 'dispatcher';
+import { recordSaveEvent } from './stats';
 import { normalizeTermsForApi } from 'state/posts/utils';
+
+const debug = debugFactory( 'calypso:posts' );
 
 var PostActions;
 
@@ -43,11 +47,11 @@ function handleMetadataOperation( key, value, operation ) {
 		// Normalize a string or array of string keys to an object of key value
 		// pairs. To accomodate both, we coerce the key into an array before
 		// mapping to pull the object pairs.
-		key = fromPairs( [].concat( key ).map( ( meta ) => [ meta, value ] ) );
+		key = fromPairs( [].concat( key ).map( meta => [ meta, value ] ) );
 	}
 
 	// Overwrite duplicates based on key
-	metadata = ( post.metadata || [] ).filter( ( meta ) => ! key.hasOwnProperty( meta.key ) );
+	metadata = ( post.metadata || [] ).filter( meta => ! key.hasOwnProperty( meta.key ) );
 
 	Object.keys( key ).forEach( function( objectKey ) {
 		// `update` is a sufficient operation for new metadata, as it will add
@@ -56,7 +60,7 @@ function handleMetadataOperation( key, value, operation ) {
 		// since this will effectively noop.
 		var meta = {
 			key: objectKey,
-			operation: operation
+			operation: operation,
 		};
 
 		if ( 'delete' !== operation ) {
@@ -69,8 +73,8 @@ function handleMetadataOperation( key, value, operation ) {
 	Dispatcher.handleViewAction( {
 		type: 'EDIT_POST',
 		post: {
-			metadata: metadata
-		}
+			metadata: metadata,
+		},
 	} );
 }
 
@@ -94,19 +98,19 @@ PostActions = {
 	/**
 	 * Start keeping track of edits to a new post
 	 *
-	 * @param {Number} siteId  Site ID
+	 * @param {Object} site    Site object
 	 * @param {Object} options Edit options
 	 */
-	startEditingNew: function( siteId, options ) {
+	startEditingNew: function( site, options ) {
 		var args;
 		options = options || {};
 
 		args = {
 			type: 'DRAFT_NEW_POST',
-			siteId: siteId,
 			postType: options.type || 'post',
 			title: options.title,
 			content: options.content,
+			site,
 		};
 
 		Dispatcher.handleViewAction( args );
@@ -115,34 +119,35 @@ PostActions = {
 	/**
 	 * Load an existing post and keep track of edits to it
 	 *
-	 * @param {Number} siteId Site ID to load post from
+	 * @param {Object} site   Site object
 	 * @param {Number} postId Post ID to load
 	 */
-	startEditingExisting: function( siteId, postId ) {
+	startEditingExisting: function( site, postId ) {
 		var currentPost = PostEditStore.get(),
 			postHandle;
 
-		if ( ! siteId ) {
+		if ( ! site || ! site.ID ) {
 			return;
 		}
 
-		if ( currentPost && currentPost.site_ID === siteId && currentPost.ID === postId ) {
+		if ( currentPost && currentPost.site_ID === site.ID && currentPost.ID === postId ) {
 			return; // already editing same post
 		}
 
 		Dispatcher.handleViewAction( {
 			type: 'START_EDITING_POST',
-			siteId: siteId,
-			postId: postId
+			siteId: site.ID,
+			postId: postId,
 		} );
 
-		postHandle = wpcom.site( siteId ).post( postId );
+		postHandle = wpcom.site( site.ID ).post( postId );
 
 		postHandle.get( { context: 'edit', meta: 'autosave' }, function( error, data ) {
 			Dispatcher.handleServerAction( {
 				type: 'RECEIVE_POST_TO_EDIT',
 				error: error,
-				post: data
+				post: data,
+				site,
 			} );
 		} );
 	},
@@ -152,15 +157,14 @@ PostActions = {
 	 */
 	stopEditing: function() {
 		Dispatcher.handleViewAction( {
-			type: 'STOP_EDITING_POST'
+			type: 'STOP_EDITING_POST',
 		} );
 	},
 
-	autosave: function( callback ) {
+	autosave: function( site, callback ) {
 		var post = PostEditStore.get(),
 			savedPost = PostEditStore.getSavedPost(),
-			siteHandle = wpcom.undocumented().site( post.site_ID ),
-			site;
+			siteHandle = wpcom.undocumented().site( post.site_ID );
 
 		callback = callback || function() {};
 
@@ -172,32 +176,42 @@ PostActions = {
 
 		// TODO: incorporate post locking
 		if ( utils.isPublished( savedPost ) || utils.isPublished( post ) ) {
-			site = sites.getSite( post.site_ID );
-
-			if ( ! post.ID || ! site || site.jetpack && versionCompare( site.options.jetpack_version, '3.7.0-dev', '<' ) ) {
+			if (
+				! post.ID ||
+				! site ||
+				( site.jetpack && versionCompare( site.options.jetpack_version, '3.7.0-dev', '<' ) )
+			) {
 				return callback( new Error( 'NO_AUTOSAVE' ) );
 			}
 
 			Dispatcher.handleViewAction( {
 				type: 'POST_AUTOSAVE',
-				post: post
+				post: post,
 			} );
 
-			siteHandle.postAutosave( post.ID, {
-				content: post.content,
-				title: post.title,
-				excerpt: post.excerpt
-			}, function( error, data ) {
-				Dispatcher.handleServerAction( {
-					type: 'RECEIVE_POST_AUTOSAVE',
-					error: error,
-					autosave: data
-				} );
+			siteHandle.postAutosave(
+				post.ID,
+				{
+					content: post.content,
+					title: post.title,
+					excerpt: post.excerpt,
+				},
+				function( error, data ) {
+					Dispatcher.handleServerAction( {
+						type: 'RECEIVE_POST_AUTOSAVE',
+						error: error,
+						autosave: data,
+						site,
+					} );
 
-				callback( error, data );
-			} );
+					callback( error, data );
+				}
+			);
 		} else {
-			PostActions.saveEdited( null, null, callback, { recordSaveEvent: false } );
+			PostActions.saveEdited( site, null, null, callback, {
+				recordSaveEvent: false,
+				autosave: true,
+			} );
 		}
 	},
 
@@ -209,7 +223,7 @@ PostActions = {
 	blockSave: function( key ) {
 		Dispatcher.handleViewAction( {
 			type: 'BLOCK_EDIT_POST_SAVE',
-			key: key
+			key: key,
 		} );
 	},
 
@@ -221,7 +235,7 @@ PostActions = {
 	unblockSave: function( key ) {
 		Dispatcher.handleViewAction( {
 			type: 'UNBLOCK_EDIT_POST_SAVE',
-			key: key
+			key: key,
 		} );
 	},
 
@@ -233,7 +247,7 @@ PostActions = {
 	edit: function( attributes ) {
 		Dispatcher.handleViewAction( {
 			type: 'EDIT_POST',
-			post: attributes
+			post: attributes,
 		} );
 	},
 
@@ -245,7 +259,7 @@ PostActions = {
 	editRawContent: function( content ) {
 		Dispatcher.handleViewAction( {
 			type: 'EDIT_POST_RAW_CONTENT',
-			content: content
+			content: content,
 		} );
 	},
 
@@ -254,7 +268,7 @@ PostActions = {
 	 */
 	resetRawContent: function() {
 		Dispatcher.handleViewAction( {
-			type: 'RESET_POST_RAW_CONTENT'
+			type: 'RESET_POST_RAW_CONTENT',
 		} );
 	},
 
@@ -280,17 +294,18 @@ PostActions = {
 	/**
 	 * Calls out to API to save a Post object
 	 *
+	 * @param {Object} site Site object
 	 * @param {object} attributes post attributes to change before saving
 	 * @param {object} context additional properties for recording the save event
 	 * @param {function} callback receives ( err, post ) arguments
 	 * @param {object} options object with optional recordSaveEvent property. True if you want to record the save event.
 	 */
-	saveEdited: function( attributes, context, callback, options ) {
+	saveEdited: function( site, attributes, context, callback, options ) {
 		var post, postHandle, query, changedAttributes, rawContent, mode, isNew;
 
 		Dispatcher.handleViewAction( {
 			type: 'EDIT_POST',
-			post: attributes
+			post: attributes,
 		} );
 
 		post = PostEditStore.get();
@@ -325,20 +340,26 @@ PostActions = {
 		// There is a separate action dispatched here because we need to queue changes
 		// that occur while the subsequent AJAX request is in-flight
 		Dispatcher.handleViewAction( {
-			type: 'EDIT_POST_SAVE'
+			type: 'EDIT_POST_SAVE',
 		} );
 
 		postHandle = wpcom.site( post.site_ID ).post( post.ID );
 		query = {
 			context: 'edit',
-			apiVersion: '1.2'
+			apiVersion: '1.2',
 		};
-
-		if ( ! options || options.recordSaveEvent !== false ) {
-			stats.recordSaveEvent( context ); // do this before changing status from 'future'
+		if ( options && options.autosave ) {
+			query.autosave = options.autosave;
 		}
 
-		if ( ( changedAttributes && changedAttributes.status === 'future' && utils.isFutureDated( post ) ) ||
+		if ( ! options || options.recordSaveEvent !== false ) {
+			recordSaveEvent( site, context ); // do this before changing status from 'future'
+		}
+
+		if (
+			( changedAttributes &&
+				changedAttributes.status === 'future' &&
+				utils.isFutureDated( post ) ) ||
 			( changedAttributes && changedAttributes.status === 'publish' && utils.isBackDated( post ) )
 		) {
 			// HACK: This is necessary because for some reason v1.1 and v1.2 of the update post endpoints
@@ -349,7 +370,7 @@ PostActions = {
 			// here /public.api/rest/json-endpoints/class.wpcom-json-api-update-post-v1-2-endpoint.php#L102
 			changedAttributes = assign( {}, changedAttributes, {
 				status: 'publish',
-				date: post.date
+				date: post.date,
 			} );
 		}
 
@@ -371,7 +392,8 @@ PostActions = {
 				rawContent: mode === currentMode ? rawContent : null,
 				isNew: isNew,
 				original: original,
-				post: data
+				post: data,
+				site,
 			} );
 
 			callback( error, data );
@@ -381,27 +403,30 @@ PostActions = {
 	/**
 	 * Calls out to API to update Post object with any changed attributes
 	 *
+	 * @param {Object} site Site object
 	 * @param {object} post to be changed
 	 * @param {object} attributes only send the attributes to be changed
 	 * @param {function} callback callback receives ( err, post ) arguments
+
 	 */
-	update: function( post, attributes, callback ) {
+	update: function( site, post, attributes, callback ) {
 		var postHandle = wpcom.site( post.site_ID ).post( post.ID );
 
-		postHandle.update( attributes, PostActions.receiveUpdate.bind( null, callback ) );
+		postHandle.update( attributes, PostActions.receiveUpdate.bind( null, site, callback ) );
 	},
 
 	/**
 	 * Sends `delete` request to the API. The first request
 	 * updates status to `trash`, the second request deletes the post.
 	 *
+	 * @param {Object} site Site object
 	 * @param {object} post to be trashed
 	 * @param {function} callback that receives ( err, post ) arguments
 	 */
-	trash: function( post, callback ) {
+	trash: function( site, post, callback ) {
 		var postHandle = wpcom.site( post.site_ID ).post( post.ID );
 
-		postHandle.delete( PostActions.receiveUpdate.bind( null, callback ) );
+		postHandle.delete( PostActions.receiveUpdate.bind( null, site, callback ) );
 	},
 
 	/**
@@ -409,18 +434,19 @@ PostActions = {
 	 *
 	 * @param {object} post to be trashed
 	 * @param {function} callback that receives ( err, post ) arguments
+	 * @param {Object} site Site object
 	 */
-	restore: function( post, callback ) {
+	restore: function( site, post, callback ) {
 		var postHandle = wpcom.site( post.site_ID ).post( post.ID );
 
-		postHandle.restore( PostActions.receiveUpdate.bind( null, callback ) );
+		postHandle.restore( PostActions.receiveUpdate.bind( null, site, callback ) );
 	},
 
 	queryPosts: function( options, postListStoreId = 'default' ) {
 		Dispatcher.handleViewAction( {
 			type: 'QUERY_POSTS',
 			options: options,
-			postListStoreId: postListStoreId
+			postListStoreId: postListStoreId,
 		} );
 	},
 
@@ -438,7 +464,7 @@ PostActions = {
 
 		Dispatcher.handleViewAction( {
 			type: 'FETCH_NEXT_POSTS_PAGE',
-			postListStoreId: postListStoreId
+			postListStoreId: postListStoreId,
 		} );
 
 		const id = postListStore.getID();
@@ -450,9 +476,7 @@ PostActions = {
 				.site( siteId )
 				.postsList( params, PostActions.receivePage.bind( null, id, postListStoreId ) );
 		} else {
-			wpcom
-				.me()
-				.postsList( params, PostActions.receivePage.bind( null, id, postListStoreId ) );
+			wpcom.me().postsList( params, PostActions.receivePage.bind( null, id, postListStoreId ) );
 		}
 	},
 
@@ -462,7 +486,7 @@ PostActions = {
 			id: id,
 			postListStoreId: postListStoreId,
 			error: error,
-			data: data
+			data: data,
 		} );
 	},
 
@@ -475,7 +499,7 @@ PostActions = {
 
 		Dispatcher.handleViewAction( {
 			type: 'FETCH_UPDATED_POSTS',
-			postListStoreId: postListStoreId
+			postListStoreId: postListStoreId,
 		} );
 
 		const id = postListStore.getID();
@@ -483,15 +507,18 @@ PostActions = {
 		const siteId = postListStore.getSiteId();
 
 		if ( siteId ) {
-			debug( 'Fetching posts that have been updated for %s since %s %o', siteId, params.modified_after, params );
+			debug(
+				'Fetching posts that have been updated for %s since %s %o',
+				siteId,
+				params.modified_after,
+				params
+			);
 			wpcom
 				.site( siteId )
 				.postsList( params, PostActions.receiveUpdated.bind( null, id, postListStoreId ) );
 		} else {
 			debug( 'Fetching posts that have been updated since %s %o', params.modified_after, params );
-			wpcom
-				.me()
-				.postsList( params, PostActions.receiveUpdated.bind( null, id, postListStoreId ) );
+			wpcom.me().postsList( params, PostActions.receiveUpdated.bind( null, id, postListStoreId ) );
 		}
 	},
 
@@ -501,11 +528,11 @@ PostActions = {
 			id: id,
 			postListStoreId: postListStoreId,
 			error: error,
-			data: data
+			data: data,
 		} );
 	},
 
-	receiveUpdate: function( callback, error, data ) {
+	receiveUpdate: function( site, callback, error, data ) {
 		var original;
 
 		if ( ! error ) {
@@ -516,7 +543,8 @@ PostActions = {
 			type: 'RECEIVE_UPDATED_POST',
 			error: error,
 			original: original,
-			post: data
+			post: data,
+			site,
 		} );
 		callback( error, data );
 	},
@@ -524,18 +552,21 @@ PostActions = {
 	fetchCounts: function( siteId, options ) {
 		Dispatcher.handleViewAction( {
 			type: 'FETCH_POST_COUNTS',
-			siteId: siteId
+			siteId: siteId,
 		} );
 
-		wpcom.undocumented().site( siteId ).postCounts( options, function( error, data ) {
-			Dispatcher.handleServerAction( {
-				type: 'RECEIVE_POST_COUNTS',
-				error: error,
-				data: data,
-				siteId: siteId
+		wpcom
+			.undocumented()
+			.site( siteId )
+			.postCounts( options, function( error, data ) {
+				Dispatcher.handleServerAction( {
+					type: 'RECEIVE_POST_COUNTS',
+					error: error,
+					data: data,
+					siteId: siteId,
+				} );
 			} );
-		} );
-	}
+	},
 };
 
-module.exports = PostActions;
+export default PostActions;

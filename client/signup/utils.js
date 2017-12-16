@@ -1,7 +1,10 @@
 /**
  * Exernal dependencies
+ *
+ * @format
  */
-import { find, indexOf, isEmpty, merge, pick } from 'lodash';
+
+import { filter, find, indexOf, isEmpty, merge, pick } from 'lodash';
 
 /**
  * Internal dependencies
@@ -15,7 +18,10 @@ import userFactory from 'lib/user';
 const user = userFactory();
 
 function getFlowName( parameters ) {
-	const flow = ( parameters.flowName && isFlowName( parameters.flowName ) ) ? parameters.flowName : defaultFlowName;
+	const flow =
+		parameters.flowName && isFlowName( parameters.flowName )
+			? parameters.flowName
+			: defaultFlowName;
 	return maybeFilterFlowName( flow, flows.filterFlowName );
 }
 
@@ -50,7 +56,10 @@ function isStepSectionName( pathFragment ) {
 }
 
 function getLocale( parameters ) {
-	return find( pick( parameters, [ 'flowName', 'stepName', 'stepSectionName', 'lang' ] ), isLocale );
+	return find(
+		pick( parameters, [ 'flowName', 'stepName', 'stepSectionName', 'lang' ] ),
+		isLocale
+	);
 }
 
 function isLocale( pathFragment ) {
@@ -104,17 +113,14 @@ function getFlowSteps( flowName ) {
 }
 
 function getValueFromProgressStore( { signupProgress, stepName, fieldName } ) {
-	const siteStepProgress = find(
-		signupProgress,
-		step => step.stepName === stepName
-	);
+	const siteStepProgress = find( signupProgress, step => step.stepName === stepName );
 	return siteStepProgress ? siteStepProgress[ fieldName ] : null;
 }
 
 function mergeFormWithValue( { form, fieldName, fieldValue } ) {
 	if ( ! formState.getFieldValue( form, fieldName ) ) {
 		return merge( form, {
-			[ fieldName ]: { value: fieldValue }
+			[ fieldName ]: { value: fieldValue },
 		} );
 	}
 	return form;
@@ -126,14 +132,71 @@ function getDestination( destination, dependencies, flowName ) {
 
 function getThemeForDesignType( designType ) {
 	switch ( designType ) {
-		case 'blog': return 'pub/independent-publisher-2';
-		case 'grid': return 'pub/altofocus';
-		case 'page': return 'pub/dara';
-		default: return 'pub/twentyseventeen';
+		case 'blog':
+			return 'pub/independent-publisher-2';
+		case 'grid':
+			return 'pub/altofocus';
+		case 'page':
+			return 'pub/dara';
+		case 'store':
+			return 'pub/dara';
+		default:
+			return 'pub/twentyseventeen';
 	}
 }
 
+function getThemeForSiteGoals( siteGoals ) {
+	const siteGoalsValue = siteGoals.split( ',' );
+
+	if ( siteGoalsValue.indexOf( 'sell' ) !== -1 ) {
+		return 'pub/dara';
+	}
+
+	if ( siteGoalsValue.indexOf( 'promote' ) !== -1 ) {
+		return 'pub/dara';
+	}
+
+	if ( siteGoalsValue.indexOf( 'educate' ) !== -1 ) {
+		return 'pub/twentyfifteen';
+	}
+
+	if ( siteGoalsValue.indexOf( 'showcase' ) !== -1 ) {
+		return 'pub/altofocus';
+	}
+
+	return 'pub/independent-publisher-2';
+}
+
+function getSiteTypeForSiteGoals( siteGoals ) {
+	const siteGoalsValue = siteGoals.split( ',' );
+
+	if ( siteGoalsValue.indexOf( 'sell' ) !== -1 ) {
+		return 'store';
+	}
+
+	if ( siteGoalsValue.indexOf( 'promote' ) !== -1 ) {
+		return 'page';
+	}
+
+	if ( siteGoalsValue.indexOf( 'showcase' ) !== -1 ) {
+		return 'portfolio';
+	}
+
+	return 'blog';
+}
+
+function canResumeFlow( flowName, progress ) {
+	const flow = flows.getFlow( flowName );
+	const flowStepsInProgressStore = filter(
+		progress,
+		step => -1 !== flow.steps.indexOf( step.stepName )
+	);
+
+	return flowStepsInProgressStore.length > 0 && ! flow.disallowResume;
+}
+
 export default {
+	canResumeFlow: canResumeFlow,
 	getFlowName: getFlowName,
 	getFlowSteps: getFlowSteps,
 	getStepName: getStepName,
@@ -146,5 +209,7 @@ export default {
 	getValueFromProgressStore: getValueFromProgressStore,
 	getDestination: getDestination,
 	mergeFormWithValue: mergeFormWithValue,
-	getThemeForDesignType: getThemeForDesignType
+	getThemeForDesignType: getThemeForDesignType,
+	getThemeForSiteGoals: getThemeForSiteGoals,
+	getSiteTypeForSiteGoals: getSiteTypeForSiteGoals,
 };

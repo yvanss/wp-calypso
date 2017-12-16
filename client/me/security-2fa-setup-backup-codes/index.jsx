@@ -1,50 +1,47 @@
+/** @format */
+
 /**
  * External dependencies
  */
-var React = require( 'react' ),
-	debug = require( 'debug' )( 'calypso:me:security:2fa-setup-backup-codes' );
+import React from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { localize } from 'i18n-calypso';
 
 /**
  * Internal dependencies
  */
-var Security2faBackupCodesList = require( 'me/security-2fa-backup-codes-list' ),
-	Security2faProgress = require( 'me/security-2fa-progress' ),
-	twoStepAuthorization = require( 'lib/two-step-authorization' ),
-	eventRecorder = require( 'me/event-recorder' ),
-	support = require( 'lib/url/support' );
-
 import Notice from 'components/notice';
+import Security2faBackupCodesList from 'me/security-2fa-backup-codes-list';
+import Security2faProgress from 'me/security-2fa-progress';
+import support from 'lib/url/support';
+import twoStepAuthorization from 'lib/two-step-authorization';
+import { recordGoogleEvent } from 'state/analytics/actions';
 
-module.exports = React.createClass( {
+class Security2faSetupBackupCodes extends React.Component {
+	state = {
+		backupCodes: [],
+		lastError: false,
+	};
 
-	displayName: 'Security2faSetupBackupCodes',
+	static propTypes = {
+		onFinished: PropTypes.func.isRequired,
+	};
 
-	mixins: [ eventRecorder ],
-
-	propTypes: {
-		onFinished: React.PropTypes.func.isRequired
-	},
-
-	componentDidMount: function() {
-		debug( this.constructor.displayName + ' React component is mounted.' );
+	componentDidMount() {
 		twoStepAuthorization.backupCodes( this.onRequestComplete );
-	},
+	}
 
-	componentWillUnmount: function() {
-		debug( this.constructor.displayName + ' React component will unmount.' );
-	},
+	getClickHandler = action => {
+		return () => this.props.recordGoogleEvent( 'Me', 'Clicked on ' + action );
+	};
 
-	getInitialState: function() {
-		return {
-			backupCodes: [],
-			lastError: false
-		};
-	},
-
-	onRequestComplete: function( error, data ) {
+	onRequestComplete = ( error, data ) => {
 		if ( error ) {
 			this.setState( {
-				lastError: this.translate( 'Unable to obtain backup codes.  Please try again later.' ),
+				lastError: this.props.translate(
+					'Unable to obtain backup codes.  Please try again later.'
+				),
 			} );
 			return;
 		}
@@ -52,42 +49,35 @@ module.exports = React.createClass( {
 		this.setState( {
 			backupCodes: data.codes,
 		} );
-	},
+	};
 
-	onFinished: function() {
+	onFinished = () => {
 		this.props.onFinished();
-	},
+	};
 
-	possiblyRenderError: function() {
-		var errorMessage;
+	possiblyRenderError() {
 		if ( ! this.state.lastError ) {
 			return;
 		}
 
-		errorMessage = this.translate(
+		const errorMessage = this.props.translate(
 			'There was an error retrieving back up codes. Please {{supportLink}}contact support{{/supportLink}}',
 			{
 				components: {
 					supportLink: (
 						<a
 							href={ support.CALYPSO_CONTACT }
-							onClick={ this.recordClickEvent( 'No Backup Codes Contact Support Link' ) }
+							onClick={ this.getClickHandler( 'No Backup Codes Contact Support Link' ) }
 						/>
-					)
-				}
+					),
+				},
 			}
 		);
 
-		return (
-			<Notice
-				showDismiss={ false }
-				status="is-error"
-				text={ errorMessage }
-			/>
-		);
-	},
+		return <Notice showDismiss={ false } status="is-error" text={ errorMessage } />;
+	}
 
-	renderList: function() {
+	renderList() {
 		if ( this.state.lastError ) {
 			return null;
 		}
@@ -99,20 +89,18 @@ module.exports = React.createClass( {
 				showList
 			/>
 		);
-	},
+	}
 
-	render: function() {
+	render() {
 		return (
 			<div>
 				<Security2faProgress step={ 3 } />
 				<p>
-					{
-						this.translate(
-							'Backup codes let you access your account if your phone is ' +
+					{ this.props.translate(
+						'Backup codes let you access your account if your phone is ' +
 							'lost, stolen, or if you run it through the washing ' +
-							'machine and the bag of rice trick doesn\'t work.'
-						)
-					}
+							"machine and the bag of rice trick doesn't work."
+					) }
 				</p>
 
 				{ this.possiblyRenderError() }
@@ -120,4 +108,8 @@ module.exports = React.createClass( {
 			</div>
 		);
 	}
-} );
+}
+
+export default connect( null, {
+	recordGoogleEvent,
+} )( localize( Security2faSetupBackupCodes ) );

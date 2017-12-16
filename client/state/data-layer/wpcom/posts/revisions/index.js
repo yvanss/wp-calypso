@@ -1,15 +1,9 @@
-/**
- * External dependencies
- */
-import { flow, forEach, get, map, mapKeys, mapValues, omit, pick } from 'lodash';
+/** @format */
 
 /**
  * Internal dependencies
  */
-import { countDiffWords, diffWords } from 'lib/text-utils';
-import {
-	POST_REVISIONS_REQUEST,
-} from 'state/action-types';
+import { POST_REVISIONS_REQUEST } from 'state/action-types';
 import { dispatchRequest } from 'state/data-layer/wpcom-http/utils';
 import { http } from 'state/data-layer/wpcom-http/actions';
 import {
@@ -17,31 +11,6 @@ import {
 	receivePostRevisionsSuccess,
 	receivePostRevisionsFailure,
 } from 'state/posts/revisions/actions';
-
-/**
- * Normalize a WP REST API Post Revisions resource for consumption in Calypso
- *
- * @param {Object} revision Raw revision from the API
- * @returns {Object} the normalized revision
- */
-export function normalizeRevision( revision ) {
-	if ( ! revision ) {
-		return revision;
-	}
-
-	return {
-		...omit( revision, [ 'title', 'content', 'excerpt', 'date', 'date_gmt', 'modified', 'modified_gmt' ] ),
-		...flow(
-			r => pick( r, [ 'title', 'content', 'excerpt' ] ),
-			r => mapValues( r, ( val = {} ) => val.rendered )
-		)( revision ),
-		...flow(
-			r => pick( r, [ 'date_gmt', 'modified_gmt' ] ),
-			r => mapValues( r, val => `${ val }Z` ),
-			r => mapKeys( r, ( val, key ) => key.slice( 0, -'_gmt'.length ) )
-		)( revision )
-	};
-}
 
 /**
  * Dispatches returned error from post revisions request
@@ -63,20 +32,12 @@ export const receiveError = ( { dispatch }, { siteId, postId }, rawError ) =>
  * @param {Object} action Redux action
  * @param {String} action.siteId of the revisions
  * @param {String} action.postId of the revisions
- * @param {Array} revisions raw data from post revisions API
+ * @param {Object} response from the server
+ * @param {Object} response.diffs raw data containing a set of diffs for the site & post
  */
-export const receiveSuccess = ( { dispatch }, { siteId, postId }, revisions ) => {
-	const normalizedRevisions = map( revisions, normalizeRevision );
-
-	forEach( normalizedRevisions, ( revision, index ) => {
-		revision.changes = countDiffWords( diffWords(
-			get( normalizedRevisions, [ index + 1, 'content' ], '' ),
-			revision.content
-		) );
-	} );
-
+export const receiveSuccess = ( { dispatch }, { siteId, postId }, response ) => {
 	dispatch( receivePostRevisionsSuccess( siteId, postId ) );
-	dispatch( receivePostRevisions( siteId, postId, normalizedRevisions ) );
+	dispatch( receivePostRevisions( { siteId, postId, ...response } ) );
 };
 
 /**
@@ -85,20 +46,27 @@ export const receiveSuccess = ( { dispatch }, { siteId, postId }, revisions ) =>
  * @param {Function} dispatch Redux dispatcher
  * @param {Object} action Redux action
  */
-export const fetchPostRevisions = ( { dispatch }, action ) => {
-	const { siteId, postId, postType } = action;
-	const resourceName = postType === 'page' ? 'pages' : 'posts';
-	dispatch( http( {
-		path: `/sites/${ siteId }/${ resourceName }/${ postId }/revisions`,
-		method: 'GET',
-		query: {
-			apiNamespace: 'wp/v2',
-		},
-	}, action ) );
+export const fetchPostRevisionsDiffs = ( { dispatch }, action ) => {
+	const { siteId, postId, postType, comparisons } = action;
+	dispatch(
+		http(
+			{
+				apiVersion: '1.1',
+				path: `/sites/${ siteId }/${ postType }/${ postId }/diffs`,
+				method: 'GET',
+				query: { comparisons },
+			},
+			action
+		)
+	);
 };
 
-const dispatchPostRevisionsRequest = dispatchRequest( fetchPostRevisions, receiveSuccess, receiveError );
+const dispatchPostRevisionsDiffsRequest = dispatchRequest(
+	fetchPostRevisionsDiffs,
+	receiveSuccess,
+	receiveError
+);
 
 export default {
-	[ POST_REVISIONS_REQUEST ]: [ dispatchPostRevisionsRequest ]
+	[ POST_REVISIONS_REQUEST ]: [ dispatchPostRevisionsDiffsRequest ],
 };

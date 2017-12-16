@@ -1,16 +1,19 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import { assign, filter, isEqual, pickBy, without } from 'lodash';
-const debug = require( 'debug' )( 'calypso:posts:post-edit-store' ),
-	emitter = require( 'lib/mixins/emitter' );
+import { assign, filter, get, isEqual, pickBy, without, omit } from 'lodash';
+import debugFactory from 'debug';
+const debug = debugFactory( 'calypso:posts:post-edit-store' );
+import emitter from 'lib/mixins/emitter';
 
 /**
  * Internal dependencies
  */
-var Dispatcher = require( 'dispatcher' ),
-	decodeEntities = require( 'lib/formatting' ).decodeEntities,
-	utils = require( './utils' );
+import Dispatcher from 'dispatcher';
+import { decodeEntities } from 'lib/formatting';
+import utils from './utils';
 
 /**
  * Module variables
@@ -67,24 +70,24 @@ function getPageTemplate( post ) {
 	return post.page_template;
 }
 
-function startEditing( post ) {
+function startEditing( site, post ) {
 	resetState();
 	post = normalize( post );
 	if ( post.title ) {
 		post.title = decodeEntities( post.title );
 	}
-	_previewUrl = utils.getPreviewURL( post );
+	_previewUrl = utils.getPreviewURL( site, post );
 	_savedPost = Object.freeze( post );
 	_post = _savedPost;
 	_isLoading = false;
 }
 
-function updatePost( post ) {
+function updatePost( site, post ) {
 	post = normalize( post );
 	if ( post.title ) {
 		post.title = decodeEntities( post.title );
 	}
-	_previewUrl = utils.getPreviewURL( post );
+	_previewUrl = utils.getPreviewURL( site, post );
 	_savedPost = Object.freeze( post );
 	_post = _savedPost;
 	_isNew = false;
@@ -96,19 +99,19 @@ function updatePost( post ) {
 	} );
 }
 
-function initializeNewPost( siteId, options ) {
+function initializeNewPost( site, options ) {
 	var args;
 	options = options || {};
 
 	args = {
-		site_ID: siteId,
+		site_ID: get( site, 'ID' ),
 		status: 'draft',
 		type: options.postType || 'post',
 		content: options.content || '',
-		title: options.title || ''
+		title: options.title || '',
 	};
 
-	startEditing( args );
+	startEditing( site, args );
 	_isNew = true;
 }
 
@@ -131,6 +134,14 @@ function set( attributes ) {
 	}
 
 	updatedPost = assign( {}, _post, attributes );
+
+	// This prevents an unsaved changes dialogue from appearing
+	// on a new post when only the featured image is added then removed.
+	// See #17701 for context.
+	if ( updatedPost.featured_image === '' && ! _savedPost.featured_image && _post.featured_image ) {
+		updatedPost = omit( updatedPost, 'featured_image' );
+	}
+
 	updatedPost = normalize( updatedPost );
 
 	if ( ! isEqual( updatedPost, _post ) ) {
@@ -177,7 +188,10 @@ function setRawContent( content ) {
 }
 
 function isContentEmpty( content ) {
-	return ! content || ( content.length < CONTENT_LENGTH_ASSUME_SET && REGEXP_EMPTY_CONTENT.test( content ) );
+	return (
+		! content ||
+		( content.length < CONTENT_LENGTH_ASSUME_SET && REGEXP_EMPTY_CONTENT.test( content ) )
+	);
 }
 
 function dispatcherCallback( payload ) {
@@ -185,7 +199,6 @@ function dispatcherCallback( payload ) {
 		changed;
 
 	switch ( action.type ) {
-
 		case 'EDIT_POST':
 			changed = set( action.post );
 			if ( changed ) {
@@ -203,7 +216,7 @@ function dispatcherCallback( payload ) {
 			break;
 
 		case 'DRAFT_NEW_POST':
-			initializeNewPost( action.siteId, {
+			initializeNewPost( action.site, {
 				postType: action.postType,
 				title: action.title,
 				content: action.content,
@@ -227,7 +240,7 @@ function dispatcherCallback( payload ) {
 			if ( action.error ) {
 				setLoadingError( action.error );
 			} else {
-				startEditing( action.post );
+				startEditing( action.site, action.post );
 			}
 			PostEditStore.emit( 'change' );
 			break;
@@ -252,7 +265,7 @@ function dispatcherCallback( payload ) {
 		case 'RECEIVE_UPDATED_POST':
 			if ( ! action.error ) {
 				if ( _post && action.post.ID === _post.ID ) {
-					updatePost( action.post );
+					updatePost( action.site, action.post );
 					PostEditStore.emit( 'change' );
 				}
 			}
@@ -262,7 +275,7 @@ function dispatcherCallback( payload ) {
 
 		case 'RECEIVE_POST_BEING_EDITED':
 			if ( ! action.error ) {
-				updatePost( action.post );
+				updatePost( action.site, action.post );
 				if ( typeof action.rawContent === 'string' ) {
 					_initialRawContent = action.rawContent;
 				}
@@ -280,7 +293,10 @@ function dispatcherCallback( payload ) {
 		case 'RECEIVE_POST_AUTOSAVE':
 			_isAutosaving = false;
 			if ( ! action.error ) {
-				_previewUrl = utils.getPreviewURL( assign( { preview_URL: action.autosave.preview_URL }, _savedPost ) );
+				_previewUrl = utils.getPreviewURL(
+					action.site,
+					assign( { preview_URL: action.autosave.preview_URL }, _savedPost )
+				);
 			}
 			PostEditStore.emit( 'change' );
 			break;
@@ -296,7 +312,6 @@ function dispatcherCallback( payload ) {
 }
 
 PostEditStore = {
-
 	get: function() {
 		return _post;
 	},
@@ -310,8 +325,7 @@ PostEditStore = {
 	},
 
 	getChangedAttributes: function() {
-		var changedAttributes,
-			metadata;
+		var changedAttributes, metadata;
 
 		if ( this.isNew() ) {
 			return _post;
@@ -392,12 +406,11 @@ PostEditStore = {
 		}
 
 		return ! isContentEmpty( _post.content );
-	}
-
+	},
 };
 
 emitter( PostEditStore );
 
 PostEditStore.dispatchToken = Dispatcher.register( dispatcherCallback );
 
-module.exports = PostEditStore;
+export default PostEditStore;

@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { combineReducers, keyedReducer } from 'state/utils';
 
 /**
@@ -8,6 +11,9 @@ import { combineReducers, keyedReducer } from 'state/utils';
  */
 import list from './list/reducer';
 
-export default keyedReducer( 'siteId', combineReducers( {
-	list,
-} ) );
+export default keyedReducer(
+	'siteId',
+	combineReducers( {
+		list,
+	} )
+);

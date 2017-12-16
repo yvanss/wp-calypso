@@ -1,20 +1,24 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import { isEqual } from 'lodash';
-var store = require( 'store' ),
-	debug = require( 'debug' )( 'calypso:user' ),
-	config = require( 'config' ),
-	qs = require( 'qs' );
+
+import { entries, isEqual } from 'lodash';
+import store from 'store';
+import debugFactory from 'debug';
+const debug = debugFactory( 'calypso:user' );
+import config from 'config';
+import qs from 'qs';
 
 /**
  * Internal dependencies
  */
 import { isSupportUserSession, boot as supportUserBoot } from 'lib/user/support-user-interop';
-var wpcom = require( 'lib/wp' ),
-	Emitter = require( 'lib/mixins/emitter' ),
-	userUtils = require( './shared-utils' ),
-	localforage = require( 'lib/localforage' );
+import wpcom from 'lib/wp';
+import Emitter from 'lib/mixins/emitter';
+import userUtils from './shared-utils';
+import localforage from 'lib/localforage';
 
 /**
  * User component
@@ -61,7 +65,7 @@ User.prototype.initialize = function() {
 		this.data = window.currentUser || false;
 
 		// Store the current user in localStorage so that we can use it to determine
-		// if the the logged in user has changed when initializing in the future
+		// if the logged in user has changed when initializing in the future
 		if ( this.data ) {
 			this.clearStoreIfChanged( this.data.ID );
 			store.set( 'wpcom_user', this.data );
@@ -74,7 +78,6 @@ User.prototype.initialize = function() {
 
 		// Make sure that the user stored in localStorage matches the logged-in user
 		this.fetch();
-
 	}
 
 	if ( this.data ) {
@@ -82,7 +85,6 @@ User.prototype.initialize = function() {
 		this.emit( 'change' );
 	}
 };
-
 
 /**
  * Clear localStorage when we detect that there is a mismatch between the ID
@@ -107,7 +109,6 @@ User.prototype.get = function() {
 	return this.data;
 };
 
-
 /**
  * Fetch the current user from WordPress.com via the REST API
  * and stores it in local cache.
@@ -125,46 +126,50 @@ User.prototype.fetch = function() {
 	this.fetching = true;
 	debug( 'Getting user from api' );
 
-	me.get( { meta: 'flags' }, function( error, data ) {
-		if ( error ) {
-			if ( ! config.isEnabled( 'wpcom-user-bootstrap' ) && error.error === 'authorization_required' ) {
-				/**
+	me.get(
+		{ meta: 'flags' },
+		function( error, data ) {
+			if ( error ) {
+				if (
+					! config.isEnabled( 'wpcom-user-bootstrap' ) &&
+					error.error === 'authorization_required'
+				) {
+					/**
 				 * if the user bootstrap is disabled (in development), we need to rely on a request to
 				 * /me to determine if the user is logged in.
 				 */
-				debug( 'The user is not logged in.' );
+					debug( 'The user is not logged in.' );
 
-				this.initialized = true;
-				this.emit( 'change' );
-			} else {
-				debug( 'Something went wrong trying to get the user.' );
+					this.initialized = true;
+					this.emit( 'change' );
+				} else {
+					debug( 'Something went wrong trying to get the user.' );
+				}
+				return;
 			}
-			return;
-		}
 
-		var userData = userUtils.filterUserObject( data );
+			var userData = userUtils.filterUserObject( data );
 
-		// Release lock from subsequent fetches
-		this.fetching = false;
+			// Release lock from subsequent fetches
+			this.fetching = false;
 
-		this.clearStoreIfChanged( userData.ID );
+			this.clearStoreIfChanged( userData.ID );
 
-		// Store user info in `this.data` and localstorage as `wpcom_user`
-		store.set( 'wpcom_user', userData );
-		this.data = userData;
-		if ( this.settings ) {
-			debug( 'Retaining fetched settings data in new user data' );
-			this.data.settings = this.settings;
-		}
-		this.initialized = true;
+			// Store user info in `this.data` and localstorage as `wpcom_user`
+			store.set( 'wpcom_user', userData );
+			this.data = userData;
+			if ( this.settings ) {
+				debug( 'Retaining fetched settings data in new user data' );
+				this.data.settings = this.settings;
+			}
+			this.initialized = true;
 
-		this.emit( 'change' );
+			this.emit( 'change' );
 
-		debug( 'User successfully retrieved' );
-
-	}.bind( this ) );
+			debug( 'User successfully retrieved' );
+		}.bind( this )
+	);
 };
-
 
 User.prototype.getLanguage = function() {
 	var languages = config( 'languages' ),
@@ -183,7 +188,6 @@ User.prototype.getLanguage = function() {
 	}
 
 	return language;
-
 };
 
 /**
@@ -196,10 +200,10 @@ User.prototype.getAvatarUrl = function( options ) {
 	var default_options = {
 			s: 80,
 			d: 'mm',
-			r: 'G'
+			r: 'G',
 		},
 		avatar_URL = this.get().avatar_URL,
-		avatar = ( typeof avatar_URL === 'string' ) ? avatar_URL.split( '?' )[ 0 ] : '';
+		avatar = typeof avatar_URL === 'string' ? avatar_URL.split( '?' )[ 0 ] : '';
 
 	options = options || {};
 	options = Object.assign( {}, options, default_options );
@@ -233,6 +237,8 @@ User.prototype.clear = function( onClear ) {
 	store.clear();
 	if ( config.isEnabled( 'persist-redux' ) ) {
 		localforage.clear( onClear );
+	} else if ( onClear ) {
+		onClear();
 	}
 };
 
@@ -241,28 +247,51 @@ User.prototype.clear = function( onClear ) {
  * are unverified.
  */
 User.prototype.sendVerificationEmail = function( fn ) {
-	return wpcom.undocumented().me().sendVerificationEmail( fn );
+	return wpcom
+		.undocumented()
+		.me()
+		.sendVerificationEmail( fn );
 };
 
 User.prototype.set = function( attributes ) {
-	var changed = false,
-		computedAttributes = userUtils.getComputedAttributes( attributes );
+	let changed = false;
 
-	attributes = Object.assign( {}, attributes, computedAttributes );
-
-	for ( var prop in attributes ) {
-		if ( attributes.hasOwnProperty( prop ) && ! isEqual( attributes[ prop ], this.data[ prop ] ) ) {
-			this.data[ prop ] = attributes[ prop ];
+	for ( const [ attrName, attrValue ] of entries( attributes ) ) {
+		if ( ! isEqual( attrValue, this.data[ attrName ] ) ) {
+			this.data[ attrName ] = attrValue;
 			changed = true;
 		}
 	}
 
 	if ( changed ) {
-		this.emit( 'change' );
+		Object.assign( this.data, userUtils.getComputedAttributes( this.data ) );
 		store.set( 'wpcom_user', this.data );
+		this.emit( 'change' );
 	}
 
 	return changed;
+};
+
+User.prototype.decrementSiteCount = function() {
+	const user = this.get();
+	if ( user ) {
+		this.set( {
+			visible_site_count: user.visible_site_count - 1,
+			site_count: user.site_count - 1,
+		} );
+	}
+	this.fetch();
+};
+
+User.prototype.incrementSiteCount = function() {
+	const user = this.get();
+	if ( user ) {
+		return this.set( {
+			visible_site_count: user.visible_site_count + 1,
+			site_count: user.site_count + 1,
+		} );
+	}
+	this.fetch();
 };
 
 /**
@@ -278,7 +307,7 @@ User.prototype.set = function( attributes ) {
 User.prototype.verificationPollerCallback = function( signal ) {
 	// skip server poll if page is hidden or there are no listeners
 	// and this was not triggered by a localStorage signal
-	if ( ( document.hidden || this.listeners( 'verify' ).length === 0 ) && !signal ) {
+	if ( ( document.hidden || this.listeners( 'verify' ).length === 0 ) && ! signal ) {
 		return;
 	}
 
@@ -307,7 +336,7 @@ User.prototype.verificationPollerCallback = function( signal ) {
  */
 
 User.prototype.checkVerification = function() {
-	if ( !this.get() ) {
+	if ( ! this.get() ) {
 		// not loaded, do nothing
 		return;
 	}
@@ -322,10 +351,13 @@ User.prototype.checkVerification = function() {
 		return;
 	}
 
-	this.verificationPoller = setInterval( this.verificationPollerCallback.bind( this ), VERIFICATION_POLL_INTERVAL );
+	this.verificationPoller = setInterval(
+		this.verificationPollerCallback.bind( this ),
+		VERIFICATION_POLL_INTERVAL
+	);
 
 	// wait for localStorage event (from other windows)
-	window.addEventListener( 'storage', ( e ) => {
+	window.addEventListener( 'storage', e => {
 		if ( e.key === '__email_verified_signal__' && e.newValue ) {
 			debug( 'Verification: RECEIVED SIGNAL' );
 			window.localStorage.removeItem( '__email_verified_signal__' );
@@ -353,4 +385,4 @@ User.prototype.signalVerification = function() {
 /**
  * Expose `User`
  */
-module.exports = User;
+export default User;

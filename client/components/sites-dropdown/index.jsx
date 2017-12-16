@@ -1,7 +1,11 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { PropTypes, PureComponent } from 'react';
+
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { noop, get } from 'lodash';
@@ -48,7 +52,7 @@ export class SitesDropdown extends PureComponent {
 		this.onClose = this.onClose.bind( this );
 
 		this.state = {
-			selectedSiteId: this.props.selectedSiteId || this.props.primarySiteId
+			selectedSiteId: this.props.selectedSiteId || this.props.primarySiteId,
 		};
 	}
 
@@ -56,7 +60,7 @@ export class SitesDropdown extends PureComponent {
 		this.props.onSiteSelect( siteId );
 		this.setState( {
 			selectedSiteId: siteId,
-			open: false
+			open: false,
 		} );
 	}
 
@@ -104,7 +108,7 @@ export class SitesDropdown extends PureComponent {
 							hideSelected={ true }
 							filter={ this.props.filter && this.siteFilter }
 						/>
-					}
+					) }
 				</div>
 			</div>
 		);
@@ -114,6 +118,6 @@ export class SitesDropdown extends PureComponent {
 export default connect(
 	( state ) => ( {
 		primarySiteId: getPrimarySiteId( state ),
-		hasMultipleSites: get( getCurrentUser( state ), 'site_count', 1 ) > 1
+		hasMultipleSites: get( getCurrentUser( state ), 'site_count', 1 ) > 1,
 	} )
 )( SitesDropdown );

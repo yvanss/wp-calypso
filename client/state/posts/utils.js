@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import {
 	isEmpty,
 	isPlainObject,
@@ -26,6 +29,8 @@ import {
 import { DEFAULT_POST_QUERY } from './constants';
 import pickCanonicalImage from 'lib/post-normalizer/rule-pick-canonical-image';
 import decodeEntities from 'lib/post-normalizer/rule-decode-entities';
+import detectMedia from 'lib/post-normalizer/rule-content-detect-media';
+import withContentDom from 'lib/post-normalizer/rule-with-content-dom';
 import stripHtml from 'lib/post-normalizer/rule-strip-html';
 
 /**
@@ -38,18 +43,15 @@ const REGEXP_SERIALIZED_QUERY = /^((\d+):)?(.*)$/;
  * Utility
  */
 
-const normalizeEditedFlow = flow( [
-	getTermIdsFromEdits
-] );
+const normalizeEditedFlow = flow( [ getTermIdsFromEdits ] );
 
-const normalizeApiFlow = flow( [
-	normalizeTermsForApi
-] );
+const normalizeApiFlow = flow( [ normalizeTermsForApi ] );
 
 const normalizeDisplayFlow = flow( [
-	pickCanonicalImage,
 	decodeEntities,
-	stripHtml
+	stripHtml,
+	withContentDom( [ detectMedia ] ),
+	pickCanonicalImage,
 ] );
 
 /**
@@ -131,6 +133,12 @@ export function mergeIgnoringArrays( object, ...sources ) {
 }
 
 /**
+ * Memoization cache for `normalizePostForDisplay`. If an identical `post` object was
+ * normalized before, retrieve the normalized value from cache instead of recomputing.
+ */
+const normalizePostCache = new WeakMap();
+
+/**
  * Returns a normalized post object given its raw form. A normalized post
  * includes common transformations to prepare the post for display.
  *
@@ -142,7 +150,13 @@ export function normalizePostForDisplay( post ) {
 		return null;
 	}
 
-	return normalizeDisplayFlow( cloneDeep( post ) );
+	let normalizedPost = normalizePostCache.get( post );
+	if ( ! normalizedPost ) {
+		// `normalizeDisplayFlow` mutates its argument properties -- hence deep clone is needed
+		normalizedPost = normalizeDisplayFlow( cloneDeep( post ) );
+		normalizePostCache.set( post, normalizedPost );
+	}
+	return normalizedPost;
 }
 
 /**
@@ -168,18 +182,25 @@ export function normalizePostForEditing( post ) {
  */
 export function normalizePostForState( post ) {
 	const normalizedPost = cloneDeep( post );
-	return reduce( [
-		[],
-		...reduce( post.terms, ( memo, terms, taxonomy ) => (
-			memo.concat( map( terms, ( term, slug ) => [ 'terms', taxonomy, slug ] ) )
-		), [] ),
-		...map( post.categories, ( category, slug ) => [ 'categories', slug ] ),
-		...map( post.tags, ( tag, slug ) => [ 'tags', slug ] ),
-		...map( post.attachments, ( attachment, id ) => [ 'attachments', id ] )
-	], ( memo, path ) => {
-		unset( memo, path.concat( 'meta' ) );
-		return memo;
-	}, normalizedPost );
+	return reduce(
+		[
+			[],
+			...reduce(
+				post.terms,
+				( memo, terms, taxonomy ) =>
+					memo.concat( map( terms, ( term, slug ) => [ 'terms', taxonomy, slug ] ) ),
+				[]
+			),
+			...map( post.categories, ( category, slug ) => [ 'categories', slug ] ),
+			...map( post.tags, ( tag, slug ) => [ 'tags', slug ] ),
+			...map( post.attachments, ( attachment, id ) => [ 'attachments', id ] ),
+		],
+		( memo, path ) => {
+			unset( memo, path.concat( 'meta' ) );
+			return memo;
+		},
+		normalizedPost
+	);
 }
 
 /**
@@ -195,16 +216,20 @@ export function getTermIdsFromEdits( post ) {
 
 	// Filter taxonomies that are set as arrays ( i.e. tags )
 	// This can be detected by an array of strings vs an array of objects
-	const taxonomies = reduce( post.terms, ( prev, taxonomyTerms, taxonomyName ) => {
-		// Ensures we are working with an array
-		const termsArray = toArray( taxonomyTerms );
-		if ( termsArray && termsArray.length && ! isPlainObject( termsArray[ 0 ] ) ) {
-			return prev;
-		}
+	const taxonomies = reduce(
+		post.terms,
+		( prev, taxonomyTerms, taxonomyName ) => {
+			// Ensures we are working with an array
+			const termsArray = toArray( taxonomyTerms );
+			if ( termsArray && termsArray.length && ! isPlainObject( termsArray[ 0 ] ) ) {
+				return prev;
+			}
 
-		prev[ taxonomyName ] = termsArray;
-		return prev;
-	}, {} );
+			prev[ taxonomyName ] = termsArray;
+			return prev;
+		},
+		{}
+	);
 
 	if ( isEmpty( taxonomies ) ) {
 		return post;
@@ -212,13 +237,13 @@ export function getTermIdsFromEdits( post ) {
 
 	return {
 		...post,
-		terms_by_id: mapValues( taxonomies, ( taxonomy ) => {
+		terms_by_id: mapValues( taxonomies, taxonomy => {
 			const termIds = map( taxonomy, 'ID' );
 
 			// Hack: qs omits empty arrays in wpcom.js request, which prevents
 			// removing all terms for a given taxonomy since the empty array is not sent to the API
 			return termIds.length ? termIds : null;
-		} )
+		} ),
 	};
 }
 
@@ -235,9 +260,9 @@ export function normalizeTermsForApi( post ) {
 
 	return {
 		...post,
-		terms: pickBy( post.terms, ( terms ) => {
+		terms: pickBy( post.terms, terms => {
 			return terms.length && every( terms, isString );
-		} )
+		} ),
 	};
 }
 

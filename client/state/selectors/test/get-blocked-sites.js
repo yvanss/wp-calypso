@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,20 +8,20 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import { getBlockedSites } from '../';
+import { getBlockedSites } from 'state/selectors';
 
 describe( 'getBlockedSites()', () => {
-	it( 'should return an array of blocked site IDs', () => {
+	test( 'should return an array of blocked site IDs', () => {
 		const state = {
 			reader: {
 				siteBlocks: {
 					items: {
 						123: true,
 						124: false,
-						125: true
-					}
-				}
-			}
+						125: true,
+					},
+				},
+			},
 		};
 		expect( getBlockedSites( state ) ).to.deep.equal( [ 123, 125 ] );
 	} );

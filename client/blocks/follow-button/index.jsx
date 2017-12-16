@@ -1,6 +1,9 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { noop, omitBy, isUndefined } from 'lodash';
@@ -27,6 +30,7 @@ class FollowButtonContainer extends Component {
 	static defaultProps = {
 		onFollowToggle: noop,
 	};
+
 	handleFollowToggle = following => {
 		if ( following ) {
 			const followData = omitBy(

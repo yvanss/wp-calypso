@@ -2,76 +2,144 @@
 /**
  * External dependencies
  */
-import debugFactory from 'debug';
-import { get, includes, pick, reduce } from 'lodash';
+import { get, merge, omitBy } from 'lodash';
+import { translate } from 'i18n-calypso';
 
 /**
  * Internal dependencies
  */
 import fromApi from './from-api';
-import { dispatchRequest } from 'state/data-layer/wpcom-http/utils';
+import { ACTIVITY_LOG_REQUEST, ACTIVITY_LOG_WATCH } from 'state/action-types';
+import { activityLogRequest, activityLogUpdate } from 'state/activity-log/actions';
+import { dispatchRequestEx, getData, getError } from 'state/data-layer/wpcom-http/utils';
 import { http } from 'state/data-layer/wpcom-http/actions';
-import { ACTIVITY_LOG_REQUEST } from 'state/action-types';
-import { activityLogError, activityLogUpdate } from 'state/activity-log/actions';
+import { errorNotice } from 'state/notices/actions';
+import { recordTracksEvent } from 'state/analytics/actions';
+import { getSiteGmtOffset } from 'state/selectors';
 
-/**
- * Module constants
- */
-const debug = debugFactory( 'calypso:data-layer:activity' );
-const CALYPSO_TO_API_PARAMS = {
-	dateEnd: 'date_end',
-	dateStart: 'date_start',
+const POLL_INTERVAL = 10000;
+const pollingSites = new Map();
+
+export const togglePolling = ( { dispatch, getState }, { isWatching, siteId } ) => {
+	if ( isWatching ) {
+		const newestDate = Date.now();
+		pollingSites.set( siteId, { newestDate } );
+
+		// kick off the first polling
+		dispatch(
+			merge(
+				activityLogRequest( siteId, {
+					dateStart: newestDate - getSiteGmtOffset( getState(), siteId ) * 3600 * 1000,
+					number: 100,
+				} ),
+				{
+					meta: {
+						dataLayer: {
+							isWatching: true,
+						},
+					},
+				}
+			)
+		);
+	} else {
+		pollingSites.delete( siteId );
+	}
 };
-const KNOWN_API_PARAMS = [ 'action', 'date_end', 'date_start', 'group', 'name', 'number' ];
 
-export const handleActivityLogRequest = ( { dispatch }, action ) => {
+export const continuePolling = ( { dispatch }, action ) => {
+	if ( ! get( action, 'meta.dataLayer.isWatching' ) ) {
+		return;
+	}
+
 	const { siteId } = action;
 
-	const query = reduce(
-		action.params,
-		( acc, value, param ) => {
-			const paramToStore = get( CALYPSO_TO_API_PARAMS, param, param );
+	const error = getError( action );
+	if ( undefined !== error ) {
+		pollingSites.delete( siteId );
 
-			if ( includes( KNOWN_API_PARAMS, paramToStore ) ) {
-				return {
-					...acc,
-					[ paramToStore ]: value,
-				};
-			}
+		dispatch( recordTracksEvent( 'calypso_activity_log_polling_fail', { siteId } ) );
+		return;
+	}
 
-			return acc;
+	const rawData = getData( action );
+	if ( undefined !== rawData ) {
+		const prevState = pollingSites.get( siteId );
+
+		if ( ! prevState ) {
+			return;
+		}
+
+		const data = fromApi( rawData );
+
+		const newestDate = data.reduce(
+			( newest, { activityTs } ) => Math.max( newest, activityTs ),
+			prevState.newestDate
+		);
+
+		// no need to send out a new request if we're waiting on one
+		if ( prevState.timer ) {
+			pollingSites.set( siteId, { ...prevState, newestDate } );
+			return;
+		}
+
+		const timer = setTimeout( () => {
+			pollingSites.set( siteId, { ...pollingSites.get( siteId ), timer: null } );
+			dispatch(
+				merge(
+					activityLogRequest( siteId, {
+						dateStart: newestDate,
+						number: 100,
+					} ),
+					{
+						meta: { dataLayer: { isWatching: true } },
+					}
+				)
+			);
+		}, POLL_INTERVAL );
+
+		pollingSites.set( siteId, { ...prevState, newestDate, timer } );
+	}
+};
+
+export const handleActivityLogRequest = action => {
+	const { params = {}, siteId } = action;
+
+	return http(
+		{
+			apiNamespace: 'wpcom/v2',
+			method: 'GET',
+			path: `/sites/${ siteId }/activity`,
+			query: omitBy(
+				{
+					action: params.action,
+					date_end: params.date_end || params.dateEnd,
+					date_start: params.date_start || params.dateStart,
+					group: params.group,
+					name: params.name,
+					number: params.number,
+				},
+				a => a === undefined
+			),
 		},
-		{}
-	);
-
-	debug( 'Handling activity request', query );
-
-	// Clear current logs, this will allow loading placeholders to appear
-	dispatch( activityLogUpdate( siteId, undefined ) );
-
-	dispatch(
-		http(
-			{
-				apiNamespace: 'wpcom/v2',
-				method: 'GET',
-				path: `/sites/${ siteId }/activity`,
-				query,
-			},
-			action
-		)
+		action
 	);
 };
 
-export const receiveActivityLog = ( { dispatch }, { siteId }, data ) => {
-	dispatch( activityLogUpdate( siteId, fromApi( data ) ) );
-};
+export const receiveActivityLog = ( action, data ) =>
+	activityLogUpdate( action.siteId, data, data.totalItems, action.params );
 
-export const receiveActivityLogError = ( { dispatch }, { siteId }, error ) => {
-	dispatch( activityLogError( siteId, pick( error, [ 'error', 'status', 'message' ] ) ) );
-};
+export const receiveActivityLogError = () =>
+	errorNotice( translate( 'Error receiving activity for site.' ) );
 
 export default {
 	[ ACTIVITY_LOG_REQUEST ]: [
-		dispatchRequest( handleActivityLogRequest, receiveActivityLog, receiveActivityLogError ),
+		dispatchRequestEx( {
+			fetch: handleActivityLogRequest,
+			onSuccess: receiveActivityLog,
+			onError: receiveActivityLogError,
+			fromApi,
+		} ),
+		continuePolling,
 	],
+	[ ACTIVITY_LOG_WATCH ]: [ togglePolling ],
 };

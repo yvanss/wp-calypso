@@ -1,6 +1,9 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import page from 'page';
 import { Component } from 'react';
 import { curry } from 'lodash';
@@ -9,14 +12,14 @@ import { curry } from 'lodash';
  * Internal Dependencies
  */
 import analytics from 'lib/analytics';
-import { createPaygateToken } from 'lib/store-transactions';
+import { createCardToken } from 'lib/store-transactions';
 import { getPurchase, goToManagePurchase, isDataLoading } from 'me/purchases/utils';
 import paths from 'me/purchases/paths';
 
 class PurchaseCardDetails extends Component {
 	constructor( props ) {
 		super( props );
-		this.createPaygateToken = curry( createPaygateToken )( 'card_update' );
+		this.createCardToken = curry( createCardToken )( 'card_update' );
 		this.goToManagePurchase = this.goToManagePurchase.bind( this );
 		this.recordFormSubmitEvent = this.recordFormSubmitEvent.bind( this );
 		this.successCallback = this.successCallback.bind( this );
@@ -33,7 +36,8 @@ class PurchaseCardDetails extends Component {
 	}
 
 	isDataValid( props = this.props ) {
-		const purchase = getPurchase( props ), { selectedSite } = props;
+		const purchase = getPurchase( props ),
+			{ selectedSite } = props;
 
 		return purchase && selectedSite;
 	}

@@ -1,4 +1,11 @@
-var debug = require( 'debug' )( 'calypso:poller' );
+/** @format */
+
+/**
+ * External dependencies
+ */
+
+import debugFactory from 'debug';
+const debug = debugFactory( 'calypso:poller' );
 
 var DEFAULT_INTERVAL = 30000,
 	_id = 0;
@@ -10,7 +17,6 @@ function Poller( dataStore, fetcher, options ) {
 	_id++;
 
 	this.paused = false;
-	this.initialized = false;
 
 	this.startOnFirstChange = this.startOnFirstChange.bind( this );
 	this.stopOnNoChangeListeners = this.stopOnNoChangeListeners.bind( this );
@@ -36,11 +42,6 @@ function Poller( dataStore, fetcher, options ) {
 	if ( this.dataStore.listeners( 'change' ).length > 0 ) {
 		this.start();
 	}
-
-	// Defer setting initialized until stack is cleared
-	setTimeout( function() {
-		this.initialized = true;
-	}.bind( this ), 0 );
 }
 
 Poller.prototype.start = function() {
@@ -51,7 +52,7 @@ Poller.prototype.start = function() {
 
 	if ( ! this.timer ) {
 		debug( 'Starting poller for %o', this.dataStore );
-		if ( this.leading || this.initialized ) {
+		if ( this.leading ) {
 			fetch();
 		}
 		this.timer = setInterval( fetch, this.interval );
@@ -100,4 +101,4 @@ Poller.prototype.stopOnNoChangeListeners = function( event ) {
 	}
 };
 
-module.exports = Poller;
+export default Poller;

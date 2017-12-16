@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
@@ -42,12 +45,19 @@ class SiteSettingsFormGeneral extends Component {
 
 	onTimezoneSelect = timezone => {
 		this.props.updateFields( {
-			timezone_string: timezone
+			timezone_string: timezone,
 		} );
 	};
 
 	siteOptions() {
-		const { translate, isRequestingSettings, fields, eventTracker, onChangeField, uniqueEventTracker } = this.props;
+		const {
+			translate,
+			isRequestingSettings,
+			fields,
+			eventTracker,
+			onChangeField,
+			uniqueEventTracker,
+		} = this.props;
 
 		return (
 			<div className="site-settings__site-options">
@@ -63,7 +73,8 @@ class SiteSettingsFormGeneral extends Component {
 							onChange={ onChangeField( 'blogname' ) }
 							disabled={ isRequestingSettings }
 							onClick={ eventTracker( 'Clicked Site Title Field' ) }
-							onKeyPress={ uniqueEventTracker( 'Typed in Site Title Field' ) } />
+							onKeyPress={ uniqueEventTracker( 'Typed in Site Title Field' ) }
+						/>
 					</FormFieldset>
 					<FormFieldset>
 						<FormLabel htmlFor="blogdescription">{ translate( 'Site Tagline' ) }</FormLabel>
@@ -76,7 +87,8 @@ class SiteSettingsFormGeneral extends Component {
 							onChange={ onChangeField( 'blogdescription' ) }
 							disabled={ isRequestingSettings }
 							onClick={ eventTracker( 'Clicked Site Tagline Field' ) }
-							onKeyPress={ uniqueEventTracker( 'Typed in Site Tagline Field' ) } />
+							onKeyPress={ uniqueEventTracker( 'Typed in Site Tagline Field' ) }
+						/>
 						<FormSettingExplanation>
 							{ translate( 'In a few words, explain what this site is about.' ) }
 						</FormSettingExplanation>
@@ -99,33 +111,39 @@ class SiteSettingsFormGeneral extends Component {
 		if ( config.isEnabled( 'upgrades/domain-search' ) ) {
 			customAddress = (
 				<Button href={ '/domains/add/' + siteSlug } onClick={ this.trackUpgradeClick }>
-					<Gridicon icon="plus" /> { translate( 'Add a Custom Address', { context: 'Site address, domain' } ) }
+					<Gridicon icon="plus" />{' '}
+					{ translate( 'Add a Custom Address', { context: 'Site address, domain' } ) }
 				</Button>
 			);
 
-			addressDescription =
+			addressDescription = (
 				<FormSettingExplanation>
-					{
-						translate(
-							'Buy a {{domainSearchLink}}custom domain{{/domainSearchLink}}, ' +
+					{ translate(
+						'Buy a {{domainSearchLink}}custom domain{{/domainSearchLink}}, ' +
 							'{{mapDomainLink}}map{{/mapDomainLink}} a domain you already own, ' +
 							'or {{redirectLink}}redirect{{/redirectLink}} this site.',
-							{
-								components: {
-									domainSearchLink: (
-										<a href={ '/domains/add/' + siteSlug } onClick={ this.trackUpgradeClick } />
-									),
-									mapDomainLink: (
-										<a href={ '/domains/add/mapping/' + siteSlug } onClick={ this.trackUpgradeClick } />
-									),
-									redirectLink: (
-										<a href={ '/domains/add/site-redirect/' + siteSlug } onClick={ this.trackUpgradeClick } />
-									)
-								}
-							}
-						)
-					}
-				</FormSettingExplanation>;
+						{
+							components: {
+								domainSearchLink: (
+									<a href={ '/domains/add/' + siteSlug } onClick={ this.trackUpgradeClick } />
+								),
+								mapDomainLink: (
+									<a
+										href={ '/domains/add/mapping/' + siteSlug }
+										onClick={ this.trackUpgradeClick }
+									/>
+								),
+								redirectLink: (
+									<a
+										href={ '/domains/add/site-redirect/' + siteSlug }
+										onClick={ this.trackUpgradeClick }
+									/>
+								),
+							},
+						}
+					) }
+				</FormSettingExplanation>
+			);
 		}
 
 		return (
@@ -137,7 +155,8 @@ class SiteSettingsFormGeneral extends Component {
 						type="text"
 						id="blogaddress"
 						value={ site.domain }
-						disabled="disabled" />
+						disabled="disabled"
+					/>
 					{ customAddress }
 				</div>
 				{ addressDescription }
@@ -146,11 +165,20 @@ class SiteSettingsFormGeneral extends Component {
 	}
 
 	trackUpgradeClick = () => {
-		this.props.recordTracksEvent( 'calypso_upgrade_nudge_cta_click', { cta_name: 'settings_site_address' } );
-	}
+		this.props.recordTracksEvent( 'calypso_upgrade_nudge_cta_click', {
+			cta_name: 'settings_site_address',
+		} );
+	};
 
 	languageOptions() {
-		const { eventTracker, fields, isRequestingSettings, onChangeField, siteIsJetpack, translate } = this.props;
+		const {
+			eventTracker,
+			fields,
+			isRequestingSettings,
+			onChangeField,
+			siteIsJetpack,
+			translate,
+		} = this.props;
 		if ( siteIsJetpack ) {
 			return null;
 		}
@@ -175,7 +203,14 @@ class SiteSettingsFormGeneral extends Component {
 	}
 
 	visibilityOptions() {
-		const { fields, handleRadio, isRequestingSettings, eventTracker, siteIsJetpack, translate } = this.props;
+		const {
+			fields,
+			handleRadio,
+			isRequestingSettings,
+			eventTracker,
+			siteIsJetpack,
+			translate,
+		} = this.props;
 
 		return (
 			<FormFieldset>
@@ -186,11 +221,14 @@ class SiteSettingsFormGeneral extends Component {
 						checked={ 1 === parseInt( fields.blog_public, 10 ) }
 						onChange={ handleRadio }
 						disabled={ isRequestingSettings }
-						onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) } />
+						onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) }
+					/>
 					<span>{ translate( 'Public' ) }</span>
 				</FormLabel>
 				<FormSettingExplanation isIndented>
-					{ translate( 'Your site is visible to everyone, and it may be indexed by search engines.' ) }
+					{ translate(
+						'Your site is visible to everyone, and it may be indexed by search engines.'
+					) }
 				</FormSettingExplanation>
 
 				<FormLabel>
@@ -200,14 +238,17 @@ class SiteSettingsFormGeneral extends Component {
 						checked={ 0 === parseInt( fields.blog_public, 10 ) }
 						onChange={ handleRadio }
 						disabled={ isRequestingSettings }
-						onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) } />
+						onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) }
+					/>
 					<span>{ translate( 'Hidden' ) }</span>
 				</FormLabel>
 				<FormSettingExplanation isIndented>
-					{ translate( 'Your site is visible to everyone, but we ask search engines to not index your site.' ) }
+					{ translate(
+						'Your site is visible to everyone, but we ask search engines to not index your site.'
+					) }
 				</FormSettingExplanation>
 
-				{ ! siteIsJetpack &&
+				{ ! siteIsJetpack && (
 					<div>
 						<FormLabel>
 							<FormRadio
@@ -216,22 +257,29 @@ class SiteSettingsFormGeneral extends Component {
 								checked={ -1 === parseInt( fields.blog_public, 10 ) }
 								onChange={ handleRadio }
 								disabled={ isRequestingSettings }
-								onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) } />
+								onClick={ eventTracker( 'Clicked Site Visibility Radio Button' ) }
+							/>
 							<span>{ translate( 'Private' ) }</span>
 						</FormLabel>
 						<FormSettingExplanation isIndented>
 							{ translate( 'Your site is only visible to you and users you approve.' ) }
 						</FormSettingExplanation>
 					</div>
-				}
-
+				) }
 			</FormFieldset>
 		);
 	}
 
 	holidaySnowOption() {
 		// Note that years and months below are zero indexed
-		const { fields, handleToggle, isRequestingSettings, moment, supportsHolidaySnowOption, translate } = this.props,
+		const {
+				fields,
+				handleToggle,
+				isRequestingSettings,
+				moment,
+				supportsHolidaySnowOption,
+				translate,
+			} = this.props,
 			today = moment(),
 			startDate = moment( { year: today.year(), month: 11, day: 1 } ),
 			endDate = moment( { year: today.year(), month: 0, day: 4 } );
@@ -254,13 +302,78 @@ class SiteSettingsFormGeneral extends Component {
 							disabled={ isRequestingSettings }
 							onChange={ handleToggle( 'holidaysnow' ) }
 						>
-							{ translate(
-								'Show falling snow on my blog until January 4th.'
-							) }
+							{ translate( 'Show falling snow on my blog until January 4th.' ) }
 						</CompactFormToggle>
 					</li>
 				</ul>
 			</FormFieldset>
+		);
+	}
+
+	netNeutralityOption() {
+		const {
+			fields,
+			isRequestingSettings,
+			translate,
+			handleToggle,
+			moment,
+			handleSubmitForm,
+			isSavingSettings,
+		} = this.props;
+
+		const today = moment(),
+			lastDay = moment( { year: 2017, month: 11, day: 14 } );
+
+		if ( today.isAfter( lastDay, 'day' ) ) {
+			return null;
+		}
+
+		return (
+			<div>
+				<SectionHeader label={ translate( 'Net Neutrality' ) }>
+					<Button
+						compact={ true }
+						onClick={ handleSubmitForm }
+						primary={ true }
+						type="submit"
+						disabled={ isRequestingSettings || isSavingSettings }
+					>
+						{ isSavingSettings ? translate( 'Saving…' ) : translate( 'Save Settings' ) }
+					</Button>
+				</SectionHeader>
+				<Card>
+					<FormFieldset>
+						<CompactFormToggle
+							checked={ !! fields.net_neutrality }
+							disabled={ isRequestingSettings }
+							onChange={ handleToggle( 'net_neutrality' ) }
+						>
+							{ translate(
+								'The FCC wants to repeal Net Neutrality. Without Net Neutrality, ' +
+									'big cable and telecom companies can divide the internet into fast ' +
+									'and slow lanes. What would the Internet look like without net neutrality? ' +
+									'Find out by enabling this banner on your site: it shows your support ' +
+									'for real net neutrality rules by displaying a message on the bottom ' +
+									'of your site and "slowing down" some of your posts. ' +
+									'{{netNeutralityLink}}Learn more about Net Neutrality{{/netNeutralityLink}}',
+								{
+									components: {
+										netNeutralityLink: (
+											<a
+												target="_blank"
+												rel="noopener noreferrer"
+												href={
+													'https://en.blog.wordpress.com/2017/07/11/join-us-in-the-fight-for-net-neutrality/'
+												}
+											/>
+										),
+									},
+								}
+							) }
+						</CompactFormToggle>
+					</FormFieldset>
+				</Card>
+			</div>
 		);
 	}
 
@@ -272,9 +385,7 @@ class SiteSettingsFormGeneral extends Component {
 
 		return (
 			<FormFieldset>
-				<FormLabel htmlFor="blogtimezone">
-					{ translate( 'Site Timezone' ) }
-				</FormLabel>
+				<FormLabel htmlFor="blogtimezone">{ translate( 'Site Timezone' ) }</FormLabel>
 
 				<Timezone
 					selectedZone={ fields.timezone_string }
@@ -297,19 +408,21 @@ class SiteSettingsFormGeneral extends Component {
 			site,
 			siteIsJetpack,
 			siteSlug,
-			translate
+			translate,
 		} = this.props;
 		if ( siteIsJetpack && ! site.hasMinimumJetpackVersion ) {
 			return null;
 		}
 
 		const classes = classNames( 'site-settings__general-settings', {
-			'is-loading': isRequestingSettings
+			'is-loading': isRequestingSettings,
 		} );
 
 		return (
 			<div className={ classNames( classes ) }>
 				{ site && <QuerySiteSettings siteId={ site.ID } /> }
+
+				{ ! siteIsJetpack && this.netNeutralityOption() }
 
 				<SectionHeader label={ translate( 'Site Profile' ) }>
 					<Button
@@ -318,11 +431,9 @@ class SiteSettingsFormGeneral extends Component {
 						primary={ true }
 						data-tip-target="settings-site-profile-save"
 						type="submit"
-						disabled={ isRequestingSettings || isSavingSettings }>
-							{ isSavingSettings
-								? translate( 'Saving…' )
-								: translate( 'Save Settings' )
-							}
+						disabled={ isRequestingSettings || isSavingSettings }
+					>
+						{ isSavingSettings ? translate( 'Saving…' ) : translate( 'Save Settings' ) }
 					</Button>
 				</SectionHeader>
 				<Card>
@@ -340,48 +451,52 @@ class SiteSettingsFormGeneral extends Component {
 						compact={ true }
 						onClick={ handleSubmitForm }
 						primary={ true }
-
 						type="submit"
-						disabled={ isRequestingSettings || isSavingSettings }>
-							{ isSavingSettings
-								? translate( 'Saving…' )
-								: translate( 'Save Settings' )
-							}
+						disabled={ isRequestingSettings || isSavingSettings }
+					>
+						{ isSavingSettings ? translate( 'Saving…' ) : translate( 'Save Settings' ) }
 					</Button>
 				</SectionHeader>
 				<Card>
-					<form>
-						{ this.visibilityOptions() }
-					</form>
+					<form>{ this.visibilityOptions() }</form>
 				</Card>
 
-				{
-					! siteIsJetpack && <div className="site-settings__footer-credit-container">
+				{ ! siteIsJetpack && (
+					<div className="site-settings__footer-credit-container">
 						<SectionHeader label={ translate( 'Footer Credit' ) } />
 						<CompactCard className="site-settings__footer-credit-explanation">
 							<p>
 								{ preventWidows(
-									translate( 'You can customize your website by changing the footer credit in customizer.' ),
-									2 )
-								}
+									translate(
+										'You can customize your website by changing the footer credit in customizer.'
+									),
+									2
+								) }
 							</p>
 							<div>
-								<Button className="site-settings__footer-credit-change" href={ '/customize/identity/' + siteSlug }>
+								<Button
+									className="site-settings__footer-credit-change"
+									href={ '/customize/identity/' + siteSlug }
+								>
 									{ translate( 'Change footer credit' ) }
 								</Button>
 							</div>
 						</CompactCard>
-						{
-							site && ! isBusiness( site.plan ) &&
-							<Banner
-								feature={ FEATURE_NO_BRANDING }
-								plan={ PLAN_BUSINESS }
-								title={ translate( 'Remove the footer credit entirely with WordPress.com Business' ) }
-								description={ translate( 'Upgrade to remove the footer credit, add Google Analytics and more' ) }
-							/>
-						}
+						{ site &&
+							! isBusiness( site.plan ) && (
+								<Banner
+									feature={ FEATURE_NO_BRANDING }
+									plan={ PLAN_BUSINESS }
+									title={ translate(
+										'Remove the footer credit entirely with WordPress.com Business'
+									) }
+									description={ translate(
+										'Upgrade to remove the footer credit, add Google Analytics and more'
+									) }
+								/>
+							) }
 					</div>
-				}
+				) }
 			</div>
 		);
 	}
@@ -394,11 +509,11 @@ class SiteSettingsFormGeneral extends Component {
 		if ( siteIsJetpack && ! site.hasMinimumJetpackVersion ) {
 			notices.warning(
 				translate( 'Jetpack %(version)s is required to manage Settings', {
-					args: { version: config( 'jetpack_min_version' ) }
+					args: { version: config( 'jetpack_min_version' ) },
 				} ),
 				{
 					button: translate( 'Update now' ),
-					href: site.options.admin_url + 'plugins.php?plugin_status=upgrade'
+					href: site.options.admin_url + 'plugins.php?plugin_status=upgrade',
 				}
 			);
 		}
@@ -406,14 +521,14 @@ class SiteSettingsFormGeneral extends Component {
 }
 
 const connectComponent = connect(
-	( state ) => {
+	state => {
 		const siteId = getSelectedSiteId( state );
 		const siteIsJetpack = isJetpackSite( state, siteId );
 
 		return {
 			siteIsJetpack,
 			siteSlug: getSelectedSiteSlug( state ),
-			supportsHolidaySnowOption: siteIsJetpack && isJetpackMinimumVersion( state, siteId, '4.0' ),
+			supportsHolidaySnowOption: ! siteIsJetpack || isJetpackMinimumVersion( state, siteId, '4.0' ),
 		};
 	},
 	null,
@@ -430,6 +545,7 @@ const getFormSettings = settings => {
 		blog_public: '',
 		admin_url: '',
 		holidaysnow: false,
+		net_neutrality: false,
 	};
 
 	if ( ! settings ) {
@@ -445,25 +561,20 @@ const getFormSettings = settings => {
 		timezone_string: settings.timezone_string,
 
 		holidaysnow: !! settings.holidaysnow,
+
+		net_neutrality: settings.net_neutrality,
 	};
 
 	// handling `gmt_offset` and `timezone_string` values
 	const gmt_offset = settings.gmt_offset;
 
-	if (
-		! settings.timezone_string &&
-		typeof gmt_offset === 'string' &&
-		gmt_offset.length
-	) {
-		formSettings.timezone_string = 'UTC' +
-			( /\-/.test( gmt_offset ) ? '' : '+' ) +
-			gmt_offset;
+	if ( ! settings.timezone_string && typeof gmt_offset === 'string' && gmt_offset.length ) {
+		formSettings.timezone_string = 'UTC' + ( /\-/.test( gmt_offset ) ? '' : '+' ) + gmt_offset;
 	}
 
 	return formSettings;
 };
 
-export default flowRight(
-	connectComponent,
-	wrapSettingsForm( getFormSettings )
-)( SiteSettingsFormGeneral );
+export default flowRight( connectComponent, wrapSettingsForm( getFormSettings ) )(
+	SiteSettingsFormGeneral
+);

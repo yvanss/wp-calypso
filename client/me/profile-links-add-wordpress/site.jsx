@@ -1,13 +1,17 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 
 /**
  * Internal dependencies
  */
 import Site from 'blocks/site';
-import { recordCheckboxEvent } from 'me/event-recorder';
+import { recordGoogleEvent } from 'state/analytics/actions';
 
 class ProfileLinksAddWordPressSite extends Component {
 	static propTypes = {
@@ -21,8 +25,15 @@ class ProfileLinksAddWordPressSite extends Component {
 		checked: false,
 	};
 
-	onSelect = ( event ) => {
+	onSelect = event => {
 		this.props.onSelect( event, this.getInputName() );
+	};
+
+	getCheckboxEventHandler = checkboxName => event => {
+		const action = 'Clicked ' + checkboxName + ' checkbox';
+		const value = event.target.checked ? 1 : 0;
+
+		this.props.recordGoogleEvent( 'Me', action, 'checked', value );
 	};
 
 	getInputName() {
@@ -36,21 +47,21 @@ class ProfileLinksAddWordPressSite extends Component {
 			<li
 				key={ site.ID }
 				className="profile-links-add-wordpress__item"
-				onClick={ recordCheckboxEvent( 'Add WordPress Site' ) }
+				onClick={ this.getCheckboxEventHandler( 'Add WordPress Site' ) }
 			>
 				<input
 					className="profile-links-add-wordpress__checkbox"
 					type="checkbox"
 					name={ this.getInputName() }
 					onChange={ onChange }
-					checked={ checked } />
-				<Site
-					site={ site }
-					indicator={ false }
-					onSelect={ this.onSelect } />
+					checked={ checked }
+				/>
+				<Site site={ site } indicator={ false } onSelect={ this.onSelect } />
 			</li>
 		);
 	}
 }
 
-export default ProfileLinksAddWordPressSite;
+export default connect( null, {
+	recordGoogleEvent,
+} )( ProfileLinksAddWordPressSite );

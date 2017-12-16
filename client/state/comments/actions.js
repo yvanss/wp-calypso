@@ -4,23 +4,63 @@
  */
 import { isEnabled } from 'config';
 import {
+	COMMENT_COUNTS_REQUEST,
+	COMMENT_REQUEST,
 	COMMENTS_CHANGE_STATUS,
 	COMMENTS_DELETE,
 	COMMENTS_EDIT,
-	COMMENTS_LIST_REQUEST,
-	COMMENTS_REQUEST,
 	COMMENTS_LIKE,
-	COMMENTS_UNLIKE,
+	COMMENTS_LIST_REQUEST,
+	COMMENTS_RECEIVE,
+	COMMENTS_RECEIVE_ERROR,
 	COMMENTS_REPLY_WRITE,
-	COMMENTS_WRITE,
-	COMMENT_REQUEST,
+	COMMENTS_REQUEST,
+	COMMENTS_SET_ACTIVE_REPLY,
 	COMMENTS_TREE_SITE_REQUEST,
+	COMMENTS_UNLIKE,
+	COMMENTS_WRITE,
 	READER_EXPAND_COMMENTS,
 } from '../action-types';
 import { NUMBER_OF_COMMENTS_PER_FETCH } from './constants';
 
-export const requestComment = ( { siteId, commentId } ) => ( {
+/**
+ * Creates an action that requests a single comment for a given site.
+ * @param {Number} siteId Site identifier
+ * @param {Number} commentId Comment identifier
+ * @param {Object} query API call parameters
+ * @returns {Object} Action that requests a single comment
+ */
+export const requestComment = ( { siteId, commentId, query = {} } ) => ( {
 	type: COMMENT_REQUEST,
+	siteId,
+	commentId,
+	query,
+} );
+
+/**
+ * Creates an action for receiving comments for a specific post on a site.
+ * @param {Number} siteId site identifier
+ * @param {Number} postId post identifier
+ * @param {Array} comments the list of comments received
+ * @param {Boolean} commentById were the comments retrieved by ID directly?
+ * @returns {Object} Action for receiving comments
+ */
+export const receiveComments = ( { siteId, postId, comments, commentById = false } ) => ( {
+	type: COMMENTS_RECEIVE,
+	siteId,
+	postId,
+	comments,
+	commentById,
+} );
+
+/**
+ * Creates an action for receiving comment errors.
+ * @param {Number} siteId site identifier
+ * @param {Number} commentId comment identifier
+ * @returns {Object} Action for receiving comment errors
+ */
+export const receiveCommentsError = ( { siteId, commentId } ) => ( {
+	type: COMMENTS_RECEIVE_ERROR,
 	siteId,
 	commentId,
 } );
@@ -81,6 +121,18 @@ export const requestCommentsList = query => ( {
 export const requestCommentsTreeForSite = query => ( {
 	type: COMMENTS_TREE_SITE_REQUEST,
 	query,
+} );
+
+/**
+ * Creates an action that requests comment counts for a given site.
+ * @param {Number} siteId Site identifier
+ * @param {Number} [postId] Post identifier
+ * @returns {Object} Action that requests comment counts by site.
+ */
+export const requestCommentCounts = ( siteId, postId ) => ( {
+	type: COMMENT_COUNTS_REQUEST,
+	siteId,
+	postId,
 } );
 
 /**
@@ -151,11 +203,11 @@ export const likeComment = ( siteId, postId, commentId ) => ( {
 } );
 
 /***
- * Creates a thunk that unlikes a comment
+ * Creates an action that unlikes a comment
  * @param {Number} siteId site identifier
  * @param {Number} postId post identifier
  * @param {Number} commentId comment identifier
- * @returns {Function} think that unlikes a comment
+ * @returns {Object} Action that unlikes a comment
  */
 export const unlikeComment = ( siteId, postId, commentId ) => ( {
 	type: COMMENTS_UNLIKE,
@@ -227,4 +279,22 @@ export const editComment = ( siteId, postId, commentId, comment ) => ( {
 export const expandComments = ( { siteId, commentIds, postId, displayType } ) => ( {
 	type: READER_EXPAND_COMMENTS,
 	payload: { siteId, commentIds, postId, displayType },
+} );
+
+/***
+ * Creates an action that sets the active reply for a given site ID and post ID
+ * This is used on the front end to show a reply box under the specified comment.
+ *
+ * @param {Number} siteId site identifier
+ * @param {Number} postId post identifier
+ * @param {Number} commentId comment identifier
+ * @returns {Object} Action to set active reply
+ */
+export const setActiveReply = ( { siteId, postId, commentId } ) => ( {
+	type: COMMENTS_SET_ACTIVE_REPLY,
+	payload: {
+		siteId,
+		postId,
+		commentId,
+	},
 } );

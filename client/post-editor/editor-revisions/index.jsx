@@ -1,78 +1,111 @@
+/** @format */
 /**
  * External dependencies
  */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Gridicon from 'gridicons';
 import { localize } from 'i18n-calypso';
+import { connect } from 'react-redux';
+import { flow, get } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import { isEnabled } from 'config';
-import { NESTED_SIDEBAR_REVISIONS } from 'post-editor/editor-sidebar/constants';
+import { getEditorPostId } from 'state/ui/editor/selectors';
+import {
+	getPostRevisions,
+	getPostRevisionsComparisons,
+	getPostRevisionsAuthorsId,
+	getPostRevisionsSelectedRevisionId,
+} from 'state/selectors';
+import { getSelectedSiteId } from 'state/ui/selectors';
+import { recordTracksEvent } from 'state/analytics/actions';
+import EditorDiffViewer from 'post-editor/editor-diff-viewer';
+import EditorRevisionsList from 'post-editor/editor-revisions-list';
+import QueryPostRevisions from 'components/data/query-post-revisions';
+import QueryUsers from 'components/data/query-users';
 
 class EditorRevisions extends Component {
-	showRevisionsNestedSidebar = () => {
-		this.props.selectRevision( null );
-		this.props.setNestedSidebar( NESTED_SIDEBAR_REVISIONS );
+	componentDidMount() {
+		this.props.recordTracksEvent( 'calypso_editor_post_revisions_open' );
 	}
 
 	render() {
-		const { adminUrl, revisions, translate } = this.props;
+		const {
+			authorsIds,
+			comparisons,
+			postId,
+			revisions,
+			selectedDiff,
+			selectedRevisionId,
+			siteId,
+		} = this.props;
 
-		if ( ! revisions || ! revisions.length ) {
-			return null;
-		}
-
-		if ( isEnabled( 'post-editor/revisions' ) ) {
-			return (
-				<button
-					className="editor-revisions"
-					title={ translate( 'Open list of revisions' ) }
-					onClick={ this.showRevisionsNestedSidebar }
-				>
-					<Gridicon icon="history" size={ 18 } />
-					{ translate(
-						'%(revisions)d revision',
-						'%(revisions)d revisions', {
-							count: revisions.length,
-							args: { revisions: revisions.length },
-						}
-					) }
-				</button>
-			);
-		}
-
-		const lastRevision = revisions[ 0 ];
-		const revisionsLink = adminUrl + 'revision.php?revision=' + lastRevision;
 		return (
-			<a
-				className="editor-revisions"
-				href={ revisionsLink }
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-label={ translate( 'Open list of revisions' ) }
-			>
-				<Gridicon icon="history" size={ 18 } />
-				{ translate(
-					'%(revisions)d revision',
-					'%(revisions)d revisions', {
-						count: revisions.length,
-						args: { revisions: revisions.length },
-					}
-				) }
-			</a>
+			<div className="editor-revisions__wrapper">
+				<QueryPostRevisions
+					postId={ postId }
+					siteId={ siteId }
+					selectedRevisionId={ selectedRevisionId }
+				/>
+				<QueryUsers siteId={ siteId } userIds={ authorsIds } />
+				<EditorDiffViewer
+					diff={ selectedDiff }
+					postId={ postId }
+					selectedRevisionId={ selectedRevisionId }
+					siteId={ siteId }
+				/>
+				<EditorRevisionsList
+					comparisons={ comparisons }
+					postId={ postId }
+					revisions={ revisions }
+					selectedRevisionId={ selectedRevisionId }
+					siteId={ siteId }
+				/>
+			</div>
 		);
 	}
 }
 
 EditorRevisions.propTypes = {
-	adminUrl: PropTypes.string,
-	revisions: PropTypes.array,
-	translate: PropTypes.func,
-	setNestedSidebar: PropTypes.func.isRequired,
-	selectRevision: PropTypes.func.isRequired,
+	// connected to state
+	authorsIds: PropTypes.array.isRequired,
+	comparisons: PropTypes.object,
+	postId: PropTypes.number.isRequired,
+	revisions: PropTypes.array.isRequired,
+	selectedDiff: PropTypes.object,
+	selectedRevisionId: PropTypes.number,
+	siteId: PropTypes.number.isRequired,
+
+	// connected to dispatch
+	recordTracksEvent: PropTypes.func.isRequired,
+
+	// localize
+	translate: PropTypes.func.isRequired,
 };
 
-export default localize( EditorRevisions );
+export default flow(
+	localize,
+	connect(
+		state => {
+			const postId = getEditorPostId( state );
+			const siteId = getSelectedSiteId( state );
+
+			const revisions = getPostRevisions( state, siteId, postId );
+			const selectedRevisionId = getPostRevisionsSelectedRevisionId( state );
+			const comparisons = getPostRevisionsComparisons( state, siteId, postId );
+			const selectedDiff = get( comparisons, [ selectedRevisionId, 'diff' ], {} );
+
+			return {
+				authorsIds: getPostRevisionsAuthorsId( state, siteId, postId ),
+				comparisons,
+				postId,
+				revisions,
+				selectedDiff,
+				selectedRevisionId,
+				siteId,
+			};
+		},
+		{ recordTracksEvent }
+	)
+)( EditorRevisions );

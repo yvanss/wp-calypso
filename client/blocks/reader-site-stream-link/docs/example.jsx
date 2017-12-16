@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React from 'react';
 
 /**
@@ -17,7 +20,9 @@ export default class ReaderSiteStreamLinkExample extends React.Component {
 		const siteId = null;
 		return (
 			<Card>
-				<ReaderSiteStreamLink feedId={ feedId } siteId={ siteId }>futonbleu</ReaderSiteStreamLink>
+				<ReaderSiteStreamLink feedId={ feedId } siteId={ siteId }>
+					futonbleu
+				</ReaderSiteStreamLink>
 			</Card>
 		);
 	}

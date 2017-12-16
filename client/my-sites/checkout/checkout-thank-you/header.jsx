@@ -1,9 +1,13 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 
 /**
  * Internal dependencies
@@ -12,12 +16,15 @@ import {
 	isChargeback,
 	isDomainMapping,
 	isDomainRegistration,
+	isDomainTransfer,
 	isGoogleApps,
 	isGuidedTransfer,
 	isPlan,
-	isSiteRedirect
+	isSiteRedirect,
 } from 'lib/products-values';
+import { recordTracksEvent } from 'state/analytics/actions';
 import { localize } from 'i18n-calypso';
+import { preventWidows } from 'lib/formatting';
 
 class CheckoutThankYouHeader extends PureComponent {
 	static propTypes = {
@@ -41,6 +48,12 @@ class CheckoutThankYouHeader extends PureComponent {
 			return translate( 'Thank you!' );
 		}
 
+		if ( primaryPurchase && isDomainTransfer( primaryPurchase ) ) {
+			return preventWidows(
+				translate( 'Check your email! There are important next steps waiting in your inbox.' )
+			);
+		}
+
 		return translate( 'Congratulations on your purchase!' );
 	}
 
@@ -58,9 +71,10 @@ class CheckoutThankYouHeader extends PureComponent {
 		if ( isPlan( primaryPurchase ) ) {
 			return translate(
 				'Your site is now on the {{strong}}%(productName)s{{/strong}} plan. ' +
-				"It's doing somersaults in excitement!", {
+					"It's doing somersaults in excitement!",
+				{
 					args: { productName: primaryPurchase.productName },
-					components: { strong: <strong /> }
+					components: { strong: <strong /> },
 				}
 			);
 		}
@@ -68,9 +82,10 @@ class CheckoutThankYouHeader extends PureComponent {
 		if ( isDomainRegistration( primaryPurchase ) ) {
 			return translate(
 				'Your new domain {{strong}}%(domainName)s{{/strong}} is ' +
-				'being set up. Your site is doing somersaults in excitement!', {
+					'being set up. Your site is doing somersaults in excitement!',
+				{
 					args: { domainName: primaryPurchase.meta },
-					components: { strong: <strong /> }
+					components: { strong: <strong /> },
 				}
 			);
 		}
@@ -78,9 +93,10 @@ class CheckoutThankYouHeader extends PureComponent {
 		if ( isDomainMapping( primaryPurchase ) ) {
 			return translate(
 				'Your domain {{strong}}%(domainName)s{{/strong}} was added to your site. ' +
-				'It may take a little while to start working – see below for more information.', {
+					'It may take a little while to start working – see below for more information.',
+				{
 					args: { domainName: primaryPurchase.meta },
-					components: { strong: <strong /> }
+					components: { strong: <strong /> },
 				}
 			);
 		}
@@ -88,25 +104,30 @@ class CheckoutThankYouHeader extends PureComponent {
 		if ( isGoogleApps( primaryPurchase ) ) {
 			return translate(
 				'Your domain {{strong}}%(domainName)s{{/strong}} is now set up to use G Suite. ' +
-				"It's doing somersaults in excitement!", {
+					"It's doing somersaults in excitement!",
+				{
 					args: { domainName: primaryPurchase.meta },
-					components: { strong: <strong /> }
+					components: { strong: <strong /> },
 				}
 			);
 		}
 
 		if ( isGuidedTransfer( primaryPurchase ) ) {
 			if ( typeof primaryPurchase.meta === 'string' ) {
-				return translate( 'The guided transfer for {{strong}}%(siteName)s{{/strong}} ' +
-					'will begin very soon. We will be in touch with you via email.', {
+				return translate(
+					'The guided transfer for {{strong}}%(siteName)s{{/strong}} ' +
+						'will begin very soon. We will be in touch with you via email.',
+					{
 						args: { siteName: primaryPurchase.meta },
 						components: { strong: <strong /> },
 					}
 				);
 			}
 
-			return translate( 'The guided transfer for your site will ' +
-				'begin very soon. We will be in touch with you via email.', {
+			return translate(
+				'The guided transfer for your site will ' +
+					'begin very soon. We will be in touch with you via email.',
+				{
 					components: { strong: <strong /> },
 				}
 			);
@@ -115,47 +136,102 @@ class CheckoutThankYouHeader extends PureComponent {
 		if ( isSiteRedirect( primaryPurchase ) ) {
 			return translate(
 				'Your site is now redirecting to {{strong}}%(domainName)s{{/strong}}. ' +
-				"It's doing somersaults in excitement!", {
+					"It's doing somersaults in excitement!",
+				{
 					args: { domainName: primaryPurchase.meta },
-					components: { strong: <strong /> }
+					components: { strong: <strong /> },
+				}
+			);
+		}
+
+		if ( isDomainTransfer( primaryPurchase ) ) {
+			return translate(
+				'We sent an email with an important link. Please open the email and click the link to confirm ' +
+					'that you want to transfer {{strong}}%(domainName)s{{/strong}} to WordPress.com. ' +
+					"The transfer can't complete until you do!",
+				{
+					args: { domainName: primaryPurchase.meta },
+					components: { strong: <strong /> },
 				}
 			);
 		}
 
 		if ( isChargeback( primaryPurchase ) ) {
-			return translate( 'Your chargeback fee is paid. Your site is doing somersaults in excitement!' );
+			return translate(
+				'Your chargeback fee is paid. Your site is doing somersaults in excitement!'
+			);
 		}
 
 		return translate(
-			"You will receive an email confirmation shortly for your purchase of {{strong}}%(productName)s{{/strong}}. What's next?", {
+			"You will receive an email confirmation shortly for your purchase of {{strong}}%(productName)s{{/strong}}. What's next?",
+			{
 				args: {
-					productName: primaryPurchase.productName
+					productName: primaryPurchase.productName,
 				},
 				components: {
-					strong: <strong />
-				}
+					strong: <strong />,
+				},
 			}
 		);
 	}
 
+	visitSite = event => {
+		event.preventDefault();
+
+		const { primaryPurchase, selectedSite } = this.props;
+
+		this.props.recordTracksEvent( 'calypso_thank_you_view_site', {
+			product: primaryPurchase.productName,
+		} );
+		window.location.href = selectedSite.URL;
+	};
+
+	getButton() {
+		const { hasFailedPurchases, translate, primaryPurchase, selectedSite } = this.props;
+		const headerButtonClassName = 'button is-primary';
+
+		if (
+			! hasFailedPurchases &&
+			primaryPurchase &&
+			isPlan( primaryPurchase ) &&
+			selectedSite &&
+			! selectedSite.jetpack
+		) {
+			return (
+				<div className="checkout-thank-you__header-button">
+					<button className={ headerButtonClassName } onClick={ this.visitSite }>
+						{ translate( 'View your site' ) }
+					</button>
+				</div>
+			);
+		}
+
+		return null;
+	}
+
 	render() {
-		const { isDataLoaded, hasFailedPurchases } = this.props;
+		const { isDataLoaded, hasFailedPurchases, primaryPurchase } = this.props;
 		const classes = { 'is-placeholder': ! isDataLoaded };
+
+		let svg = 'thank-you.svg';
+		if ( hasFailedPurchases ) {
+			svg = 'items-failed.svg';
+		} else if ( primaryPurchase && isDomainTransfer( primaryPurchase ) ) {
+			svg = 'check-emails-desktop.svg';
+		}
 
 		return (
 			<div className={ classNames( 'checkout-thank-you__header', classes ) }>
 				<div className="checkout-thank-you__header-icon">
-					<img src={ `/calypso/images/upgrades/${ hasFailedPurchases ? 'items-failed.svg' : 'thank-you.svg' }` } />
+					<img src={ `/calypso/images/upgrades/${ svg }` } />
 				</div>
 				<div className="checkout-thank-you__header-content">
 					<div className="checkout-thank-you__header-copy">
-						<h1 className="checkout-thank-you__header-heading">
-							{ this.getHeading() }
-						</h1>
+						<h1 className="checkout-thank-you__header-heading">{ this.getHeading() }</h1>
 
-						<h2 className="checkout-thank-you__header-text">
-							{ this.getText() }
-						</h2>
+						<h2 className="checkout-thank-you__header-text">{ this.getText() }</h2>
+
+						{ this.getButton() }
 					</div>
 				</div>
 			</div>
@@ -163,4 +239,6 @@ class CheckoutThankYouHeader extends PureComponent {
 	}
 }
 
-export default localize( CheckoutThankYouHeader );
+export default connect( null, {
+	recordTracksEvent,
+} )( localize( CheckoutThankYouHeader ) );

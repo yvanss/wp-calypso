@@ -1,6 +1,9 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import page from 'page';
 import React from 'react';
 
@@ -10,16 +13,18 @@ import React from 'react';
 import AsyncLoad from 'components/async-load';
 import config from 'config';
 import DeleteSite from './delete-site';
+import ConfirmDisconnection from './disconnect-site/confirm';
+import DisconnectSite from './disconnect-site';
 import purchasesPaths from 'me/purchases/paths';
-import { renderWithReduxStore } from 'lib/react-helpers';
 import SiteSettingsMain from 'my-sites/site-settings/main';
 import StartOver from './start-over';
 import ThemeSetup from './theme-setup';
 import ManageConnection from './manage-connection';
 import { getSelectedSite, getSelectedSiteId, getSelectedSiteSlug } from 'state/ui/selectors';
 import { isJetpackSite } from 'state/sites/selectors';
-import { canCurrentUser, isVipSite } from 'state/selectors';
+import { canCurrentUser, isSiteAutomatedTransfer, isVipSite } from 'state/selectors';
 import { SITES_ONCE_CHANGED } from 'state/action-types';
+import { setSection } from 'state/ui/actions';
 
 function canDeleteSite( state, siteId ) {
 	const canManageOptions = canCurrentUser( state, siteId, 'manage_options' );
@@ -29,8 +34,8 @@ function canDeleteSite( state, siteId ) {
 		return false;
 	}
 
-	if ( isJetpackSite( state, siteId ) ) {
-		// Current user can't delete a jetpack site
+	if ( isJetpackSite( state, siteId ) && ! isSiteAutomatedTransfer( state, siteId ) ) {
+		// Current user can't delete a Jetpack site, but can request to delete an Atomic site
 		return false;
 	}
 
@@ -42,20 +47,12 @@ function canDeleteSite( state, siteId ) {
 	return true;
 }
 
-function renderPage( context, component ) {
-	renderWithReduxStore(
-		component,
-		document.getElementById( 'primary' ),
-		context.store
-	);
-}
-
 const controller = {
 	redirectToGeneral() {
 		page.redirect( '/settings/general' );
 	},
 
-	redirectIfCantDeleteSite( context ) {
+	redirectIfCantDeleteSite( context, next ) {
 		const state = context.store.getState();
 		const dispatch = context.store.dispatch;
 		const siteId = getSelectedSiteId( state );
@@ -75,65 +72,59 @@ const controller = {
 					if ( ! canDeleteSite( updatedState, updatedSiteId ) ) {
 						return page.redirect( '/settings/general/' + updatedSiteSlug );
 					}
-				}
+				},
 			} );
 		}
+		next();
 	},
 
-	general( context ) {
-		renderPage(
-			context,
-			<SiteSettingsMain />
+	general( context, next ) {
+		context.primary = <SiteSettingsMain />;
+		next();
+	},
+
+	importSite( context, next ) {
+		context.primary = <AsyncLoad require="my-sites/site-settings/section-import" />;
+		next();
+	},
+
+	exportSite( context, next ) {
+		context.primary = <AsyncLoad require="my-sites/site-settings/section-export" />;
+		next();
+	},
+
+	guidedTransfer( context, next ) {
+		context.primary = (
+			<AsyncLoad require="my-sites/guided-transfer" hostSlug={ context.params.host_slug } />
 		);
+		next();
 	},
 
-	importSite( context ) {
-		renderPage(
-			context,
-			<AsyncLoad require="my-sites/site-settings/section-import" />
-		);
+	deleteSite( context, next ) {
+		context.primary = <DeleteSite path={ context.path } />;
+
+		next();
 	},
 
-	exportSite( context ) {
-		renderPage(
-			context,
-			<AsyncLoad require="my-sites/site-settings/section-export" />
-		);
+	disconnectSite( context, next ) {
+		context.store.dispatch( setSection( null, { hasSidebar: false } ) );
+		context.primary = <DisconnectSite reason={ context.params.reason } />;
+		next();
 	},
 
-	guidedTransfer( context ) {
-		renderPage(
-			context,
-			<AsyncLoad
-				require="my-sites/guided-transfer"
-				hostSlug={ context.params.host_slug }
-			/>
-		);
+	disconnectSiteConfirm( context, next ) {
+		const { reason, text } = context.query;
+		context.store.dispatch( setSection( null, { hasSidebar: false } ) );
+		context.primary = <ConfirmDisconnection reason={ reason } text={ text } />;
+		next();
 	},
 
-	deleteSite( context ) {
-		const redirectIfCantDeleteSite = controller.redirectIfCantDeleteSite;
-
-		redirectIfCantDeleteSite( context );
-
-		renderPage(
-			context,
-			<DeleteSite path={ context.path } />
-		);
+	startOver( context, next ) {
+		context.primary = <StartOver path={ context.path } />;
+		next();
 	},
 
-	startOver( context ) {
-		const redirectIfCantDeleteSite = controller.redirectIfCantDeleteSite;
-
-		redirectIfCantDeleteSite( context );
-
-		renderPage(
-			context,
-			<StartOver path={ context.path } />
-		);
-	},
-
-	themeSetup( context ) {
+	themeSetup( context, next ) {
 		const site = getSelectedSite( context.store.getState() );
 		if ( site && site.jetpack ) {
 			return page.redirect( '/settings/general/' + site.slug );
@@ -143,17 +134,13 @@ const controller = {
 			return page.redirect( '/settings/general/' + site.slug );
 		}
 
-		renderPage(
-			context,
-			<ThemeSetup />
-		);
+		context.primary = <ThemeSetup />;
+		next();
 	},
 
-	manageConnection( context ) {
-		renderPage(
-			context,
-			<ManageConnection />
-		);
+	manageConnection( context, next ) {
+		context.primary = <ManageConnection />;
+		next();
 	},
 
 	legacyRedirects( context, next ) {
@@ -167,7 +154,7 @@ const controller = {
 				earnings: '/me/public-profile',
 				'billing-history': purchasesPaths.billingHistory(),
 				'billing-history-v2': purchasesPaths.billingHistory(),
-				'connected-apps': '/me/security/connected-applications'
+				'connected-apps': '/me/security/connected-applications',
 			};
 		if ( ! context ) {
 			return page( '/me/public-profile' );

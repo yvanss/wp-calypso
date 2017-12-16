@@ -1,3 +1,4 @@
+/** @format */
 /**
  * External dependencies
  */
@@ -7,20 +8,23 @@ import page from 'page';
  * Internal dependencies
  */
 import controller from './controller';
-import mySitesController from 'my-sites/controller';
+import { navigation, siteSelection } from 'my-sites/controller';
 import settingsController from 'my-sites/site-settings/settings-controller';
+import { makeLayout, render as clientRender } from 'controller';
 
-const redirectToTrafficSection = ( context ) => {
+const redirectToTrafficSection = context => {
 	page.redirect( '/settings/traffic/' + ( context.params.site_id || '' ) );
 };
 
 export default function() {
 	page(
 		'/settings/traffic/:site_id',
-		mySitesController.siteSelection,
-		mySitesController.navigation,
+		siteSelection,
+		navigation,
 		settingsController.siteSettings,
-		controller.traffic
+		controller.traffic,
+		makeLayout,
+		clientRender
 	);
 
 	// redirect legacy urls

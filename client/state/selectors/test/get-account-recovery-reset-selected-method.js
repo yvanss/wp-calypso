@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -7,10 +9,10 @@ import deepFreeze from 'deep-freeze';
 /**
  * Internal dependencies
  */
-import { getAccountRecoveryResetSelectedMethod } from '../';
+import { getAccountRecoveryResetSelectedMethod } from 'state/selectors';
 
 describe( 'getAccountRecoveryResetSelectedMethod()', () => {
-	it( 'should return the method field under the account recovery state tree.', () => {
+	test( 'should return the method field under the account recovery state tree.', () => {
 		const method = 'primary_email';
 		const state = deepFreeze( {
 			accountRecovery: {

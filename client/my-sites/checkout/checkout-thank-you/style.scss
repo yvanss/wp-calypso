@@ -132,6 +132,10 @@
 	clear: none;
 }
 
+.checkout-thank-you__header-button {
+	margin: 2em 0;
+}
+
 .checkout-thank-you__header-heading {
 	font-size: 24px;
 	font-weight: 400;
@@ -322,4 +326,9 @@
 
 .checkout-thank-you__jetpack .thank-you-card__action .button {
 	max-width: 45%;
+}
+
+.checkout-thank-you .checkout-thank-you__gsuite-support-link {
+	color: inherit;
+	text-decoration: underline;
 }

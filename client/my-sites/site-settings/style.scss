@@ -108,6 +108,21 @@
 
 	.analytics-settings {
 		padding-top: 20px;
+
+		.form-setting-explanation {
+			a {
+				margin-left: 6px;
+			}
+		}
+	}
+
+	.site-settings__analytics-stores-settings {
+		padding-bottom: 20px;
+
+		.site-settings__analytics-stores-child-settings {
+			margin-top: 10px;
+			margin-left: 20px;
+		}
 	}
 
 	.site-settings__blogaddress-settings {
@@ -166,11 +181,14 @@
 	}
 
 	fieldset.site-icon-setting {
+		padding-bottom: 16px;
+
 		@include breakpoint( ">660px" ) {
 			flex: 0 0 122px;
 			order: 1;
 			margin-bottom: 0;
 			padding-right: 24px;
+			padding-bottom: 24px;
 		}
 	}
 
@@ -210,6 +228,7 @@
 	}
 }
 
+.site-settings__analytics-settings,
 .site-settings__general-settings,
 .site-settings__writing-settings,
 .site-settings__traffic-settings,
@@ -274,10 +293,14 @@
 }
 
 .site-settings__site-options {
-	padding-bottom: 24px;
-
 	@include breakpoint( ">660px" ) {
 		display: flex;
+	}
+
+	&:last-child {
+		.site-icon-setting {
+			padding-bottom: 0;
+		}
 	}
 }
 

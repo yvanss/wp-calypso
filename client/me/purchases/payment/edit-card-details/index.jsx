@@ -1,8 +1,12 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import { connect } from 'react-redux';
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 /**
  * Internal Dependencies
@@ -67,7 +71,7 @@ class EditCardDetails extends PurchaseCardDetails {
 
 				<CreditCardForm
 					apiParams={ this.getApiParams() }
-					createPaygateToken={ this.createPaygateToken }
+					createCardToken={ this.createCardToken }
 					initialValues={ this.props.card }
 					recordFormSubmitEvent={ this.recordFormSubmitEvent }
 					successCallback={ this.successCallback }

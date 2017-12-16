@@ -1,3 +1,4 @@
+/** @format */
 /**
  * External dependencies
  */
@@ -9,24 +10,29 @@ import page from 'page';
 import config from 'config';
 import controller from './controller';
 import settingsController from 'my-sites/site-settings/settings-controller';
-import mySitesController from 'my-sites/controller';
+import { navigation, siteSelection } from 'my-sites/controller';
+import { makeLayout, render as clientRender } from 'controller';
 
 export default function() {
 	page(
 		'/settings/writing/:site_id',
-		mySitesController.siteSelection,
-		mySitesController.navigation,
+		siteSelection,
+		navigation,
 		settingsController.siteSettings,
-		controller.writing
+		controller.writing,
+		makeLayout,
+		clientRender
 	);
 
 	if ( config.isEnabled( 'manage/site-settings/categories' ) ) {
 		page(
 			'/settings/taxonomies/:taxonomy/:site_id',
-			mySitesController.siteSelection,
-			mySitesController.navigation,
+			siteSelection,
+			navigation,
 			settingsController.setScroll,
-			controller.taxonomies
+			controller.taxonomies,
+			makeLayout,
+			clientRender
 		);
 	}
 }

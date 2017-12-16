@@ -1,7 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { PropTypes, Children, cloneElement } from 'react';
+import PropTypes from 'prop-types';
+import React, { Children, cloneElement } from 'react';
 
 /**
  * Internal dependencies
@@ -10,6 +13,7 @@ import EllipsisMenu from 'components/ellipsis-menu';
 import PopoverMenuSeparator from 'components/popover/menu-separator';
 import PostActionsEllipsisMenuEdit from './edit';
 import PostActionsEllipsisMenuStats from './stats';
+import PostActionsEllipsisMenuComments from './comments';
 import PostActionsEllipsisMenuPublish from './publish';
 import PostActionsEllipsisMenuShare from './share';
 import PostActionsEllipsisMenuTrash from './trash';
@@ -25,6 +29,7 @@ export default function PostActionsEllipsisMenu( { globalId, includeDefaultActio
 			<PostActionsEllipsisMenuEdit key="edit" />,
 			<PostActionsEllipsisMenuView key="view" />,
 			<PostActionsEllipsisMenuStats key="stats" />,
+			<PostActionsEllipsisMenuComments key="comments" />,
 			<PostActionsEllipsisMenuPublish key="publish" />,
 			<PostActionsEllipsisMenuShare key="share" />,
 			<PostActionsEllipsisMenuRestore key="restore" />,
@@ -45,7 +50,7 @@ export default function PostActionsEllipsisMenu( { globalId, includeDefaultActio
 	return (
 		<div className="post-actions-ellipsis-menu">
 			<EllipsisMenu position="bottom left" disabled={ ! globalId }>
-				{ actions.map( ( action ) => cloneElement( action, { globalId } ) ) }
+				{ actions.map( action => cloneElement( action, { globalId } ) ) }
 			</EllipsisMenu>
 		</div>
 	);
@@ -54,9 +59,8 @@ export default function PostActionsEllipsisMenu( { globalId, includeDefaultActio
 PostActionsEllipsisMenu.propTypes = {
 	globalId: PropTypes.string,
 	includeDefaultActions: PropTypes.bool,
-	children: PropTypes.node
 };
 
 PostActionsEllipsisMenu.defaultProps = {
-	includeDefaultActions: true
+	includeDefaultActions: true,
 };

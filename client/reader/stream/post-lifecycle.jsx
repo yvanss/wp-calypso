@@ -2,7 +2,8 @@
 /**
  * External Dependencies
  */
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { defer, omit, includes } from 'lodash';
 
 /**
@@ -19,14 +20,14 @@ import RecommendedPosts from './recommended-posts';
 import XPostHelper, { isXPost } from 'reader/xpost-helper';
 import PostBlocked from 'blocks/reader-post-card/blocked';
 import Post from './post';
-import { IN_STREAM_RECOMMENDATION } from 'reader/follow-button/follow-sources';
+import { IN_STREAM_RECOMMENDATION } from 'reader/follow-sources';
 import CombinedCard from 'blocks/reader-combined-card';
 import fluxPostAdapter from 'lib/reader-post-flux-adapter';
 import EmptySearchRecommendedPost from './empty-search-recommended-post';
 
 const ConnectedCombinedCard = fluxPostAdapter( CombinedCard );
 
-export default class PostLifecycle extends React.PureComponent {
+export default class PostLifecycle extends React.Component {
 	static propTypes = {
 		postKey: PropTypes.object.isRequired,
 		isDiscoverStream: PropTypes.bool,
@@ -122,7 +123,7 @@ export default class PostLifecycle extends React.PureComponent {
 			return <PostPlaceholder />;
 		} else if ( post._state === 'error' ) {
 			return <PostUnavailable post={ post } />;
-		} else if ( includes( this.props.blockedSites, +postKey.blogId ) ) {
+		} else if ( ! post.is_external && includes( this.props.blockedSites, +post.site_ID ) ) {
 			return <PostBlocked post={ post } />;
 		} else if ( isXPost( post ) ) {
 			const xMetadata = XPostHelper.getXPostMetadata( post );

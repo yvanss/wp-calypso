@@ -2,6 +2,7 @@
 /**
  * External Dependencies
  */
+import PropTypes from 'prop-types';
 import React from 'react';
 import { localize } from 'i18n-calypso';
 import { connect } from 'react-redux';
@@ -23,9 +24,9 @@ import QueryReaderTag from 'components/data/query-reader-tag';
 
 class TagStream extends React.Component {
 	static propTypes = {
-		encodedTagSlug: React.PropTypes.string,
-		decodedTagSlug: React.PropTypes.string,
-		followSource: React.PropTypes.string.isRequired,
+		encodedTagSlug: PropTypes.string,
+		decodedTagSlug: PropTypes.string,
+		followSource: PropTypes.string.isRequired,
 	};
 
 	state = {
@@ -106,6 +107,23 @@ class TagStream extends React.Component {
 			imageSearchString = this.state.emojiText.convert( title, {
 				delimiter: '',
 			} );
+		}
+
+		if ( tag && tag.error ) {
+			return (
+				<React.Fragment>
+					<QueryReaderFollowedTags />
+					<QueryReaderTag tag={ this.props.decodedTagSlug } />
+					{ this.props.showBack && <HeaderBack /> }
+					<TagStreamHeader
+						title={ title }
+						imageSearchString={ imageSearchString }
+						showFollow={ false }
+						showBack={ this.props.showBack }
+					/>
+					<EmptyContent />
+				</React.Fragment>
+			);
 		}
 
 		return (

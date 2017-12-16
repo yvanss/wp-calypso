@@ -1,8 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import PropTypes from 'prop-types';
 
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { localize, getLocaleSlug } from 'i18n-calypso';
 import { find, findIndex, get } from 'lodash';
@@ -21,10 +23,15 @@ export class NavigationLink extends Component {
 		goToNextStep: PropTypes.func,
 		direction: PropTypes.oneOf( [ 'back', 'forward' ] ),
 		flowName: PropTypes.string.isRequired,
+		labelText: PropTypes.string,
 		positionInFlow: PropTypes.number,
 		previousPath: PropTypes.string,
 		signupProgress: PropTypes.array,
 		stepName: PropTypes.string.isRequired,
+	};
+
+	static defaultProps = {
+		labelText: '',
 	};
 
 	/**
@@ -38,7 +45,10 @@ export class NavigationLink extends Component {
 
 		const currentStepIndex = findIndex( signupProgress, { stepName } );
 
-		const previousStep = find( signupProgress.slice( 0, currentStepIndex ).reverse(), step => ! step.wasSkipped );
+		const previousStep = find(
+			signupProgress.slice( 0, currentStepIndex ).reverse(),
+			step => ! step.wasSkipped
+		);
 
 		return previousStep ? previousStep.stepName : null;
 	}
@@ -54,9 +64,18 @@ export class NavigationLink extends Component {
 
 		const previousStepName = this.getPreviousStepName();
 
-		const stepSectionName = get( find( this.props.signupProgress, { stepName: previousStepName } ), 'stepSectionName', '' );
+		const stepSectionName = get(
+			find( this.props.signupProgress, { stepName: previousStepName } ),
+			'stepSectionName',
+			''
+		);
 
-		return signupUtils.getStepUrl( this.props.flowName, previousStepName, stepSectionName, getLocaleSlug() );
+		return signupUtils.getStepUrl(
+			this.props.flowName,
+			previousStepName,
+			stepSectionName,
+			getLocaleSlug()
+		);
 	}
 
 	handleClick = () => {
@@ -67,7 +86,7 @@ export class NavigationLink extends Component {
 		}
 
 		this.recordClick();
-	}
+	};
 
 	recordClick() {
 		const tracksProps = {
@@ -85,7 +104,13 @@ export class NavigationLink extends Component {
 	}
 
 	render() {
-		if ( this.props.positionInFlow === 0 && this.props.direction === 'back' && ! this.props.stepSectionName ) {
+		const { translate, labelText } = this.props;
+
+		if (
+			this.props.positionInFlow === 0 &&
+			this.props.direction === 'back' &&
+			! this.props.stepSectionName
+		) {
 			return null;
 		}
 
@@ -93,16 +118,22 @@ export class NavigationLink extends Component {
 
 		if ( this.props.direction === 'back' ) {
 			backGridicon = <Gridicon icon="arrow-left" size={ 18 } />;
-			text = this.props.translate( 'Back' );
+			text = labelText ? labelText : translate( 'Back' );
 		}
 
 		if ( this.props.direction === 'forward' ) {
 			forwardGridicon = <Gridicon icon="arrow-right" size={ 18 } />;
-			text = this.props.translate( 'Skip for now' );
+			text = labelText ? labelText : translate( 'Skip for now' );
 		}
 
 		return (
-			<Button compact borderless className="navigation-link" href={ this.getBackUrl() } onClick={ this.handleClick }>
+			<Button
+				compact
+				borderless
+				className="navigation-link"
+				href={ this.getBackUrl() }
+				onClick={ this.handleClick }
+			>
 				{ backGridicon }
 				{ text }
 				{ forwardGridicon }

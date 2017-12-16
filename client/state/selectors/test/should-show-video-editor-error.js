@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,18 +8,18 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import { shouldShowVideoEditorError } from '../';
+import { shouldShowVideoEditorError } from 'state/selectors';
 
 describe( 'shouldShowVideoEditorError()', () => {
-	it( 'should return the poster error state', () => {
+	test( 'should return the poster error state', () => {
 		const showError = shouldShowVideoEditorError( {
 			ui: {
 				editor: {
 					videoEditor: {
-						showError: true
-					}
-				}
-			}
+						showError: true,
+					},
+				},
+			},
 		} );
 
 		expect( showError ).to.be.true;

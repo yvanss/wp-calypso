@@ -1,10 +1,13 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { noop } from 'lodash';
+import { noop } from 'lodash';
 
 export default class FormToggle extends PureComponent {
 	static propTypes = {
@@ -14,9 +17,9 @@ export default class FormToggle extends PureComponent {
 		disabled: PropTypes.bool,
 		id: PropTypes.string,
 		className: PropTypes.string,
+		wrapperClassName: PropTypes.string,
 		toggling: PropTypes.bool,
 		'aria-label': PropTypes.string,
-		children: PropTypes.node,
 	};
 
 	static defaultProps = {
@@ -45,7 +48,11 @@ export default class FormToggle extends PureComponent {
 		this.props.onKeyDown( event );
 	};
 
-	onClick = () => {
+	onClick = event => {
+		if ( event ) {
+			event.stopPropagation && event.stopPropagation();
+		}
+
 		if ( ! this.props.disabled ) {
 			this.props.onChange( ! this.props.checked );
 		}
@@ -65,7 +72,7 @@ export default class FormToggle extends PureComponent {
 
 	render() {
 		const id = this.props.id || 'toggle-' + this.id;
-		const wrapperClasses = classNames( 'form-toggle__wrapper', {
+		const wrapperClasses = classNames( 'form-toggle__wrapper', this.props.wrapperClassName, {
 			'is-disabled': this.props.disabled,
 		} );
 		const toggleClasses = classNames( 'form-toggle', this.props.className, {

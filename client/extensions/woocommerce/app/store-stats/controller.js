@@ -10,7 +10,6 @@ import { moment, translate } from 'i18n-calypso';
 /**
  * Internal dependencies
  */
-import { renderWithReduxStore } from 'lib/react-helpers';
 import AsyncLoad from 'components/async-load';
 import StatsPagePlaceholder from 'my-sites/stats/stats-page-placeholder';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
@@ -28,7 +27,7 @@ function isValidParameters( context ) {
 	);
 }
 
-export default function StatsController( context ) {
+export default function StatsController( context, next ) {
 	if ( ! context.params.site || context.params.site === 'null' ) {
 		page.redirect( '/stats/day/' );
 	}
@@ -76,20 +75,23 @@ export default function StatsController( context ) {
 	}
 
 	const asyncComponent =
-		props.type === 'orders'
-			? <AsyncLoad
-					/* eslint-disable wpcalypso/jsx-classname-namespace */
-					placeholder={ <StatsPagePlaceholder className="woocommerce" /> }
-					/* eslint-enable wpcalypso/jsx-classname-namespace */
-					require="extensions/woocommerce/app/store-stats"
-					{ ...props }
-				/>
-			: <AsyncLoad
-					/* eslint-disable wpcalypso/jsx-classname-namespace */
-					placeholder={ <StatsPagePlaceholder className="woocommerce" /> }
-					/* eslint-enable wpcalypso/jsx-classname-namespace */
-					require="extensions/woocommerce/app/store-stats/listview"
-					{ ...props }
-				/>;
-	renderWithReduxStore( asyncComponent, document.getElementById( 'primary' ), context.store );
+		props.type === 'orders' ? (
+			<AsyncLoad
+				/* eslint-disable wpcalypso/jsx-classname-namespace */
+				placeholder={ <StatsPagePlaceholder className="woocommerce" /> }
+				/* eslint-enable wpcalypso/jsx-classname-namespace */
+				require="extensions/woocommerce/app/store-stats"
+				{ ...props }
+			/>
+		) : (
+			<AsyncLoad
+				/* eslint-disable wpcalypso/jsx-classname-namespace */
+				placeholder={ <StatsPagePlaceholder className="woocommerce" /> }
+				/* eslint-enable wpcalypso/jsx-classname-namespace */
+				require="extensions/woocommerce/app/store-stats/listview"
+				{ ...props }
+			/>
+		);
+	context.primary = asyncComponent;
+	next();
 }

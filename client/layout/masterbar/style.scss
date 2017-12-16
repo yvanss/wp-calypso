@@ -3,9 +3,9 @@ $autobar-height: 20px;
 
 // The WordPress.com Masterbar
 .masterbar {
-	background: $masterbar-color;
-	border-bottom: 1px solid darken( $masterbar-color, 4% );
-	color: $white;
+	background: var( --masterbar-background );
+	border-bottom: 1px solid var( --masterbar-border-color );
+	color: var( --masterbar-color );
 	font-size: 16px;
 	display: flex;
 	height: $masterbar-height;
@@ -68,17 +68,17 @@ $autobar-height: 20px;
 	display: flex;
 		align-items: center;
 	position: relative;
-	color: $white;
+	color: var( --masterbar-color );
 	font-size: 14px;
 	height: $masterbar-height;
 	line-height: $masterbar-height;
 	padding: 0 15px;
 	text-decoration: none;
 	cursor: default;
-	transition: all 150ms ease-in;
+	transition: all 0.2s ease-in-out;
 
 	&:visited {
-		color: $white;
+		color: var( --masterbar-color );
 	}
 
 	&[href] {
@@ -86,7 +86,7 @@ $autobar-height: 20px;
 	}
 
 	.masterbar__item-content {
-		color: $white;
+		color: var( --masterbar-color );
 	}
 
 	.gridicon + .masterbar__item-content {
@@ -95,13 +95,13 @@ $autobar-height: 20px;
 
 	&:hover,
 	&:focus {
-		background: lighten( $masterbar-color, 5% );
-		color: $white;
+		background: var( --masterbar-item-hover-background );
+		color: var( --masterbar-color );
 		outline: 0;
 	}
 
 	&.is-active {
-		background: darken( $masterbar-color, 17% );
+		background: var( --masterbar-item-active-background );
 	}
 
 	.is-support-user &.is-active {
@@ -126,11 +126,14 @@ $autobar-height: 20px;
 	padding: 0 0 0 8px;
 
 	.masterbar__wpcom-logo {
-		height: 24px;
-		width: 164px;
-		position: relative;
-			top: 6px;
-			left: -4px;
+		display: none;
+	}
+
+	.masterbar__wpcom-wordmark {
+		display: block;
+		width: 144px;
+		height: 15px;
+		margin: 0 5px;
 	}
 
 	@include breakpoint( "<480px" ) {
@@ -143,6 +146,18 @@ $autobar-height: 20px;
 			margin: 0 auto;
 			width: 30px;
 			overflow: hidden;
+		}
+
+		.masterbar__wpcom-logo {
+			display: block;
+			height: 24px;
+			width: 24px;
+			margin-left: 5px;
+			fill: $white;
+		}
+
+		.masterbar__wpcom-wordmark {
+			display: none;
 		}
 	}
 
@@ -159,6 +174,10 @@ $autobar-height: 20px;
 
 	.masterbar__item-content {
 		display: block;
+
+		@include breakpoint( ">480px" ) {
+			margin-top: 3px; /*Align with logo*/
+		}
 	}
 
 	&:hover,
@@ -170,13 +189,13 @@ $autobar-height: 20px;
 .masterbar__item-new {
 	background: $white;
 	border-radius: 3px;
-	color: $blue-wordpress;
+	color: var( --masterbar-item-new-color );
 	height: 36px;
 	margin: 5px 8px;
 	transition: all 0.2s ease-out;
 
 	&:visited {
-		color: $blue-wordpress;
+		color: var( --masterbar-item-new-color );
 	}
 
 	&.is-active {
@@ -186,11 +205,11 @@ $autobar-height: 20px;
 	&:hover,
 	&:focus {
 		background: $gray-light;
-		color: $blue-wordpress;
+		color: var( --masterbar-item-new-color );
 	}
 
 	.masterbar__item-content {
-		color: $blue-wordpress;
+		color: var( --masterbar-item-new-color );
 		display: none;
 
 		@include breakpoint( ">960px" ) {
@@ -212,7 +231,7 @@ $autobar-height: 20px;
 
 	// active state when editing
 	.is-group-editor & {
-		background: darken( $masterbar-color, 17% );
+		background: var( --masterbar-item-new-editor-background );
 		color: $white;
 	}
 
@@ -222,7 +241,7 @@ $autobar-height: 20px;
 	}
 
 	.is-group-editor &:hover {
-		background: darken( $masterbar-color, 13% );
+		background: var( --masterbar-item-new-editor-hover-background );
 	}
 
 }
@@ -391,8 +410,8 @@ $autobar-height: 20px;
 	}
 
 	.is-group-editor & {
-		background: darken( $masterbar-color, 12% );
-		border-left: 1px solid darken( $masterbar-color, 5% );
+		background: var( --masterbar-toggle-drafts-editor-background );
+		border-left: 1px solid var( --masterbar-toggle-drafts-editor-border-color );
 
 		.count {
 			color: $gray-light;
@@ -400,7 +419,7 @@ $autobar-height: 20px;
 	}
 
 	.is-group-editor &:hover {
-		background: darken( $masterbar-color, 17% );
+		background: var( --masterbar-toggle-drafts-editor-hover-background );
 
 		.count {
 			color: $white;
@@ -431,5 +450,20 @@ $autobar-height: 20px;
 
 	@include breakpoint( '>480px' ) {
 		flex-grow: 0;
+	}
+}
+
+// Editor Transition
+.masterbar {
+	opacity: 1;
+	transition: opacity 0.3s ease-in-out;
+}
+.is-section-post-editor .masterbar {
+	opacity: 0;
+	pointer-events: none;
+
+	.masterbar__item,
+	.masterbar__toggle-drafts {
+		transform: translateY( -48px );
 	}
 }

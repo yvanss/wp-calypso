@@ -15,23 +15,27 @@ import {
 	includes,
 	isArray,
 	values,
+	omit,
 } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import {
+	COMMENT_COUNTS_UPDATE,
 	COMMENTS_CHANGE_STATUS,
 	COMMENTS_EDIT,
 	COMMENTS_RECEIVE,
 	COMMENTS_DELETE,
-	COMMENTS_ERROR,
+	COMMENTS_RECEIVE_ERROR,
 	COMMENTS_COUNT_INCREMENT,
 	COMMENTS_COUNT_RECEIVE,
 	COMMENTS_LIKE,
 	COMMENTS_UNLIKE,
 	COMMENTS_TREE_SITE_ADD,
+	COMMENTS_WRITE_ERROR,
 	READER_EXPAND_COMMENTS,
+	COMMENTS_SET_ACTIVE_REPLY,
 } from '../action-types';
 import { combineReducers, createReducer, keyedReducer } from 'state/utils';
 import {
@@ -40,15 +44,9 @@ import {
 	POST_COMMENT_DISPLAY_TYPES,
 } from './constants';
 import trees from './trees/reducer';
+import { getStateKey, getErrorKey } from './utils';
 
 const getCommentDate = ( { date } ) => new Date( date );
-
-export const getStateKey = ( siteId, postId ) => `${ siteId }-${ postId }`;
-
-export const deconstructStateKey = key => {
-	const [ siteId, postId ] = key.split( '-' );
-	return { siteId: +siteId, postId: +postId };
-};
 
 const isCommentManagementEdit = newProperties =>
 	has( newProperties, 'commentContent' ) &&
@@ -115,7 +113,11 @@ export function items( state = {}, action ) {
 				[ stateKey ]: map( state[ stateKey ], updateComment( commentId, comment ) ),
 			};
 		case COMMENTS_RECEIVE:
-			const { skipSort, comments } = action;
+			const { skipSort } = action;
+			const comments = map( action.comments, _comment => ( {
+				..._comment,
+				contiguous: ! action.commentById,
+			} ) );
 			const allComments = unionBy( state[ stateKey ], comments, 'ID' );
 			return {
 				...state,
@@ -142,8 +144,9 @@ export function items( state = {}, action ) {
 					updateComment( commentId, { i_like: false, like_count } )
 				),
 			};
-		case COMMENTS_ERROR:
-			const { error } = action;
+		case COMMENTS_RECEIVE_ERROR:
+		case COMMENTS_WRITE_ERROR:
+			const { error, errorType } = action;
 			return {
 				...state,
 				[ stateKey ]: map(
@@ -151,6 +154,7 @@ export function items( state = {}, action ) {
 					updateComment( commentId, {
 						placeholderState: PLACEHOLDER_STATE.ERROR,
 						placeholderError: error,
+						placeholderErrorType: errorType,
 					} )
 				),
 			};
@@ -292,8 +296,20 @@ export const totalCommentsCount = createReducer(
 export const errors = createReducer(
 	{},
 	{
-		[ COMMENTS_ERROR ]: ( state, action ) => {
-			const key = `${ action.siteId }-${ action.commentId }`;
+		[ COMMENTS_RECEIVE_ERROR ]: ( state, { siteId, commentId } ) => {
+			const key = getErrorKey( siteId, commentId );
+
+			if ( state[ key ] ) {
+				return state;
+			}
+
+			return {
+				...state,
+				[ key ]: { error: true },
+			};
+		},
+		[ COMMENTS_WRITE_ERROR ]: ( state, { siteId, commentId } ) => {
+			const key = getErrorKey( siteId, commentId );
 
 			if ( state[ key ] ) {
 				return state;
@@ -319,7 +335,54 @@ export const treesInitialized = keyedReducer(
 	keyedReducer( 'status', treesInitializedReducer )
 );
 
+/***
+ * Stores the active reply comment for a given siteId and postId
+ * @param {Object} state redux state
+ * @param {Object} action redux action
+ * @returns {Object} new redux state
+ */
+export const activeReplies = createReducer(
+	{},
+	{
+		[ COMMENTS_SET_ACTIVE_REPLY ]: ( state, action ) => {
+			const { siteId, postId, commentId } = action.payload;
+			const stateKey = getStateKey( siteId, postId );
+
+			// If commentId is null, remove the key from the state map entirely
+			if ( commentId === null ) {
+				return omit( state, stateKey );
+			}
+
+			return { ...state, [ stateKey ]: commentId };
+		},
+		[ COMMENTS_WRITE_ERROR ]: ( state, action ) => {
+			const { siteId, postId, parentCommentId } = action;
+			const stateKey = getStateKey( siteId, postId );
+			return { ...state, [ stateKey ]: parentCommentId };
+		},
+	}
+);
+
+export const counts = ( state = {}, action ) => {
+	const { type, ...actionData } = action;
+	if ( COMMENT_COUNTS_UPDATE === type ) {
+		const { siteId, postId, ...commentCounts } = actionData;
+		if ( ! siteId ) {
+			return state;
+		}
+		const keyName = siteId && postId ? postId : 'site';
+		const siteCounts = {
+			[ siteId ]: Object.assign( {}, state[ siteId ] || {}, {
+				[ keyName ]: commentCounts,
+			} ),
+		};
+		return Object.assign( {}, state, siteCounts );
+	}
+	return state;
+};
+
 export default combineReducers( {
+	counts,
 	items,
 	fetchStatus,
 	errors,
@@ -327,4 +390,5 @@ export default combineReducers( {
 	totalCommentsCount,
 	trees,
 	treesInitialized,
+	activeReplies,
 } );

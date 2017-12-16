@@ -1,4 +1,4 @@
-$section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
+$section-border: solid 1px darken( $sidebar-bg-color, 5% );
 
 .post-share .card.banner,
 .card.post-share__upgrade-nudge {
@@ -18,11 +18,17 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 }
 
 .post-share__title {
+	display: flex;
+
 	font-size: 15px;
 	margin: 16px 0 4px;
 
 	@include breakpoint( ">660px" ) {
 		font-size: 18px;
+	}
+
+	span {
+		flex: 1;
 	}
 }
 
@@ -56,16 +62,17 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 	padding: 0 16px 16px;
 	@include breakpoint( ">480px" ) {
 		padding: 0 24px 16px;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			padding: 0 16px 16px;
+		}
 	}
 }
 
-.post-share__close {
-	position: absolute;
-	top: 0;
-	right: 0;
-	&.button.is-borderless { // for specificity
-		padding: 10px;
-	}
+.button.post-share__close {
+	margin-top: -6px;
+	padding: 0;
 }
 
 .post-share__form {
@@ -73,6 +80,11 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 	margin: 0 16px 16px;
 	@include breakpoint( ">480px" ) {
 		margin: 0 24px 16px;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			margin: 0 16px 16px;
+		}
 	}
 
 	.post-share__share-button {
@@ -109,9 +121,19 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 	margin: 0 16px 16px;
 	@include breakpoint( ">480px" ) {
 		margin: 0 24px 16px;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			margin: 0 16px 16px;
+		}
 	}
 	@include breakpoint( ">960px" ) {
 		margin: 0 24px 16px 0;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			margin: 0 16px 16px 0;
+		}
 	}
 }
 
@@ -263,12 +285,18 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 	@include breakpoint( ">480px" ) {
 		margin-right: 24px;
 		margin-left: 24px;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			margin: 6 24px 0;
+		}
 	}
 }
 
 .post-share__button-actions {
 	display: flex;
 	justify-content: flex-end;
+	margin-top: 8px;
 }
 
 .post-share__share-combo {
@@ -280,15 +308,39 @@ $section-border: solid 1px transparentize( lighten( $gray, 20% ), .5 );
 	}
 }
 
+.post-share__actions-list-upgrade-nudge.has-call-to-action .banner__action {
+	margin-right: 0;
+}
+
 .post-share .post-share__footer-nav {
 	margin: 0;
+	box-shadow: none;
+	border-top: $section-border;
 }
 
 .post-share .post-share__footer-items {
 	align-items: center;
+	box-sizing: border-box;
 	display: flex;
 	flex-wrap: nowrap;
 	justify-content: space-between;
+
+	margin: 0 auto 1px;
+	padding: 16px;
+
+	background: $white;
+
+	border-top: $section-border;
+
+	@include breakpoint( ">480px" ) {
+		margin-bottom: 1px;
+		padding: 16px 24px;
+
+		//TODO Clean-up after PostTypeList is used for /posts/
+		.post-type-list & {
+			padding: 16px;
+		}
+	}
 
 	&::after {
 		content: '';

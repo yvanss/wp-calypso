@@ -12,12 +12,8 @@
  * order to make debugging and interacting easier. Please
  * see the README for more information.
  *
+ * @format
  */
-
-/**
- * External dependencies
- */
-import { matchesProperty } from 'lodash';
 
 /**
  * Internal dependencies
@@ -30,12 +26,26 @@ const state = {
 	historySize: 100,
 };
 
+export const queryToPredicate = query => {
+	if ( query instanceof RegExp ) {
+		return ( { type } ) => query.test( type );
+	}
+	if ( 'string' === typeof query ) {
+		return ( { type } ) => type === query;
+	}
+	if ( 'function' === typeof query ) {
+		return query;
+	}
+
+	throw new TypeError( 'provide string or RegExp matching `action.type` or a predicate function' );
+};
+
 const actionLog = {
-	clear: () => state.actionHistory = [],
-	filter: type => state.actionHistory.filter( matchesProperty( 'type', type ) ),
-	setSize: size => state.historySize = size,
-	start: () => state.shouldRecordActions = true,
-	stop: () => state.shouldRecordActions = false,
+	clear: () => ( state.actionHistory = [] ),
+	filter: query => state.actionHistory.filter( queryToPredicate( query ) ),
+	setSize: size => ( state.historySize = size ),
+	start: () => ( state.shouldRecordActions = true ),
+	stop: () => ( state.shouldRecordActions = false ),
 };
 
 Object.defineProperty( actionLog, 'history', {
@@ -44,14 +54,9 @@ Object.defineProperty( actionLog, 'history', {
 } );
 
 const recordAction = action => {
-	const {
-		actionHistory,
-		historySize,
-	} = state;
+	const { actionHistory, historySize } = state;
 
-	const thunkDescription = 'function' === typeof action
-		? { type: 'thunk (hidden)' }
-		: {};
+	const thunkDescription = 'function' === typeof action ? { type: 'thunk (hidden)' } : {};
 
 	actionHistory.push( {
 		...action,
@@ -64,7 +69,7 @@ const recordAction = action => {
 
 	// cheap optimization to keep from
 	// thrashing once we hit our size limit
-	if ( actionHistory.length > ( 2 * historySize ) ) {
+	if ( actionHistory.length > 2 * historySize ) {
 		state.actionHistory = actionHistory.slice( -1 * historySize );
 	}
 };
@@ -97,7 +102,7 @@ export const consoleDispatcher = next => ( reducer, initialState ) => {
 
 	return {
 		...store,
-		dispatch
+		dispatch,
 	};
 };
 

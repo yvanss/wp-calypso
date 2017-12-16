@@ -1,12 +1,15 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { get } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import { getBillingTransactions } from './';
+import { getBillingTransactions } from 'state/selectors';
 
 /**
  * Returns all upcoming billing transactions.

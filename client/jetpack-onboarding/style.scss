@@ -1,0 +1,23 @@
+.jetpack-onboarding {
+	.steps__form {
+		max-width: 320px;
+
+		.form-textarea {
+			resize: vertical;
+		}
+
+		.button {
+			display: block;
+			text-align: center;
+			width: 100%;
+		}
+	}
+
+	.steps__button-group {
+		text-align: center;
+
+		.button {
+			margin: 0 8px 20px;
+		}
+	}
+}

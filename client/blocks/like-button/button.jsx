@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
@@ -103,13 +106,14 @@ class LikeButton extends PureComponent {
 			</span>
 		);
 
+		const href = isLink ? `/stats/post/${ postId }/${ slug }` : null;
 		return React.createElement(
 			containerTag,
 			omitBy(
 				{
-					href: isLink && `/stats/post/${ postId }/${ slug }`,
+					href,
 					className: classNames( containerClasses ),
-					onClick: ! isLink && this.toggleLiked,
+					onClick: ! isLink ? this.toggleLiked : null,
 				},
 				isNull
 			),

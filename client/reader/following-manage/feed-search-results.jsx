@@ -2,7 +2,8 @@
 /**
  * External Dependencies
  */
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
 import { take, times } from 'lodash';
@@ -14,7 +15,7 @@ import classnames from 'classnames';
  */
 import Button from 'components/button';
 import ReaderSubscriptionListItemPlaceholder from 'blocks/reader-subscription-list-item/placeholder';
-import { READER_FOLLOWING_MANAGE_SEARCH_RESULT } from 'reader/follow-button/follow-sources';
+import { READER_FOLLOWING_MANAGE_SEARCH_RESULT } from 'reader/follow-sources';
 import InfiniteStream from 'components/reader-infinite-stream';
 import { siteRowRenderer } from 'components/reader-infinite-stream/row-renderers';
 import { requestFeedSearch } from 'state/reader/feed-searches/actions';
@@ -62,9 +63,9 @@ class FollowingManageSearchFeedsResults extends React.Component {
 		if ( ! searchResults ) {
 			return (
 				<div className={ classNames }>
-					{ times( 10, i =>
+					{ times( 10, i => (
 						<ReaderSubscriptionListItemPlaceholder key={ `placeholder-${ i }` } />
-					) }
+					) ) }
 				</div>
 			);
 		} else if ( isEmpty ) {
@@ -92,18 +93,19 @@ class FollowingManageSearchFeedsResults extends React.Component {
 					rowRenderer={ siteRowRenderer }
 				/>
 				{ ! showMoreResults &&
-					searchResultsCount > 10 &&
-					<div className="following-manage__show-more">
-						<Button
-							compact
-							icon
-							onClick={ onShowMoreResultsClicked }
-							className="following-manage__show-more-button button"
-						>
-							<Gridicon icon="chevron-down" />
-							{ translate( 'Show more' ) }
-						</Button>
-					</div> }
+					searchResultsCount > 10 && (
+						<div className="following-manage__show-more">
+							<Button
+								compact
+								icon
+								onClick={ onShowMoreResultsClicked }
+								className="following-manage__show-more-button button"
+							>
+								<Gridicon icon="chevron-down" />
+								{ translate( 'Show more' ) }
+							</Button>
+						</div>
+					) }
 			</div>
 		);
 	}

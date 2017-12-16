@@ -2,7 +2,8 @@
 /**
  * External Dependencies
  */
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
 import escapeRegexp from 'escape-string-regexp';
@@ -27,7 +28,7 @@ import EllipsisMenu from 'components/ellipsis-menu';
 import PopoverMenuItem from 'components/popover/menu-item';
 import { formatUrlForDisplay, getFeedTitle } from 'reader/lib/feed-display-helper';
 import { addQueryArgs } from 'lib/url';
-import { READER_SUBSCRIPTIONS } from 'reader/follow-button/follow-sources';
+import { READER_SUBSCRIPTIONS } from 'reader/follow-sources';
 
 class FollowingManageSubscriptions extends Component {
 	static propTypes = {
@@ -112,17 +113,23 @@ class FollowingManageSubscriptions extends Component {
 					</div>
 					<div className="following-manage__subscriptions-import-export">
 						<EllipsisMenu toggleTitle={ translate( 'More' ) } position="bottom">
-							<PopoverMenuItem className="following-manage__subscriptions-import-export-menu-item">
+							<PopoverMenuItem
+								className="following-manage__subscriptions-import-export-menu-item"
+								itemComponent="div"
+							>
 								<ReaderImportButton />
 							</PopoverMenuItem>
-							<PopoverMenuItem className="following-manage__subscriptions-import-export-menu-item">
+							<PopoverMenuItem
+								className="following-manage__subscriptions-import-export-menu-item"
+								itemComponent="div"
+							>
 								<ReaderExportButton />
 							</PopoverMenuItem>
 						</EllipsisMenu>
 					</div>
 				</div>
 				<div className={ subsListClassNames }>
-					{ ! noSitesMatchQuery &&
+					{ ! noSitesMatchQuery && (
 						<InfiniteStream
 							items={ sortedFollows }
 							extraRenderItemProps={ {
@@ -133,14 +140,16 @@ class FollowingManageSubscriptions extends Component {
 							totalCount={ sortedFollows.length }
 							windowScrollerRef={ this.props.windowScrollerRef }
 							rowRenderer={ siteRowRenderer }
-						/> }
-					{ noSitesMatchQuery &&
+						/>
+					) }
+					{ noSitesMatchQuery && (
 						<span>
 							{ translate( 'Sorry, no followed sites match {{italic}}%s.{{/italic}}', {
 								components: { italic: <i /> },
 								args: query,
 							} ) }
-						</span> }
+						</span>
+					) }
 				</div>
 			</div>
 		);

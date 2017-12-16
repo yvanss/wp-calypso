@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { difference, each, omit } from 'lodash';
 
 /**
@@ -10,7 +13,7 @@ import analytics from 'lib/analytics';
 import { cartItems } from 'lib/cart-values';
 import { recordAddToCart } from 'lib/analytics/ad-tracking';
 
-function recordEvents( previousCart, nextCart ) {
+export function recordEvents( previousCart, nextCart ) {
 	const previousItems = cartItems.getAll( previousCart ),
 		nextItems = cartItems.getAll( nextCart );
 
@@ -18,7 +21,7 @@ function recordEvents( previousCart, nextCart ) {
 	each( difference( previousItems, nextItems ), recordRemoveEvent );
 }
 
-function removeNestedProperties( cartItem ) {
+export function removeNestedProperties( cartItem ) {
 	return omit( cartItem, [ 'extra' ] );
 }
 
@@ -30,8 +33,3 @@ function recordAddEvent( cartItem ) {
 function recordRemoveEvent( cartItem ) {
 	analytics.tracks.recordEvent( 'calypso_cart_product_remove', removeNestedProperties( cartItem ) );
 }
-
-export default {
-	recordEvents,
-	removeNestedProperties
-};

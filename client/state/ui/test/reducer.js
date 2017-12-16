@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,38 +8,29 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import {
-	SELECTED_SITE_SET,
-	SERIALIZE,
-	DESERIALIZE,
-	NOTIFICATIONS_PANEL_TOGGLE,
-} from 'state/action-types';
-import reducer, {
-	isNotificationsOpen,
-	selectedSiteId,
-	siteSelectionInitialized,
-} from '../reducer';
+import reducer, { isNotificationsOpen, selectedSiteId, siteSelectionInitialized } from '../reducer';
+import { SELECTED_SITE_SET, NOTIFICATIONS_PANEL_TOGGLE } from 'state/action-types';
 
 describe( 'reducer', () => {
-	it( 'should include expected keys in return value', () => {
+	test( 'should include expected keys in return value', () => {
 		expect( reducer( undefined, {} ) ).to.have.keys( [
 			'actionLog',
 			'dropZone',
 			'editor',
 			'guidedTour',
-			'happychat',
 			'hasSidebar',
 			'isLoading',
 			'isNotificationsOpen',
 			'isPreviewShowing',
 			'layoutFocus',
+			'language',
 			'mediaModal',
 			'npsSurveyNotice',
 			'oauth2Clients',
 			'olark',
 			'postTypeList',
 			'preview',
-			'queryArguments',
+			'route',
 			'reader',
 			'section',
 			'selectedSiteId',
@@ -46,42 +39,26 @@ describe( 'reducer', () => {
 		] );
 	} );
 
-	it( 'should refuse to persist any state', () => {
-		const state = reducer( {
-			selectedSiteId: 2916284
-		}, { type: SERIALIZE } );
-
-		expect( state ).to.eql( {} );
-	} );
-
-	it( 'should refuse to restore any persisted state', () => {
-		const state = reducer( {
-			selectedSiteId: 2916284
-		}, { type: DESERIALIZE } );
-
-		expect( state ).to.eql( {} );
-	} );
-
 	describe( '#selectedSiteId()', () => {
-		it( 'should default to null', () => {
+		test( 'should default to null', () => {
 			const state = selectedSiteId( undefined, {} );
 
 			expect( state ).to.be.null;
 		} );
 
-		it( 'should set the selected site ID', () => {
+		test( 'should set the selected site ID', () => {
 			const state = selectedSiteId( null, {
 				type: SELECTED_SITE_SET,
-				siteId: 2916284
+				siteId: 2916284,
 			} );
 
 			expect( state ).to.equal( 2916284 );
 		} );
 
-		it( 'should set to null if siteId is undefined', () => {
+		test( 'should set to null if siteId is undefined', () => {
 			const state = selectedSiteId( null, {
 				type: SELECTED_SITE_SET,
-				siteId: undefined
+				siteId: undefined,
 			} );
 
 			expect( state ).to.be.null;
@@ -89,19 +66,19 @@ describe( 'reducer', () => {
 	} );
 
 	describe( '#isNotificationsOpen()', () => {
-		it( 'should default to false', () => {
+		test( 'should default to false', () => {
 			const state = isNotificationsOpen( undefined, {} );
 			expect( state ).to.equal( false );
 		} );
 
-		it( 'should toggle open when closed', () => {
+		test( 'should toggle open when closed', () => {
 			const state = isNotificationsOpen( false, {
 				type: NOTIFICATIONS_PANEL_TOGGLE,
 			} );
 			expect( state ).to.equal( true );
 		} );
 
-		it( 'should toggle closed when open', () => {
+		test( 'should toggle closed when open', () => {
 			const state = isNotificationsOpen( true, {
 				type: NOTIFICATIONS_PANEL_TOGGLE,
 			} );
@@ -110,13 +87,13 @@ describe( 'reducer', () => {
 	} );
 
 	describe( '#siteSelectionInitialized()', () => {
-		it( 'should default to false', () => {
+		test( 'should default to false', () => {
 			const state = siteSelectionInitialized( undefined, {} );
 
 			expect( state ).to.be.false;
 		} );
 
-		it( 'should be true when a site is selected', () => {
+		test( 'should be true when a site is selected', () => {
 			const state = siteSelectionInitialized( null, {
 				type: SELECTED_SITE_SET,
 				siteId: 2916284,
@@ -125,7 +102,7 @@ describe( 'reducer', () => {
 			expect( state ).to.be.true;
 		} );
 
-		it( 'should be true if siteId is undefined', () => {
+		test( 'should be true if siteId is undefined', () => {
 			const state = siteSelectionInitialized( null, {
 				type: SELECTED_SITE_SET,
 				siteId: undefined,
@@ -134,7 +111,7 @@ describe( 'reducer', () => {
 			expect( state ).to.be.true;
 		} );
 
-		it( 'should be true if siteId is null', () => {
+		test( 'should be true if siteId is null', () => {
 			const state = siteSelectionInitialized( null, {
 				type: SELECTED_SITE_SET,
 				siteId: null,

@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { isEmpty } from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -22,8 +25,9 @@ class StripeConnectAccount extends Component {
 			lastName: PropTypes.string,
 			logo: PropTypes.string,
 		} ),
-		onDisconnect: PropTypes.func, // TODO - require most of these props in subsequent PR
-	}
+		isDeauthorizing: PropTypes.bool.isRequired,
+		onDeauthorize: PropTypes.func.isRequired,
+	};
 
 	renderLogo = () => {
 		const { stripeConnectAccount } = this.props;
@@ -32,15 +36,16 @@ class StripeConnectAccount extends Component {
 		let image = null;
 
 		if ( ! isEmpty( logo ) ) {
-			image = <Image src={ resizeImageUrl( logo, { w: 40, h: 40 } ) } className="stripe__connect-account-logo" />;
+			image = (
+				<Image
+					src={ resizeImageUrl( logo, { w: 40, h: 40 } ) }
+					className="stripe__connect-account-logo"
+				/>
+			);
 		}
 
-		return (
-			<div className="stripe__connect-account-logo-container">
-				{ image }
-			</div>
-		);
-	}
+		return <div className="stripe__connect-account-logo-container">{ image }</div>;
+	};
 
 	renderNameAndEmail = () => {
 		const { stripeConnectAccount } = this.props;
@@ -55,50 +60,60 @@ class StripeConnectAccount extends Component {
 				</span>
 			</div>
 		);
-	}
+	};
 
-	// TODO - when we are ready to connect this for-reals, this layer may not be needed
-	onDisconnect = ( event ) => {
+	onDeauthorize = event => {
 		event.preventDefault();
-		if ( this.props.onDisconnect ) {
-			this.props.onDisconnect();
-		}
-	}
+		this.props.onDeauthorize();
+	};
 
 	renderStatus = () => {
-		const { stripeConnectAccount, translate } = this.props;
+		const { isDeauthorizing, stripeConnectAccount, translate } = this.props;
 		const { isActivated } = stripeConnectAccount;
 
 		let status = null;
+		let deauthorize = null;
 
 		if ( isActivated ) {
-			status = <span className="stripe__connect-account-status account-activated">
-				{ translate( 'Activated' ) }
-			</span>;
+			status = (
+				<span className="stripe__connect-account-status account-activated">
+					{ translate( 'Activated' ) }
+				</span>
+			);
 		} else {
-			status = <span className="stripe__connect-account-status account-not-activated">
-				{ translate( 'Check email to activate account' ) }
-			</span>;
+			status = (
+				<span className="stripe__connect-account-status account-not-activated">
+					{ translate( 'Check email to activate account' ) }
+				</span>
+			);
+		}
+
+		if ( isDeauthorizing ) {
+			deauthorize = (
+				<span className="stripe__connect-account-disconnect">{ translate( 'Disconnecting' ) }</span>
+			);
+		} else {
+			deauthorize = (
+				<a href="#" className="stripe__connect-account-disconnect" onClick={ this.onDeauthorize }>
+					{ translate( 'Disconnect' ) }
+				</a>
+			);
 		}
 
 		return (
 			<div>
 				{ status }
-				<a href="#" className="stripe__connect-account-disconnect" onClick={ this.onDisconnect }>
-					{ translate( 'Disconnect' ) }
-				</a>
+				{ deauthorize }
 			</div>
 		);
-	}
+	};
 
 	render = () => {
 		const { translate } = this.props;
 
 		return (
 			<div className="stripe__connect-account">
-				<h3 className="stripe__connect-account-heading">
-					{ translate( 'Stripe account' ) }
-				</h3>
+				<h3 className="stripe__connect-account-heading">{ translate( 'Stripe account' ) }</h3>
 				<div className="stripe__connect-account-body">
 					{ this.renderLogo() }
 					<div className="stripe__connect-account-details">
@@ -108,7 +123,7 @@ class StripeConnectAccount extends Component {
 				</div>
 			</div>
 		);
-	}
+	};
 }
 
 export default localize( StripeConnectAccount );

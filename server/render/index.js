@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -18,6 +20,8 @@ import {
 	getDocumentHeadMeta,
 	getDocumentHeadLink,
 } from 'state/document-head/selectors';
+import isRTL from 'state/selectors/is-rtl';
+import getCurrentLocaleSlug from 'state/selectors/get-current-locale-slug';
 import { reducer } from 'state';
 import { SERIALIZE } from 'state/action-types';
 import stateCache from 'state-cache';
@@ -77,7 +81,10 @@ export function render( element, key = JSON.stringify( element ) ) {
 
 export function serverRender( req, res ) {
 	const context = req.context;
-	let title, metas = [], links = [], cacheKey = false;
+	let title,
+		metas = [],
+		links = [],
+		cacheKey = false;
 
 	if ( isSectionIsomorphic( context.store.getState() ) && ! context.user ) {
 		cacheKey = getCacheKey( context );
@@ -102,29 +109,37 @@ export function serverRender( req, res ) {
 		metas = getDocumentHeadMeta( context.store.getState() );
 		links = getDocumentHeadLink( context.store.getState() );
 
-		let reduxSubtrees = [ 'documentHead' ];
+		const cacheableReduxSubtrees = [ 'documentHead' ];
+		let reduxSubtrees;
 
-		// Send redux state only in logged-out scenario
-		if ( isSectionIsomorphic( context.store.getState() ) && ! context.user ) {
-			reduxSubtrees = reduxSubtrees.concat( [ 'ui', 'themes' ] );
+		if ( isSectionIsomorphic( context.store.getState() ) ) {
+			reduxSubtrees = cacheableReduxSubtrees.concat( [ 'ui', 'themes' ] );
+		} else {
+			reduxSubtrees = cacheableReduxSubtrees;
 		}
 
 		// Send state to client
 		context.initialReduxState = pick( context.store.getState(), reduxSubtrees );
-		// And cache on the server, too
+
+		// And cache on the server, too.
 		if ( cacheKey ) {
-			const serverState = reducer( context.initialReduxState, { type: SERIALIZE } );
+			const cacheableInitialState = pick( context.store.getState(), cacheableReduxSubtrees );
+			const serverState = reducer( cacheableInitialState, { type: SERIALIZE } );
 			stateCache.set( cacheKey, serverState );
 		}
+
+		context.lang = getCurrentLocaleSlug( context.store.getState() ) || context.lang;
+		const isLocaleRTL = isRTL( context.store.getState() );
+		context.isRTL = isLocaleRTL !== null ? isLocaleRTL : context.isRTL;
 	}
 
 	context.head = { title, metas, links };
 	context.config = config.ssrConfig;
 
 	if ( config.isEnabled( 'desktop' ) ) {
-		res.render( 'desktop.jade', context );
+		res.render( 'desktop', context );
 	} else {
-		res.render( 'index.jade', context );
+		res.render( 'index', context );
 	}
 }
 
@@ -135,7 +150,7 @@ export function serverRenderError( err, req, res, next ) {
 		}
 		req.error = err;
 		res.status( err.status || 500 );
-		res.render( '500.jade', req.context );
+		res.render( '500', req.context );
 		return;
 	}
 

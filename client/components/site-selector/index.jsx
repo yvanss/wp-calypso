@@ -32,7 +32,6 @@ import SitePlaceholder from 'blocks/site/placeholder';
 import Search from 'components/search';
 import SiteSelectorAddSite from './add-site';
 import searchSites from 'components/search-sites';
-import { isPluginActive } from 'state/selectors';
 
 const ALL_SITES = 'ALL_SITES';
 
@@ -79,14 +78,6 @@ class SiteSelector extends Component {
 		isKeyboardEngaged: false,
 	};
 
-	reset() {
-		if ( this.props.sitesFound && this.refs.siteSearch ) {
-			this.refs.siteSearch.clear();
-		} else {
-			this.setState( this.getInitialState() );
-		}
-	}
-
 	onSearch = terms => {
 		this.props.searchSites( terms );
 
@@ -108,15 +99,23 @@ class SiteSelector extends Component {
 
 	scrollToHighlightedSite() {
 		const selectorElement = ReactDom.findDOMNode( this.refs.selector );
-		if ( selectorElement ) {
-			const highlightedSiteElement = ReactDom.findDOMNode( this.refs.highlightedSite );
-			if ( highlightedSiteElement ) {
-				scrollIntoView( highlightedSiteElement, selectorElement, {
-					onlyScrollIfNeeded: true,
-				} );
-			} else {
-				selectorElement.scrollTop = 0;
-			}
+
+		if ( ! selectorElement ) {
+			return;
+		}
+
+		if ( ! this.highlightedSiteRef ) {
+			selectorElement.scrollTop = 0;
+
+			return;
+		}
+
+		const highlightedSiteElement = ReactDom.findDOMNode( this.highlightedSiteRef );
+
+		if ( highlightedSiteElement ) {
+			scrollIntoView( highlightedSiteElement, selectorElement, {
+				onlyScrollIfNeeded: true,
+			} );
 		}
 	}
 
@@ -188,7 +187,7 @@ class SiteSelector extends Component {
 
 	onSiteSelect = ( event, siteId ) => {
 		const handledByHost = this.props.onSiteSelect( siteId );
-		this.props.onClose( event );
+		this.props.onClose( event, siteId );
 
 		const node = ReactDom.findDOMNode( this.refs.selector );
 		if ( node ) {
@@ -302,11 +301,20 @@ class SiteSelector extends Component {
 		return siteElements;
 	}
 
+	setHighlightedSiteRef = isHighlighted => component => {
+		if ( isHighlighted && component ) {
+			this.highlightedSiteRef = component;
+		} else if ( isHighlighted ) {
+			this.highlightedSiteRef = null;
+		}
+	};
+
 	renderAllSites() {
 		if ( this.props.showAllSites && ! this.props.sitesFound && this.props.allSitesPath ) {
 			this.visibleSites.push( ALL_SITES );
 
 			const isHighlighted = this.isHighlighted( ALL_SITES );
+
 			return (
 				<AllSites
 					key="selector-all-sites"
@@ -315,7 +323,7 @@ class SiteSelector extends Component {
 					onMouseEnter={ this.onAllSitesHover }
 					isHighlighted={ isHighlighted }
 					isSelected={ this.isSelected( ALL_SITES ) }
-					ref={ isHighlighted ? 'highlightedSite' : null }
+					ref={ this.setHighlightedSiteRef( isHighlighted ) }
 				/>
 			);
 		}
@@ -329,6 +337,7 @@ class SiteSelector extends Component {
 		this.visibleSites.push( site.ID );
 
 		const isHighlighted = this.isHighlighted( site.ID );
+
 		return (
 			<Site
 				site={ site }
@@ -338,7 +347,7 @@ class SiteSelector extends Component {
 				onMouseEnter={ this.onSiteHover }
 				isHighlighted={ isHighlighted }
 				isSelected={ this.isSelected( site ) }
-				ref={ isHighlighted ? 'highlightedSite' : null }
+				ref={ this.setHighlightedSiteRef( isHighlighted ) }
 			/>
 		);
 	}
@@ -362,11 +371,7 @@ class SiteSelector extends Component {
 			return null;
 		}
 
-		return (
-			<div className="site-selector__recent">
-				{ recentSites }
-			</div>
-		);
+		return <div className="site-selector__recent">{ recentSites }</div>;
 	}
 
 	render() {
@@ -400,30 +405,31 @@ class SiteSelector extends Component {
 					{ this.renderRecentSites() }
 					{ this.renderSites() }
 					{ hiddenSitesCount > 0 &&
-						! this.props.sitesFound &&
-						<span className="site-selector__hidden-sites-message">
-							{ this.props.translate(
-								'%(hiddenSitesCount)d more hidden site. {{a}}Change{{/a}}.{{br/}}Use search to access it.',
-								'%(hiddenSitesCount)d more hidden sites. {{a}}Change{{/a}}.{{br/}}Use search to access them.',
-								{
-									count: hiddenSitesCount,
-									args: {
-										hiddenSitesCount: hiddenSitesCount,
-									},
-									components: {
-										br: <br />,
-										a: (
-											<a
-												href="https://dashboard.wordpress.com/wp-admin/index.php?page=my-blogs&show=hidden"
-												className="site-selector__manage-hidden-sites"
-												target="_blank"
-												rel="noopener noreferrer"
-											/>
-										),
-									},
-								}
-							) }
-						</span> }
+						! this.props.sitesFound && (
+							<span className="site-selector__hidden-sites-message">
+								{ this.props.translate(
+									'%(hiddenSitesCount)d more hidden site. {{a}}Change{{/a}}.{{br/}}Use search to access it.',
+									'%(hiddenSitesCount)d more hidden sites. {{a}}Change{{/a}}.{{br/}}Use search to access them.',
+									{
+										count: hiddenSitesCount,
+										args: {
+											hiddenSitesCount: hiddenSitesCount,
+										},
+										components: {
+											br: <br />,
+											a: (
+												<a
+													href="https://dashboard.wordpress.com/wp-admin/index.php?page=my-blogs&show=hidden"
+													className="site-selector__manage-hidden-sites"
+													target="_blank"
+													rel="noopener noreferrer"
+												/>
+											),
+										},
+									}
+								) }
+							</span>
+						) }
 				</div>
 				{ this.props.showAddNewSite && <SiteSelectorAddSite /> }
 			</div>
@@ -474,7 +480,7 @@ const navigateToSite = ( siteId, { allSitesPath, allSitesSingleUser, siteBasePat
 		}
 
 		if ( path.match( /^\/store\/stats\// ) ) {
-			const isStore = site.jetpack && isPluginActive( state, site.ID, 'woocommerce' );
+			const isStore = site.jetpack && site.options && site.options.woocommerce_is_active;
 			if ( ! isStore ) {
 				path = '/stats/day';
 			}

@@ -1,45 +1,64 @@
+/** @format */
 /**
  * External dependencies
  */
-var page = require( 'page' );
+import page from 'page';
 
 /**
  * Internal dependencies
  */
-var controller = require( 'my-sites/controller' ),
-	config = require( 'config' ),
-	peopleController = require( './controller' );
+import { navigation, siteSelection, sites } from 'my-sites/controller';
+import config from 'config';
+import peopleController from './controller';
+import { makeLayout, render as clientRender } from 'controller';
 
-module.exports = function() {
+export default function() {
 	if ( config.isEnabled( 'manage/people' ) ) {
-		[ 'team', 'followers', 'email-followers', 'viewers' ].forEach( function( filter ) {
-			page( '/people/' + filter, controller.siteSelection, controller.sites );
-			page(
-				'/people/' + filter + '/:site_id',
-				peopleController.enforceSiteEnding,
-				controller.siteSelection,
-				controller.navigation,
-				peopleController.people.bind( null, filter )
-			);
-		} );
+		page(
+			'/people/:filter(team|followers|email-followers|viewers)',
+			siteSelection,
+			sites,
+			makeLayout,
+			clientRender
+		);
+
+		page(
+			'/people/:filter(team|followers|email-followers|viewers)/:site_id',
+			peopleController.enforceSiteEnding,
+			siteSelection,
+			navigation,
+			peopleController.people,
+			makeLayout,
+			clientRender
+		);
 
 		page(
 			'/people/new/:site_id',
 			peopleController.enforceSiteEnding,
-			controller.siteSelection,
-			controller.navigation,
-			peopleController.invitePeople
+			siteSelection,
+			navigation,
+			peopleController.invitePeople,
+			makeLayout,
+			clientRender
 		);
 
 		page(
 			'/people/edit/:site_id/:user_login',
 			peopleController.enforceSiteEnding,
-			controller.siteSelection,
-			controller.navigation,
-			peopleController.person
+			siteSelection,
+			navigation,
+			peopleController.person,
+			makeLayout,
+			clientRender
 		);
 
 		// Anything else is unexpected and should be redirected to the default people management URL: /people/team
-		page( '/people/(.*)?', controller.siteSelection, peopleController.redirectToTeam );
+		page(
+			'/people/(.*)?',
+			siteSelection,
+			peopleController.redirectToTeam,
+			makeLayout,
+			clientRender
+		);
 	}
-};
+}

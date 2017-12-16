@@ -3,6 +3,7 @@
 @import 'plugins/insert-menu/style';
 @import 'plugins/wpcom-help/style';
 @import 'plugins/wpcom-charmap/style';
+@import 'plugins/embed/style.scss';
 @import 'plugins/contact-form/style';
 @import 'plugins/mentions/style';
 @import 'plugins/simple-payments/style';
@@ -45,7 +46,7 @@
 		& > .mce-toolbar-grp,
 		&:after {
 			position: fixed;
-				top: 94px;
+				top: 47px;
 			border-top-width: 0;
 			border-left-width: 0;
 			border-right-width: 0;

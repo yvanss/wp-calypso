@@ -1,9 +1,12 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
-var React = require( 'react' ),
-	i18n = require( 'i18n-calypso' ),
-	page = require( 'page' );
+
+import React from 'react';
+import i18n from 'i18n-calypso';
+import page from 'page';
 
 /**
  * Internal Dependencies
@@ -14,7 +17,6 @@ import titlecase from 'to-title-case';
 import { canAccessWordads } from 'lib/ads/utils';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
 import { userCan } from 'lib/site/utils';
-import { renderWithReduxStore } from 'lib/react-helpers';
 import { getSelectedSite, getSelectedSiteId } from 'state/ui/selectors';
 import { isJetpackSite } from 'state/sites/selectors';
 import Ads from 'my-sites/ads/main';
@@ -40,14 +42,13 @@ function _getLayoutTitle( context ) {
 	}
 }
 
-module.exports = {
-
+export default {
 	redirect: function( context ) {
 		page.redirect( '/ads/earnings/' + context.params.site_id );
 		return;
 	},
 
-	layout: function( context ) {
+	layout: function( context, next ) {
 		const site = getSelectedSite( context.store.getState() );
 		const pathSuffix = site ? '/' + site.slug : '';
 		const layoutTitle = _getLayoutTitle( context );
@@ -71,13 +72,10 @@ module.exports = {
 			window.scrollTo( 0, 0 );
 		}
 
-		renderWithReduxStore(
-			React.createElement( Ads, {
-				section: context.params.section,
-				path: context.path,
-			} ),
-			document.getElementById( 'primary' ),
-			context.store
-		);
-	}
+		context.primary = React.createElement( Ads, {
+			section: context.params.section,
+			path: context.path,
+		} );
+		next();
+	},
 };

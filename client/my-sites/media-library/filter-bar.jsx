@@ -1,14 +1,12 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import { localize } from 'i18n-calypso';
-import {
-	identity,
-	includes,
-	noop,
-	pull,
-} from 'lodash';
+import { identity, includes, noop, pull } from 'lodash';
 import PropTypes from 'prop-types';
 
 /**
@@ -21,6 +19,11 @@ import TrackComponentView from 'lib/analytics/track-component-view';
 import PlanStorage from 'blocks/plan-storage';
 import FilterItem from './filter-item';
 import DataSource from './data-source';
+
+// These source supply very large images, and there are instances such as
+// the site icon editor, where we want to disable them because the editor
+// can't handle the large images.
+const largeImageSources = [ 'pexels' ];
 
 export class MediaLibraryFilterBar extends Component {
 	static propTypes = {
@@ -36,9 +39,10 @@ export class MediaLibraryFilterBar extends Component {
 		translate: PropTypes.func,
 		post: PropTypes.bool,
 		isConnected: PropTypes.bool,
+		disableLargeImageSources: PropTypes.bool,
 	};
 
-	static defaultProps ={
+	static defaultProps = {
 		filter: '',
 		basePath: '/media',
 		onFilterChange: noop,
@@ -48,10 +52,15 @@ export class MediaLibraryFilterBar extends Component {
 		source: '',
 		post: false,
 		isConnected: true,
+		disableLargeImageSources: false,
 	};
 
 	getSearchPlaceholderText() {
-		const { filter, translate } = this.props;
+		const { filter, source, translate } = this.props;
+		if ( 'google_photos' === source ) {
+			return translate( 'Search your Google library…' );
+		}
+
 		switch ( filter ) {
 			case 'this-post':
 				return translate( 'Search media uploaded to this post…' );
@@ -109,19 +118,17 @@ export class MediaLibraryFilterBar extends Component {
 
 		return (
 			<SectionNavTabs>
-				{
-					tabs.map( filter =>
-						<FilterItem
-							key={ 'filter-tab-' + filter }
-							value={ filter }
-							selected={ this.props.filter === filter }
-							onChange={ this.changeFilter }
-							disabled={ this.isFilterDisabled( filter ) }
-						>
-							{ this.getFilterLabel( filter ) }
-						</FilterItem>
-					)
-				}
+				{ tabs.map( filter => (
+					<FilterItem
+						key={ 'filter-tab-' + filter }
+						value={ filter }
+						selected={ this.props.filter === filter }
+						onChange={ this.changeFilter }
+						disabled={ this.isFilterDisabled( filter ) }
+					>
+						{ this.getFilterLabel( filter ) }
+					</FilterItem>
+				) ) }
 			</SectionNavTabs>
 		);
 	}
@@ -143,11 +150,17 @@ export class MediaLibraryFilterBar extends Component {
 				onSearch={ this.props.onSearch }
 				initialValue={ this.props.search }
 				placeholder={ this.getSearchPlaceholderText() }
-				delaySearch={ true } />
+				delaySearch={ true }
+			/>
 		);
 	}
 
 	renderPlanStorage() {
+		//hide the plan storage when viewing external sources
+		if ( this.props.source ) {
+			return null;
+		}
+
 		const eventName = 'calypso_upgrade_nudge_impression';
 		const eventProperties = { cta_name: 'plan-media-storage' };
 		return (
@@ -161,7 +174,11 @@ export class MediaLibraryFilterBar extends Component {
 		// Dropdown is disabled when viewing any external data source
 		return (
 			<div className="media-library__filter-bar">
-				<DataSource source={ this.props.source } onSourceChange={ this.props.onSourceChange } />
+				<DataSource
+					source={ this.props.source }
+					onSourceChange={ this.props.onSourceChange }
+					disabledSources={ this.props.disableLargeImageSources ? largeImageSources : [] }
+				/>
 
 				<SectionNav
 					selectedText={ this.getFilterLabel( this.props.filter ) }

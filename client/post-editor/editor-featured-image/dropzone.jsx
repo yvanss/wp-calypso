@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { head, uniqueId } from 'lodash';
@@ -14,18 +17,16 @@ import MediaActions from 'lib/media/actions';
 import MediaStore from 'lib/media/store';
 import MediaUtils from 'lib/media/utils';
 import PostActions from 'lib/posts/actions';
-
 import FeaturedImageDropZoneIcon from './dropzone-icon';
 
 import { receiveMedia, deleteMedia } from 'state/media/actions';
 import { editPost } from 'state/posts/actions';
-import { getSelectedSiteId } from 'state/ui/selectors';
+import { getSelectedSiteId, getSelectedSite } from 'state/ui/selectors';
 import { getEditorPostId } from 'state/ui/editor/selectors';
-
 import { recordTracksEvent } from 'state/analytics/actions';
 
 class FeaturedImageDropZone extends Component {
-	onFilesDrop = ( files ) => {
+	onFilesDrop = files => {
 		/**
 		 * Filter files for `image` media prefix and return the first image.
 		 *
@@ -38,7 +39,7 @@ class FeaturedImageDropZone extends Component {
 		}
 
 		const transientMediaId = uniqueId( 'featured-image' );
-		const { siteId } = this.props;
+		const { siteId, site } = this.props;
 
 		const handleFeaturedImageUpload = () => {
 			const media = MediaStore.get( siteId, transientMediaId );
@@ -61,7 +62,7 @@ class FeaturedImageDropZone extends Component {
 				if ( media ) {
 					this.props.recordTracksEvent( 'calypso_editor_featured_image_upload', {
 						source: 'dropzone',
-						type: 'dragdrop'
+						type: 'dragdrop',
 					} );
 				}
 			}
@@ -78,17 +79,17 @@ class FeaturedImageDropZone extends Component {
 			// Cannot dispatch an action while in a dispatched action. Temporary(tm).
 			setTimeout( () => {
 				PostActions.edit( {
-					featured_image: media.ID
+					featured_image: media.ID,
 				} );
 			}, 0 );
 		};
 
 		MediaStore.on( 'change', handleFeaturedImageUpload );
 
-		MediaActions.add( siteId, {
+		MediaActions.add( site, {
 			ID: transientMediaId,
 			fileContents: droppedImage,
-			fileName: droppedImage.name
+			fileName: droppedImage.name,
 		} );
 	};
 
@@ -106,9 +107,10 @@ class FeaturedImageDropZone extends Component {
 }
 
 export default connect(
-	( state ) => ( {
+	state => ( {
 		siteId: getSelectedSiteId( state ),
 		postId: getEditorPostId( state ),
+		site: getSelectedSite( state ),
 	} ),
 	{
 		editPost,

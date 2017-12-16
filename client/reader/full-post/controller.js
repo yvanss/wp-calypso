@@ -3,34 +3,16 @@
  * External Dependencies
  */
 import React from 'react';
-import i18n from 'i18n-calypso';
 import page from 'page';
 import { defer } from 'lodash';
 
 /**
  * Internal Dependencies
  */
-import FeedError from 'reader/feed-error';
-import { setPageTitle, trackPageLoad } from 'reader/controller-helper';
+import { trackPageLoad } from 'reader/controller-helper';
 import AsyncLoad from 'components/async-load';
-import { renderWithReduxStore } from 'lib/react-helpers';
 
 const analyticsPageTitle = 'Reader';
-
-function renderPostNotFound() {
-	const sidebarAndPageTitle = i18n.translate( 'Post not found' );
-
-	setPageTitle( context, sidebarAndPageTitle );
-
-	renderWithReduxStore(
-		<FeedError
-			sidebarTitle={ sidebarAndPageTitle }
-			message={ i18n.translate( 'Post Not Found' ) }
-		/>,
-		document.getElementById( 'primary' ),
-		context.store
-	);
-}
 
 const scrollTopIfNoHash = () =>
 	defer( () => {
@@ -39,7 +21,7 @@ const scrollTopIfNoHash = () =>
 		}
 	} );
 
-export function blogPost( context ) {
+export function blogPost( context, next ) {
 	const blogId = context.params.blog,
 		postId = context.params.post,
 		basePath = '/read/blogs/:blog_id/posts/:post_id',
@@ -51,24 +33,23 @@ export function blogPost( context ) {
 	}
 	trackPageLoad( basePath, fullPageTitle, 'full_post' );
 
-	renderWithReduxStore(
+	context.primary = (
 		<AsyncLoad
 			require="blocks/reader-full-post"
 			blogId={ blogId }
 			postId={ postId }
 			referral={ referral }
+			referralStream={ context.lastRoute }
 			onClose={ function() {
 				page.back( context.lastRoute || '/' );
 			} }
-			onPostNotFound={ renderPostNotFound }
-		/>,
-		document.getElementById( 'primary' ),
-		context.store
+		/>
 	);
 	scrollTopIfNoHash();
+	next();
 }
 
-export function feedPost( context ) {
+export function feedPost( context, next ) {
 	const feedId = context.params.feed,
 		postId = context.params.post,
 		basePath = '/read/feeds/:feed_id/posts/:feed_item_id',
@@ -80,16 +61,15 @@ export function feedPost( context ) {
 		page.back( context.lastRoute || '/' );
 	}
 
-	renderWithReduxStore(
+	context.primary = (
 		<AsyncLoad
 			require="blocks/reader-full-post"
 			feedId={ feedId }
 			postId={ postId }
 			onClose={ closer }
-			onPostNotFound={ renderPostNotFound }
-		/>,
-		document.getElementById( 'primary' ),
-		context.store
+			referralStream={ context.lastRoute }
+		/>
 	);
 	scrollTopIfNoHash();
+	next();
 }

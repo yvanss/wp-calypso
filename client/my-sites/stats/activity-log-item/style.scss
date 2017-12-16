@@ -1,35 +1,19 @@
+/** @format */
 .activity-log-item {
 	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	align-content: flex-start;
-	align-items: center;
 	position: relative;
 
-	// TODO: Remove when foldable cards become "expandable"
-	.foldable-card__header.is-clickable {
-		cursor: default;
-	}
-
-	&:first-of-type {
-		margin-top: 24px;
+	@include breakpoint( '<480px' ) {
+		margin-left: 8px;
 	}
 
 	.card {
 		flex: 1;
+		margin-top: 8px;
 		margin-bottom: 16px;
-		background: $white;
-	}
-
-	.activity-log-item__card .foldable-card__content {
-		padding: 16px;
-		font-size: 14px;
-		color: darken( $gray, 20% );
 	}
 
 	.foldable-card {
-
 		.foldable-card__expand .gridicon {
 			transform: none;
 		}
@@ -38,13 +22,51 @@
 			margin-bottom: 24px;
 
 			.foldable-card__expand .gridicon {
-				transform: rotate( 180deg );
+				transform: rotate(180deg);
 			}
 		}
 	}
 
-	.foldable-card__main {
-		flex: 5 1;
+	.foldable-card__header {
+		@include breakpoint( '<480px' ) {
+			padding: 12px;
+		}
+
+		// TODO: Remove when foldable cards become "expandable"
+		.is-clickable {
+			cursor: default;
+		}
+	}
+
+	.foldable-card__secondary {
+		flex-grow: 0;
+	}
+
+	&.is-discarded {
+		margin-left: 80px;
+
+		@include breakpoint( '<480px' ) {
+			margin-left: 60px;
+		}
+
+		&:before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 33px;
+			height: 100%;
+			border-left: 2px dotted lighten($gray, 20%);
+
+			@include breakpoint( '<480px' ) {
+				left: 22px;
+			}
+		}
+
+		&:last-of-type {
+			&:before {
+				display: none;
+			}
+		}
 	}
 }
 
@@ -54,17 +76,22 @@
 	text-align: center;
 	margin: -2px 22px 0 10px;
 	padding: 4px 0 6px;
+	z-index: 1;
 
-	@include breakpoint( "<480px" ) {
-		margin: -2px 14px 0 4px;
+	@include breakpoint( '<480px' ) {
+		margin: -2px 8px 0 0px;
 	}
 }
 
 .activity-log-item__time {
 	font-size: 11px;
-	color: $gray;
+	color: $gray-text-min;
 	text-transform: uppercase;
 	white-space: nowrap;
+
+	@include breakpoint( '<480px' ) {
+		letter-spacing: -1px;
+	}
 }
 
 .activity-log-item__activity-icon {
@@ -76,7 +103,7 @@
 	padding: 12px;
 	margin-top: 2px;
 
-	@include breakpoint( "<480px" ) {
+	@include breakpoint( '<480px' ) {
 		padding: 10px;
 	}
 
@@ -94,63 +121,124 @@
 	&.is-error {
 		background: $alert-red;
 	}
+
+	.is-discarded & {
+		color: $gray-text;
+		background: none;
+		border: 1px solid transparentize(lighten($gray, 20%), 0.5);
+	}
+}
+
+.activity-log-item__card {
+	min-width: 0;
+
+	.foldable-card__main {
+		min-width: 0;
+	}
+
+	.foldable-card__content {
+		padding: 16px;
+		font-size: 14px;
+		color: darken($gray, 20%);
+	}
+
+	.is-discarded & {
+		background: none;
+		box-shadow: 0 0 0 1px transparentize(lighten($gray, 20%), 0.5);
+	}
 }
 
 .activity-log-item__card-header {
 	display: flex;
-	flex: 1;
+	flex-wrap: wrap;
+	margin-right: 32px;
+	padding-left: 56px;
 	align-items: center;
+	min-width: 0;
 
-	@include breakpoint( "<960px" ) {
+	@include breakpoint( '<960px' ) {
 		flex-direction: column;
 		align-items: flex-start;
+		padding-left: 40px;
 	}
 }
 
 .activity-log-item__actor {
 	display: flex;
-	flex: 3 1;
-	align-items: center;
+	flex-shrink: 0;
+	min-width: 180px;
+	max-width: 100%;
 	margin-right: 32px;
+	margin-left: -40px;
+	align-items: center;
 
-	@include breakpoint( "<960px" ) {
-		margin-bottom: 16px;
+	@include breakpoint( '>960px' ) {
+		margin-left: -56px;
 	}
 
 	.gravatar,
 	.jetpack-logo {
 		float: left;
+		width: 40px;
+		height: 40px;
 		margin-right: 16px;
+		fill: darken($gray, 10%);
+
+		@include breakpoint( '<960px' ) {
+			width: 32px;
+			height: 32px;
+			margin-right: 8px;
+		}
 	}
 
-	.jetpack-logo path {
-		fill: $green-jetpack;
+	.gravatar {
+		.is-discarded & {
+			filter: grayscale(1);
+		}
+	}
+
+	.jetpack-logo {
+		.is-discarded & {
+			opacity: 0.75;
+		}
+	}
+}
+
+.activity-log-item__actor-info {
+	min-width: 0;
+}
+
+.activity-log-item__actor-name {
+	font-size: 14px;
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+
+	@include breakpoint( '<960px' ) {
+		margin-top: 2px;
+		line-height: 1;
 	}
 }
 
 .activity-log-item__actor-role {
 	text-transform: capitalize;
 	font-size: 12px;
-	color: $gray;
+	color: $gray-text-min;
 }
 
 .activity-log-item__title {
-	flex: 4 1;
+	flex: 1 1 50%;
 	font-size: 14px;
+	word-break: break-word;
 
-	@include breakpoint( "<960px" ) {
-		margin-left: 54px;
+	@include breakpoint( '<960px' ) {
+		margin-top: 8px;
 	}
 }
 
-.activity-log-item__action {
-	flex-basis: 25%;
-	text-align:right;
-}
+.activity-log-item__description {
+	font-size: 14px;
 
-.activity-log-item__id {
-	margin-top: 8px;
-	font-size: 11px;
-	font-style: italic;
-	color: lighten( $gray, 20% );
+	@include breakpoint( '<960px' ) {
+		margin-top: 4px;
+	}
 }

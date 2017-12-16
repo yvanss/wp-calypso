@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { filter, startsWith } from 'lodash';
 
 function domainManagementRoot() {
@@ -83,7 +86,15 @@ function domainManagementPrimaryDomain( siteName, domainName ) {
 }
 
 function domainManagementTransfer( siteName, domainName, transferType = '' ) {
-	return domainManagementEdit( siteName, domainName, filter( [ 'transfer', transferType ] ).join( '/' ) );
+	return domainManagementEdit(
+		siteName,
+		domainName,
+		filter( [ 'transfer', transferType ] ).join( '/' )
+	);
+}
+
+function domainManagementTransferIn( siteName, domainName ) {
+	return domainManagementTransfer( siteName, domainName, 'in' );
 }
 
 function domainManagementTransferOut( siteName, domainName ) {
@@ -96,6 +107,15 @@ function domainManagementTransferToAnotherUser( siteName, domainName ) {
 
 function domainManagementTransferToOtherSite( siteName, domainName ) {
 	return domainManagementTransfer( siteName, domainName, 'other-site' );
+}
+
+function domainTransferIn( siteName, domain ) {
+	let path = `/domains/add/transfer/${ siteName }`;
+	if ( domain ) {
+		path += `?initialQuery=${ domain }`;
+	}
+
+	return path;
 }
 
 function getSectionName( pathname ) {
@@ -120,8 +140,10 @@ export default {
 	domainManagementRedirectSettings,
 	domainManagementRoot,
 	domainManagementTransfer,
+	domainManagementTransferIn,
 	domainManagementTransferOut,
 	domainManagementTransferToAnotherUser,
 	domainManagementTransferToOtherSite,
-	getSectionName
+	domainTransferIn,
+	getSectionName,
 };

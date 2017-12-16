@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React from 'react';
 import Gridicon from 'gridicons';
 import { debounce } from 'lodash';
@@ -28,6 +31,8 @@ class MediaLibraryExternalHeader extends React.Component {
 		selectedItems: PropTypes.array,
 		onSourceChange: PropTypes.func,
 		sticky: PropTypes.bool,
+		hasAttribution: PropTypes.bool,
+		hasRefreshButton: PropTypes.bool,
 	};
 
 	constructor( props ) {
@@ -94,7 +99,7 @@ class MediaLibraryExternalHeader extends React.Component {
 		const { site, selectedItems, source, onSourceChange } = this.props;
 
 		onSourceChange( '', () => {
-			MediaActions.addExternal( site.ID, selectedItems, source );
+			MediaActions.addExternal( site, selectedItems, source );
 		} );
 	};
 
@@ -109,15 +114,17 @@ class MediaLibraryExternalHeader extends React.Component {
 	}
 
 	renderCard() {
-		const { onMediaScaleChange, translate, canCopy } = this.props;
+		const { onMediaScaleChange, translate, canCopy, hasRefreshButton } = this.props;
 
 		return (
 			<Card className="media-library__header">
-				<Button compact disabled={ this.state.fetching } onClick={ this.handleClick }>
-					<Gridicon icon="refresh" size={ 24 } />
+				{ hasRefreshButton && (
+					<Button compact disabled={ this.state.fetching } onClick={ this.handleClick }>
+						<Gridicon icon="refresh" size={ 24 } />
 
-					{ translate( 'Refresh' ) }
-				</Button>
+						{ translate( 'Refresh' ) }
+					</Button>
+				) }
 
 				{ canCopy && this.renderCopyButton() }
 
@@ -134,11 +141,7 @@ class MediaLibraryExternalHeader extends React.Component {
 		}
 
 		if ( this.props.sticky ) {
-			return (
-				<StickyPanel minLimit={ 660 }>
-					{ this.renderCard() }
-				</StickyPanel>
-			);
+			return <StickyPanel minLimit={ 660 }>{ this.renderCard() }</StickyPanel>;
 		}
 
 		return this.renderCard();

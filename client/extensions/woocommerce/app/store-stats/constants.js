@@ -1,42 +1,45 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { translate } from 'i18n-calypso';
 
 const sparkWidgetList1 = [
 	{
 		key: 'products',
 		title: translate( 'Products Purchased' ),
-		format: 'number'
+		format: 'number',
 	},
 	{
 		key: 'avg_products_per_order',
 		title: translate( 'Products Per Order' ),
-		format: 'number'
+		format: 'number',
 	},
 	{
 		key: 'coupons',
 		title: translate( 'Coupons Used' ),
-		format: 'number'
-	}
+		format: 'number',
+	},
 ];
 
 const sparkWidgetList2 = [
 	{
 		key: 'total_refund',
 		title: translate( 'Refunds' ),
-		format: 'currency'
+		format: 'currency',
 	},
 	{
 		key: 'total_shipping',
 		title: translate( 'Shipping' ),
-		format: 'currency'
+		format: 'currency',
 	},
 	{
 		key: 'total_tax',
 		title: translate( 'Tax' ),
-		format: 'currency'
-	}
+		format: 'currency',
+	},
 ];
 
 export const sparkWidgets = [ sparkWidgetList1, sparkWidgetList2 ];
@@ -83,42 +86,46 @@ export const UNITS = {
 		label: 'days',
 		durationFn: 'asDays',
 		format: 'YYYY-MM-DD',
-		sinceFormat: 'MMM D',
+		shortFormat: 'MMM D',
 		chartFormat: 'labelDay',
-		title: translate( 'Days' )
+		title: translate( 'Days' ),
 	},
 	week: {
 		quantity: 30,
 		label: 'weeks',
 		durationFn: 'asWeeks',
 		format: 'YYYY-[W]WW',
-		sinceFormat: 'MMM D',
+		shortFormat: 'MMM D',
 		chartFormat: 'labelWeek',
-		title: translate( 'Weeks' )
+		title: translate( 'Weeks' ),
 	},
 	month: {
 		quantity: 12,
 		label: 'months',
 		durationFn: 'asMonths',
 		format: 'YYYY-MM',
-		sinceFormat: 'MMM [\']YY',
+		shortFormat: "MMM [']YY",
 		chartFormat: 'labelMonth',
-		title: translate( 'Months' )
+		title: translate( 'Months' ),
 	},
 	year: {
 		quantity: 10,
 		label: 'years',
 		durationFn: 'asYears',
 		format: 'YYYY',
-		sinceFormat: 'YYYY',
+		shortFormat: 'YYYY',
 		chartFormat: 'labelYear',
-		title: translate( 'Years' )
-	}
+		title: translate( 'Years' ),
+	},
 };
 
 export const chartTabs = [
-	{ label: translate( 'Gross Sales' ), attr: 'gross_sales', type: 'currency' },
-	{ label: translate( 'Net Sales' ), attr: 'net_sales', type: 'currency' },
+	{
+		label: translate( 'Gross Sales' ),
+		attr: 'gross_sales',
+		type: 'currency',
+		tabLabel: translate( 'Sales' ),
+	},
 	{ label: translate( 'Orders' ), attr: 'orders', type: 'number' },
 	{ label: translate( 'Average Order Value' ), attr: 'avg_order_value', type: 'currency' },
 ];

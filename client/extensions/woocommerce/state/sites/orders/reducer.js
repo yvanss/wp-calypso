@@ -1,7 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import { keyBy, omit } from 'lodash';
+
+import { isFinite, keyBy, omit } from 'lodash';
 
 /**
  * Internal dependencies
@@ -36,7 +39,9 @@ export function isLoading( state = {}, action ) {
 		case WOOCOMMERCE_ORDER_REQUEST:
 		case WOOCOMMERCE_ORDER_REQUEST_SUCCESS:
 		case WOOCOMMERCE_ORDER_REQUEST_FAILURE:
-			return Object.assign( {}, state, { [ action.orderId ]: WOOCOMMERCE_ORDER_REQUEST === action.type } );
+			return Object.assign( {}, state, {
+				[ action.orderId ]: WOOCOMMERCE_ORDER_REQUEST === action.type,
+			} );
 		default:
 			return state;
 	}
@@ -73,11 +78,14 @@ export function isQueryLoading( state = {}, action ) {
  * @return {Object}        Updated state
  */
 export function isUpdating( state = {}, action ) {
+	const orderId = isFinite( action.orderId ) ? action.orderId : JSON.stringify( action.orderId );
 	switch ( action.type ) {
 		case WOOCOMMERCE_ORDER_UPDATE:
 		case WOOCOMMERCE_ORDER_UPDATE_SUCCESS:
 		case WOOCOMMERCE_ORDER_UPDATE_FAILURE:
-			return Object.assign( {}, state, { [ action.orderId ]: WOOCOMMERCE_ORDER_UPDATE === action.type } );
+			return Object.assign( {}, state, {
+				[ orderId ]: WOOCOMMERCE_ORDER_UPDATE === action.type,
+			} );
 		default:
 			return state;
 	}
@@ -98,7 +106,7 @@ export function items( state = {}, action ) {
 			return Object.assign( {}, state, orders );
 		case WOOCOMMERCE_ORDER_REQUEST_SUCCESS:
 		case WOOCOMMERCE_ORDER_UPDATE_SUCCESS:
-			orders = { [ action.orderId ]: action.order };
+			orders = { [ action.order.id ]: action.order };
 			return Object.assign( {}, state, orders );
 		default:
 			return state;

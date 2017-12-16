@@ -2,6 +2,8 @@
 
 Welcome to Calypso! This is the place where you can write your own extensions for your WordPress plugins. Extensions are set up to function in a semi-isolated environment, with their own URL path and code chunk magic (using webpack) to assure code is loaded only when needed. Think of extensions as individual "apps" you can access in Calypso to interact with your plugin functionality in a focused way. At the moment, extensions are generated at build time.
 
+If you're a developer that has a plugin with one million or more active installations, we'd love to work with you. Please [use this form](https://developer.wordpress.com/calypso-extensions/) to get in touch with us.
+
 Before you get started we encourage you to get familiar with our [development values], [code-reviewing practice][prs], components and [data approach], and the [rest of the docs][docs] we have. Every folder in the project should have a README describing its purpose.
 
 [development values]: https://wpcalypso.wordpress.com/devdocs/docs/guide/0-values.md
@@ -58,7 +60,6 @@ const renderHelloWorld = ( context ) => {
 *Note:* you have access to all the components and blocks that Calypso offers (check out `/devdocs/design` and `/devdocs/blocks` to browse them). With those you can build an entirely new section that is consistent with the experience of the whole app. We encourage you to use them as much as possible, and to contribute back to the core project if you find issues or have suggestions for new ones.
 
 ## Imports
-
 Importing from other javascript modules can be done from one of three root contexts:
 - / (root of the Calypso repository)
 - /client (the client subdirectory)

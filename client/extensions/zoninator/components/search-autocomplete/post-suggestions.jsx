@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -11,25 +14,24 @@ import { find, map } from 'lodash';
  */
 import QueryPosts from 'components/data/query-posts';
 import Suggestions from 'components/suggestions';
-import { getSitePostsForQuery } from 'state/posts/selectors';
+import { getPostsForQuery } from 'state/posts/selectors';
 import { getSelectedSiteId } from 'state/ui/selectors';
 
 class PostSuggestions extends PureComponent {
-
 	static propTypes = {
 		exclude: PropTypes.array,
 		posts: PropTypes.array.isRequired,
 		search: PropTypes.string,
 		siteId: PropTypes.number.isRequired,
 		suggest: PropTypes.func.isRequired,
-	}
+	};
 
 	static defaultProps = {
 		exclude: [],
 		search: '',
-	}
+	};
 
-	setSuggestions = ref => this.suggestionsRef = ref;
+	setSuggestions = ref => ( this.suggestionsRef = ref );
 
 	handleKeyEvent = event => this.suggestionsRef.handleKeyEvent( event );
 
@@ -47,7 +49,8 @@ class PostSuggestions extends PureComponent {
 					ref={ this.setSuggestions }
 					query={ search }
 					suggestions={ suggestions }
-					suggest={ this.suggest } />
+					suggest={ this.suggest }
+				/>
 			</div>
 		);
 	}
@@ -57,7 +60,7 @@ const mapStateToProps = ( state, { exclude, search } ) => {
 	const siteId = getSelectedSiteId( state );
 
 	return {
-		posts: getSitePostsForQuery( state, siteId, { search, exclude } ) || [],
+		posts: getPostsForQuery( state, siteId, { search, exclude } ) || [],
 		siteId,
 	};
 };

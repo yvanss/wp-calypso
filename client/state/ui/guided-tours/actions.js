@@ -1,9 +1,10 @@
+/** @format */
+
 /**
  * Internal dependencies
  */
-import {
-	GUIDED_TOUR_UPDATE,
-} from 'state/action-types';
+
+import { GUIDED_TOUR_UPDATE } from 'state/action-types';
 
 import { savePreference } from 'state/preferences/actions';
 import { getPreference } from 'state/preferences/selectors';
@@ -32,6 +33,10 @@ export function nextGuidedTourStep( { tour, stepName } ) {
 	};
 }
 
+export function requestGuidedTour( tour ) {
+	return nextGuidedTourStep( { tour, stepName: 'init' } );
+}
+
 // TODO(mcsf): come up with a much better (read: safer) solution
 //
 // The way we persist which tours have been seen by the user is subject to
@@ -46,7 +51,7 @@ function addSeenGuidedTour( getState, tourName, finished = false ) {
 			timestamp: Date.now(),
 			tourName,
 			finished,
-		}
+		},
 	] );
 }
 

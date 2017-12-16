@@ -14,7 +14,9 @@ import moment from 'moment';
 import ReaderAvatar from 'blocks/reader-avatar';
 import FollowButton from 'reader/follow-button';
 import { getStreamUrl } from 'reader/route';
-import EmailSettings from 'blocks/reader-email-settings';
+import ReaderEmailSettings from 'blocks/reader-email-settings';
+import ReaderSiteNotificationSettings from 'blocks/reader-site-notification-settings';
+import config from 'config';
 import {
 	getSiteName,
 	getSiteDescription,
@@ -43,7 +45,7 @@ function ReaderSubscriptionListItem( {
 	className = '',
 	translate,
 	followSource,
-	showEmailSettings,
+	showEmailSettings, // @todo rename to showNotificationSettings
 	showLastUpdatedDate,
 	isFollowing,
 	railcar,
@@ -83,6 +85,12 @@ function ReaderSubscriptionListItem( {
 	const recordSiteUrlClick = () => recordEvent( 'calypso_reader_site_url_clicked' );
 	const recordAvatarClick = () => recordEvent( 'calypso_reader_avatar_clicked' );
 
+	const notificationSettings = config.isEnabled( 'reader/new-post-notifications' ) ? (
+		<ReaderSiteNotificationSettings siteId={ siteId } />
+	) : (
+		<ReaderEmailSettings siteId={ siteId } />
+	);
+
 	return (
 		<div
 			className={ classnames( 'reader-subscription-list-item', className, {
@@ -113,27 +121,26 @@ function ReaderSubscriptionListItem( {
 						</a>
 					}
 				</span>
-				<div className="reader-subscription-list-item__site-excerpt">
-					{ siteExcerpt }
-				</div>
+				<div className="reader-subscription-list-item__site-excerpt">{ siteExcerpt }</div>
 				{ ! isMultiAuthor &&
-					! isEmpty( authorName ) &&
-					<span className="reader-subscription-list-item__by-text">
-						{ translate( 'by {{author/}}', {
-							components: {
-								author: (
-									<a
-										href={ streamUrl }
-										className="reader-subscription-list-item__link"
-										onClick={ recordAuthorClick }
-									>
-										{ authorName }
-									</a>
-								),
-							},
-						} ) }
-					</span> }
-				{ siteUrl &&
+					! isEmpty( authorName ) && (
+						<span className="reader-subscription-list-item__by-text">
+							{ translate( 'by {{author/}}', {
+								components: {
+									author: (
+										<a
+											href={ streamUrl }
+											className="reader-subscription-list-item__link"
+											onClick={ recordAuthorClick }
+										>
+											{ authorName }
+										</a>
+									),
+								},
+							} ) }
+						</span>
+					) }
+				{ siteUrl && (
 					<div className="reader-subscription-list-item__site-url-timestamp">
 						<a
 							href={ siteUrl }
@@ -144,11 +151,13 @@ function ReaderSubscriptionListItem( {
 						>
 							{ formatUrlForDisplay( siteUrl ) }
 						</a>
-						{ showLastUpdatedDate &&
+						{ showLastUpdatedDate && (
 							<span className="reader-subscription-list-item__timestamp">
 								{ feed && feed.last_update && translate( 'updated %s', { args: lastUpdatedDate } ) }
-							</span> }
-					</div> }
+							</span>
+						) }
+					</div>
+				) }
 			</div>
 			<div className="reader-subscription-list-item__options">
 				<FollowButton
@@ -158,7 +167,7 @@ function ReaderSubscriptionListItem( {
 					siteId={ siteId }
 					railcar={ railcar }
 				/>
-				{ isFollowing && showEmailSettings && <EmailSettings siteId={ siteId } /> }
+				{ isFollowing && showEmailSettings && notificationSettings }
 			</div>
 		</div>
 	);

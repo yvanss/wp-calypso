@@ -1,26 +1,26 @@
+/** @format */
 /**
  * External dependencies
  */
-import React, { PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { identity, noop } from 'lodash';
 import moment from 'moment';
 import page from 'page';
 import i18n, { localize } from 'i18n-calypso';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
  */
 import Card from 'components/card';
-import Gridicon from 'gridicons';
 import Site from 'blocks/site';
 import postUtils from 'lib/posts/utils';
 import siteUtils from 'lib/site/utils';
-import { recordEvent, recordStat } from 'lib/posts/stats';
+import { recordEvent } from 'lib/posts/stats';
 import EditorPublishButton, { getPublishButtonStatus } from 'post-editor/editor-publish-button';
 import Button from 'components/button';
-import EditorPostType from 'post-editor/editor-post-type';
-import { NESTED_SIDEBAR_REVISIONS, NestedSidebarPropType } from 'post-editor/editor-sidebar/constants';
+import QuickSaveButtons from 'post-editor/editor-ground-control/quick-save-buttons';
 
 export class EditorGroundControl extends PureComponent {
 	static propTypes = {
@@ -31,7 +31,8 @@ export class EditorGroundControl extends PureComponent {
 		isSaveBlocked: PropTypes.bool,
 		isPublishing: PropTypes.bool,
 		isSaving: PropTypes.bool,
-		nestedSidebar: NestedSidebarPropType,
+		isSidebarOpened: PropTypes.bool,
+		loadRevision: PropTypes.func.isRequired,
 		moment: PropTypes.func,
 		onPreview: PropTypes.func,
 		onPublish: PropTypes.func,
@@ -46,8 +47,7 @@ export class EditorGroundControl extends PureComponent {
 		userUtils: PropTypes.object,
 		toggleSidebar: PropTypes.func,
 		translate: PropTypes.func,
-		type: PropTypes.string,
-	}
+	};
 
 	static defaultProps = {
 		hasContent: false,
@@ -66,12 +66,13 @@ export class EditorGroundControl extends PureComponent {
 		user: null,
 		userUtils: null,
 		setPostDate: noop,
-	}
+	};
 
 	state = {
 		showAdvanceStatus: false,
-		needsVerification: this.props.userUtils && this.props.userUtils.needsVerificationForSite( this.props.site ),
-	}
+		needsVerification:
+			this.props.userUtils && this.props.userUtils.needsVerificationForSite( this.props.site ),
+	};
 
 	componentDidMount() {
 		if ( ! this.props.user ) {
@@ -95,13 +96,15 @@ export class EditorGroundControl extends PureComponent {
 
 	updateNeedsVerification = () => {
 		this.setState( {
-			needsVerification: this.props.userUtils && this.props.userUtils.needsVerificationForSite( this.props.site ),
+			needsVerification:
+				this.props.userUtils && this.props.userUtils.needsVerificationForSite( this.props.site ),
 		} );
-	}
+	};
 
 	componentWillReceiveProps( nextProps ) {
 		this.setState( {
-			needsVerification: nextProps.userUtils && nextProps.userUtils.needsVerificationForSite( nextProps.site ),
+			needsVerification:
+				nextProps.userUtils && nextProps.userUtils.needsVerificationForSite( nextProps.site ),
 		} );
 
 		if ( this.props.user ) {
@@ -118,50 +121,39 @@ export class EditorGroundControl extends PureComponent {
 	}
 
 	getPreviewLabel() {
-		if ( postUtils.isPublished( this.props.savedPost ) && this.props.site.jetpack ) {
-			return this.props.translate( 'View' );
-		}
-
 		return this.props.translate( 'Preview' );
 	}
 
 	getVerificationNoticeLabel() {
-		const primaryButtonState = getPublishButtonStatus( this.props.site, this.props.post, this.props.savedPost ),
+		const primaryButtonState = getPublishButtonStatus(
+				this.props.site,
+				this.props.post,
+				this.props.savedPost
+			),
 			buttonLabels = {
 				update: i18n.translate( 'To update, check your email and confirm your address.' ),
 				schedule: i18n.translate( 'To schedule, check your email and confirm your address.' ),
 				publish: i18n.translate( 'To publish, check your email and confirm your address.' ),
-				requestReview: i18n.translate( 'To submit for review, check your email and confirm your address.' ),
+				requestReview: i18n.translate(
+					'To submit for review, check your email and confirm your address.'
+				),
 			};
 
 		return buttonLabels[ primaryButtonState ];
 	}
 
-	getSaveStatusLabel( translate ) {
-		if ( this.props.isSaving ) {
-			return translate( 'Saving…' );
-		}
+	shouldShowStatusLabel() {
+		const { isSaving, post } = this.props;
 
-		if ( ! this.props.post || postUtils.isPublished( this.props.post ) || ! this.props.post.ID ) {
-			return null;
-		}
-
-		return translate( 'Saved' );
-	}
-
-	isSaveEnabled() {
-		return ! this.props.isSaving &&
-			! this.props.isSaveBlocked &&
-			this.props.isDirty &&
-			this.props.hasContent &&
-			!! this.props.post &&
-			! postUtils.isPublished( this.props.post );
+		return isSaving || ( post && post.ID && ! postUtils.isPublished( post ) );
 	}
 
 	isPreviewEnabled() {
-		return this.props.hasContent &&
+		return (
+			this.props.hasContent &&
 			! ( this.props.isNew && ! this.props.isDirty ) &&
-			! this.props.isSaveBlocked;
+			! this.props.isSaveBlocked
+		);
 	}
 
 	canPublishPost() {
@@ -170,22 +162,17 @@ export class EditorGroundControl extends PureComponent {
 
 	toggleAdvancedStatus = () => {
 		this.setState( { showAdvanceStatus: ! this.state.showAdvanceStatus } );
-	}
+	};
 
-	onSaveButtonClick = () => {
-		this.props.onSave();
-		const eventLabel = postUtils.isPage( this.props.page ) ? 'Clicked Save Page Button' : 'Clicked Save Post Button';
-		recordEvent( eventLabel );
-		recordStat( 'save_draft_clicked' );
-	}
-
-	onPreviewButtonClick = ( event ) => {
+	onPreviewButtonClick = event => {
 		if ( this.isPreviewEnabled() ) {
 			this.props.onPreview( event );
-			const eventLabel = postUtils.isPage( this.props.page ) ? 'Clicked Preview Page Button' : 'Clicked Preview Post Button';
+			const eventLabel = postUtils.isPage( this.props.page )
+				? 'Clicked Preview Page Button'
+				: 'Clicked Preview Post Button';
 			recordEvent( eventLabel );
 		}
-	}
+	};
 
 	renderGroundControlActionButtons() {
 		if ( this.props.confirmationSidebarStatus === 'open' ) {
@@ -196,20 +183,18 @@ export class EditorGroundControl extends PureComponent {
 			<div className="editor-ground-control__action-buttons">
 				<Button
 					borderless
+					className="editor-ground-control__toggle-sidebar"
+					onClick={ this.props.toggleSidebar }
+				>
+					<Gridicon icon="cog" />
+				</Button>
+				<Button
 					className="editor-ground-control__preview-button"
 					disabled={ ! this.isPreviewEnabled() }
 					onClick={ this.onPreviewButtonClick }
 					tabIndex={ 4 }
 				>
-					<Gridicon icon="visible" /> <span className="editor-ground-control__button-label">{ this.getPreviewLabel() }</span>
-				</Button>
-				<Button
-					borderless
-					className="editor-ground-control__toggle-sidebar"
-					onClick={ this.props.toggleSidebar }
-				>
-					<Gridicon icon={ this.props.nestedSidebar === NESTED_SIDEBAR_REVISIONS ? 'history' : 'cog' } />
-					<span className="editor-ground-control__button-label"> <EditorPostType isSettings /></span>
+					<span className="editor-ground-control__button-label">{ this.getPreviewLabel() }</span>
 				</Button>
 				<div className="editor-ground-control__publish-button">
 					<EditorPublishButton
@@ -224,24 +209,42 @@ export class EditorGroundControl extends PureComponent {
 						isSaveBlocked={ this.props.isSaveBlocked }
 						hasContent={ this.props.hasContent }
 						needsVerification={ this.state.needsVerification }
-						busy={ this.props.isPublishing || ( postUtils.isPublished( this.props.savedPost ) && this.props.isSaving ) }
+						busy={
+							this.props.isPublishing ||
+							( postUtils.isPublished( this.props.savedPost ) && this.props.isSaving )
+						}
 					/>
 				</div>
 			</div>
 		);
 	}
 
+	onBackButtonClick = () => {
+		page.back( this.props.allPostsUrl );
+	};
+
 	render() {
+		const {
+			isSaving,
+			isSaveBlocked,
+			isDirty,
+			hasContent,
+			loadRevision,
+			post,
+			onSave,
+			translate,
+		} = this.props;
+
 		return (
 			<Card className="editor-ground-control">
 				<Button
 					borderless
 					className="editor-ground-control__back"
 					href={ '' }
-					onClick={ page.back.bind( page, this.props.allPostsUrl ) }
-					aria-label={ this.props.translate( 'Go back' ) }
+					onClick={ this.onBackButtonClick }
+					aria-label={ translate( 'Close' ) }
 				>
-					<Gridicon icon="arrow-left" />
+					{ translate( 'Close' ) }
 				</Button>
 				<Site
 					compact
@@ -250,39 +253,31 @@ export class EditorGroundControl extends PureComponent {
 					homeLink={ true }
 					externalLink={ true }
 				/>
-				{ this.state.needsVerification &&
-					<div className="editor-ground-control__email-verification-notice"
+				{ this.state.needsVerification && (
+					<div
+						className="editor-ground-control__email-verification-notice"
 						tabIndex={ 7 }
-						onClick={ this.props.onMoreInfoAboutEmailVerify }>
+						onClick={ this.props.onMoreInfoAboutEmailVerify }
+					>
 						<Gridicon
 							icon="info"
-							className="editor-ground-control__email-verification-notice-icon" />
-						{ this.getVerificationNoticeLabel() }
-						{ ' ' }
+							className="editor-ground-control__email-verification-notice-icon"
+						/>
+						{ this.getVerificationNoticeLabel() }{' '}
 						<span className="editor-ground-control__email-verification-notice-more">
-							{ this.props.translate( 'Learn More' ) }
+							{ translate( 'Learn More' ) }
 						</span>
 					</div>
-				}
-				<div className="editor-ground-control__status">
-					{ this.isSaveEnabled() &&
-						<button
-							className="editor-ground-control__save button is-link"
-							onClick={ this.onSaveButtonClick }
-							tabIndex={ 3 }
-						>
-							{ this.props.translate( 'Save' ) }
-						</button>
-					}
-					{ ! this.isSaveEnabled() &&
-						<span
-							className="editor-ground-control__save-status"
-							data-e2e-status={ this.getSaveStatusLabel( identity ) }
-						>
-							{ this.getSaveStatusLabel( this.props.translate ) }
-						</span>
-					}
-				</div>
+				) }
+				<QuickSaveButtons
+					isSaving={ isSaving }
+					isSaveBlocked={ isSaveBlocked }
+					isDirty={ isDirty }
+					hasContent={ hasContent }
+					loadRevision={ loadRevision }
+					post={ post }
+					onSave={ onSave }
+				/>
 				{ this.renderGroundControlActionButtons() }
 			</Card>
 		);

@@ -1,6 +1,9 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import React from 'react';
 import i18n from 'i18n-calypso';
 
@@ -13,11 +16,8 @@ import titlecase from 'to-title-case';
 import trackScrollPage from 'lib/track-scroll-page';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
 
-import { renderWithReduxStore } from 'lib/react-helpers';
-
 const controller = {
-
-	pages: function( context ) {
+	pages: function( context, next ) {
 		var Pages = require( 'my-sites/pages/main' ),
 			siteID = route.getSiteFragment( context.path ),
 			status = context.params.status,
@@ -26,7 +26,7 @@ const controller = {
 			analyticsPageTitle = 'Pages',
 			baseAnalyticsPath;
 
-		status = ( ! status || status === siteID ) ? '' : status;
+		status = ! status || status === siteID ? '' : status;
 		// FIXME: Auto-converted from the Flux setTitle action. Please use <DocumentHead> instead.
 		context.store.dispatch( setTitle( i18n.translate( 'Site Pages', { textOnly: true } ) ) );
 
@@ -44,22 +44,14 @@ const controller = {
 
 		analytics.pageView.record( baseAnalyticsPath, analyticsPageTitle );
 
-		renderWithReduxStore(
-			React.createElement( Pages, {
-				siteID: siteID,
-				status: status,
-				search: search,
-				trackScrollPage: trackScrollPage.bind(
-					null,
-					baseAnalyticsPath,
-					analyticsPageTitle,
-					'Pages'
-				)
-			} ),
-			document.getElementById( 'primary' ),
-			context.store
-		);
-	}
+		context.primary = React.createElement( Pages, {
+			siteID: siteID,
+			status: status,
+			search: search,
+			trackScrollPage: trackScrollPage.bind( null, baseAnalyticsPath, analyticsPageTitle, 'Pages' ),
+		} );
+		next();
+	},
 };
 
-module.exports = controller;
+export default controller;

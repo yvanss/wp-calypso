@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { FieldArray, reduxForm } from 'redux-form';
@@ -22,26 +25,21 @@ class ZoneContentForm extends PureComponent {
 		handleSubmit: PropTypes.func.isRequired,
 		label: PropTypes.string.isRequired,
 		onSubmit: PropTypes.func.isRequired,
+		requesting: PropTypes.bool,
 		submitting: PropTypes.bool.isRequired,
 		translate: PropTypes.func.isRequired,
-	}
+	};
 
 	save = data => this.props.onSubmit( form, data );
 
 	render() {
-		const {
-			handleSubmit,
-			label,
-			submitting,
-			translate,
-		} = this.props;
+		const { handleSubmit, label, requesting, submitting, translate } = this.props;
+		const isDisabled = requesting || submitting;
 
 		return (
 			<form onSubmit={ handleSubmit( this.save ) }>
 				<SectionHeader label={ label }>
-					<FormButton
-						compact
-						disabled={ submitting }>
+					<FormButton compact disabled={ isDisabled }>
 						{ translate( 'Save' ) }
 					</FormButton>
 				</SectionHeader>
@@ -49,7 +47,9 @@ class ZoneContentForm extends PureComponent {
 					<FieldArray
 						rerenderOnEveryChange
 						name="posts"
-						component={ PostsList } />
+						props={ { requesting } }
+						component={ PostsList }
+					/>
 				</CompactCard>
 			</form>
 		);
@@ -61,7 +61,4 @@ const createReduxForm = reduxForm( {
 	form,
 } );
 
-export default flowRight(
-	localize,
-	createReduxForm,
-)( ZoneContentForm );
+export default flowRight( localize, createReduxForm )( ZoneContentForm );

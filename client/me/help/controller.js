@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React from 'react';
 import i18n from 'i18n-calypso';
 
@@ -12,7 +15,6 @@ import { login } from 'lib/paths';
 import route from 'lib/route';
 import { setDocumentHeadTitle as setTitle } from 'state/document-head/actions';
 import config from 'config';
-import { renderWithReduxStore } from 'lib/react-helpers';
 import HelpComponent from './main';
 import CoursesComponent from './help-courses';
 import ContactComponent from './help-contact';
@@ -41,7 +43,7 @@ export default {
 		window.location.href = url;
 	},
 
-	help( context ) {
+	help( context, next ) {
 		const basePath = route.sectionify( context.path );
 
 		// FIXME: Auto-converted from the Flux setTitle action. Please use <DocumentHead> instead.
@@ -49,26 +51,20 @@ export default {
 
 		analytics.pageView.record( basePath, 'Help' );
 
-		renderWithReduxStore(
-			<HelpComponent isCoursesEnabled={ config.isEnabled( 'help/courses' ) } />,
-			document.getElementById( 'primary' ),
-			context.store
-		);
+		context.primary = <HelpComponent isCoursesEnabled={ config.isEnabled( 'help/courses' ) } />;
+		next();
 	},
 
-	courses( context ) {
+	courses( context, next ) {
 		const basePath = route.sectionify( context.path );
 
 		analytics.pageView.record( basePath, 'Help > Courses' );
 
-		renderWithReduxStore(
-			<CoursesComponent />,
-			'primary',
-			context.store
-		);
+		context.primary = <CoursesComponent />;
+		next();
 	},
 
-	contact( context ) {
+	contact( context, next ) {
 		const basePath = route.sectionify( context.path );
 
 		analytics.pageView.record( basePath, 'Help > Contact' );
@@ -78,10 +74,7 @@ export default {
 			window.scrollTo( 0, 0 );
 		}
 
-		renderWithReduxStore(
-			<ContactComponent clientSlug={ config( 'client_slug' ) } />,
-			'primary',
-			context.store
-		);
-	}
+		context.primary = <ContactComponent clientSlug={ config( 'client_slug' ) } />;
+		next();
+	},
 };

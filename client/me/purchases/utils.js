@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -15,6 +17,7 @@ import {
 	isOneTimePurchase,
 	isPaidWithCreditCard,
 } from 'lib/purchases';
+import { isDomainTransfer } from 'lib/products-values';
 
 // TODO: Remove these property-masking functions in favor of accessing the props directly
 function getPurchase( props ) {
@@ -26,7 +29,8 @@ function getSelectedSite( props ) {
 }
 
 function goToCancelPurchase( props ) {
-	const { id } = getPurchase( props ), { slug } = getSelectedSite( props );
+	const { id } = getPurchase( props ),
+		{ slug } = getSelectedSite( props );
 
 	page( paths.cancelPurchase( slug, id ) );
 }
@@ -36,7 +40,8 @@ function goToList() {
 }
 
 function goToManagePurchase( props ) {
-	const { id } = getPurchase( props ), { slug } = getSelectedSite( props );
+	const { id } = getPurchase( props ),
+		{ slug } = getSelectedSite( props );
 
 	page( paths.managePurchase( slug, id ) );
 }
@@ -76,7 +81,10 @@ function canEditPaymentDetails( purchase ) {
 		return false;
 	}
 	return (
-		! isExpired( purchase ) && ! isOneTimePurchase( purchase ) && ! isIncludedWithPlan( purchase )
+		! isExpired( purchase ) &&
+		! isOneTimePurchase( purchase ) &&
+		! isIncludedWithPlan( purchase ) &&
+		! isDomainTransfer( purchase )
 	);
 }
 

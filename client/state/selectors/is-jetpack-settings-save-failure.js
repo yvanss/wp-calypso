@@ -1,7 +1,10 @@
+/** @format */
+
 /**
  * Internal dependencies
  */
-import { getJetpackSettingsSaveRequestStatus } from './';
+
+import { getJetpackSettingsSaveRequestStatus } from 'state/selectors';
 
 /**
  * Returns true if the save Jetpack site settings requests is successful

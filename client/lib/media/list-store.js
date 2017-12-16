@@ -1,15 +1,18 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { assign, isEqual, map, omit } from 'lodash';
 
 /**
  * Internal dependencies
  */
-var Dispatcher = require( 'dispatcher' ),
-	MediaStore = require( './store' ),
-	MediaUtils = require( './utils' ),
-	emitter = require( 'lib/mixins/emitter' );
+import Dispatcher from 'dispatcher';
+import MediaStore from './store';
+import MediaUtils from './utils';
+import emitter from 'lib/mixins/emitter';
 
 /**
  * Module variables
@@ -17,7 +20,7 @@ var Dispatcher = require( 'dispatcher' ),
 const MediaListStore = {
 		_activeQueries: {},
 		DEFAULT_QUERY: Object.freeze( { number: 20 } ),
-		_media: {}
+		_media: {},
 	},
 	DEFAULT_ACTIVE_QUERY = Object.freeze( { isFetchingNextPage: false } ),
 	SAME_QUERY_IGNORE_PARAMS = Object.freeze( [ 'number', 'page_handle' ] );
@@ -51,7 +54,10 @@ function receiveSingle( siteId, item, itemId ) {
 		if ( -1 !== existingIndex ) {
 			MediaListStore._media[ siteId ].splice( existingIndex, 1, item.ID );
 		}
-	} else if ( -1 === MediaListStore._media[ siteId ].indexOf( item.ID ) && MediaListStore.isItemMatchingQuery( siteId, item ) ) {
+	} else if (
+		-1 === MediaListStore._media[ siteId ].indexOf( item.ID ) &&
+		MediaListStore.isItemMatchingQuery( siteId, item )
+	) {
 		MediaListStore._media[ siteId ].push( item.ID );
 	}
 }
@@ -120,6 +126,11 @@ function isQuerySame( siteId, query ) {
 	);
 }
 
+function sourceHasDate( source ) {
+	const sourcesWithoutDate = [ 'pexels' ];
+	return -1 === sourcesWithoutDate.indexOf( source );
+}
+
 MediaListStore.isItemMatchingQuery = function( siteId, item ) {
 	var query, matches;
 
@@ -143,10 +154,10 @@ MediaListStore.isItemMatchingQuery = function( siteId, item ) {
 		matches = item.title && -1 !== item.title.toLowerCase().indexOf( query.search.toLowerCase() );
 	}
 
-	if ( query.source === 'google_photos' && matches ) {
+	if ( !! query.source && matches ) {
 		// On uploading external images, the stores will receive the CREATE_MEDIA_ITEM  event
 		// and will update the list of media including the new one, but we don't want this new media
-		// to be shown in the google photos list - hence the filtering.
+		// to be shown in the external source's list - hence the filtering.
 		//
 		// One use case where this happened was:
 		//
@@ -191,17 +202,28 @@ MediaListStore.getNextPageQuery = function( siteId ) {
 		return MediaListStore.DEFAULT_QUERY;
 	}
 
-	return assign( {}, MediaListStore.DEFAULT_QUERY, {
-		page_handle: MediaListStore._activeQueries[ siteId ].nextPageHandle
-	}, MediaListStore._activeQueries[ siteId ].query );
+	return assign(
+		{},
+		MediaListStore.DEFAULT_QUERY,
+		{
+			page_handle: MediaListStore._activeQueries[ siteId ].nextPageHandle,
+		},
+		MediaListStore._activeQueries[ siteId ].query
+	);
 };
 
 MediaListStore.hasNextPage = function( siteId ) {
-	return ! ( siteId in MediaListStore._activeQueries ) || null !== MediaListStore._activeQueries[ siteId ].nextPageHandle;
+	return (
+		! ( siteId in MediaListStore._activeQueries ) ||
+		null !== MediaListStore._activeQueries[ siteId ].nextPageHandle
+	);
 };
 
 MediaListStore.isFetchingNextPage = function( siteId ) {
-	return siteId in MediaListStore._activeQueries && MediaListStore._activeQueries[ siteId ].isFetchingNextPage;
+	return (
+		siteId in MediaListStore._activeQueries &&
+		MediaListStore._activeQueries[ siteId ].isFetchingNextPage
+	);
 };
 
 MediaListStore.dispatchToken = Dispatcher.register( function( payload ) {
@@ -228,7 +250,7 @@ MediaListStore.dispatchToken = Dispatcher.register( function( payload ) {
 			}
 
 			updateActiveQueryStatus( action.siteId, {
-				isFetchingNextPage: true
+				isFetchingNextPage: true,
 			} );
 
 			MediaListStore.emit( 'change' );
@@ -262,15 +284,25 @@ MediaListStore.dispatchToken = Dispatcher.register( function( payload ) {
 
 			updateActiveQueryStatus( action.siteId, {
 				isFetchingNextPage: false,
-				nextPageHandle: getNextPageMetaFromResponse( action.data )
+				nextPageHandle: getNextPageMetaFromResponse( action.data ),
 			} );
 
-			if ( action.error || ! action.data || ( action.query && ! isQuerySame( action.siteId, action.query ) ) ) {
+			if (
+				action.error ||
+				! action.data ||
+				( action.query && ! isQuerySame( action.siteId, action.query ) )
+			) {
 				break;
 			}
 
 			receivePage( action.siteId, action.data.media );
-			sortItemsByDate( action.siteId );
+			// either, no query (so no external source), or there is a query and the source has date data
+			if (
+				action.query === undefined ||
+				( action.query !== undefined && sourceHasDate( action.query.source ) )
+			) {
+				sortItemsByDate( action.siteId );
+			}
 			MediaListStore.emit( 'change' );
 			break;
 
@@ -290,4 +322,4 @@ MediaListStore.dispatchToken = Dispatcher.register( function( payload ) {
 	}
 } );
 
-module.exports = MediaListStore;
+export default MediaListStore;

@@ -1,13 +1,19 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { get, filter, find, findIndex, remove } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import { getSelectedSiteId } from 'state/ui/selectors';
-import { getPaymentMethods, arePaymentMethodsLoaded } from 'woocommerce/state/sites/payment-methods/selectors';
+import {
+	getPaymentMethods,
+	arePaymentMethodsLoaded,
+} from 'woocommerce/state/sites/payment-methods/selectors';
 
 const getPaymentMethodsEdits = ( state, siteId ) => {
 	return get( state, [ 'extensions', 'woocommerce', 'ui', 'payments', siteId, 'methods' ] );
@@ -19,7 +25,15 @@ const getPaymentMethodsEdits = ( state, siteId ) => {
  * @return {Array} All changes made to method
  */
 export const getPaymentMethodEdits = ( state, siteId ) => {
-	return get( state, [ 'extensions', 'woocommerce', 'ui', 'payments', siteId, 'methods', 'currentlyEditingChanges' ] );
+	return get( state, [
+		'extensions',
+		'woocommerce',
+		'ui',
+		'payments',
+		siteId,
+		'methods',
+		'currentlyEditingChanges',
+	] );
 };
 
 /**
@@ -40,7 +54,7 @@ export const getPaymentMethodsWithEdits = ( state, siteId = getSelectedSiteId( s
 	// Overlay the current edits on top of (a copy of) the wc-api methods
 	const { creates, updates, deletes } = edits;
 	deletes.forEach( ( { id } ) => remove( methods, { id } ) );
-	updates.forEach( ( update ) => {
+	updates.forEach( update => {
 		const index = findIndex( methods, { id: update.id } );
 		if ( -1 === index ) {
 			return;
@@ -61,6 +75,11 @@ export const getPaymentMethodsWithEdits = ( state, siteId = getSelectedSiteId( s
 			if ( 'description' === updateKey ) {
 				method.description = update[ updateKey ].value;
 				return;
+			}
+			if ( 'title' === updateKey ) {
+				// Edits to title need to update base title attribute
+				// and settings value too, thus no return here.
+				method.title = update[ updateKey ].value;
 			}
 			method.settings[ updateKey ] = {
 				...method.settings[ updateKey ],
@@ -112,7 +131,9 @@ export const getCurrentlyEditingPaymentMethod = ( state, siteId = getSelectedSit
 		return null;
 	}
 
-	const method = find( getPaymentMethodsWithEdits( state, siteId ), { id: edits.currentlyEditingId } );
+	const method = find( getPaymentMethodsWithEdits( state, siteId ), {
+		id: edits.currentlyEditingId,
+	} );
 	if ( ! method || ! edits.currentlyEditingChanges ) {
 		return { ...method };
 	}

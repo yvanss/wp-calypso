@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,7 +8,7 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import { getSiteMonitorSettings } from '../';
+import { getSiteMonitorSettings } from 'state/selectors';
 
 describe( 'getSiteMonitorSettings()', () => {
 	const siteId = 2916284;
@@ -16,29 +18,29 @@ describe( 'getSiteMonitorSettings()', () => {
 		wp_note_notifications: true,
 	};
 
-	it( 'should return monitor settings for a known site', () => {
+	test( 'should return monitor settings for a known site', () => {
 		const state = {
 			sites: {
 				monitor: {
 					items: {
 						[ siteId ]: settings,
-					}
-				}
-			}
+					},
+				},
+			},
 		};
 		const output = getSiteMonitorSettings( state, siteId );
 		expect( output ).to.eql( settings );
 	} );
 
-	it( 'should return null for an unknown site', () => {
+	test( 'should return null for an unknown site', () => {
 		const state = {
 			sites: {
 				monitor: {
 					items: {
 						77203074: settings,
-					}
-				}
-			}
+					},
+				},
+			},
 		};
 		const output = getSiteMonitorSettings( state, siteId );
 		expect( output ).to.be.null;

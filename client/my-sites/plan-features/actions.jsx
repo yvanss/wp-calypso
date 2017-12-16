@@ -1,10 +1,14 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { localize } from 'i18n-calypso';
 import { connect } from 'react-redux';
 import { noop } from 'lodash';
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import classNames from 'classnames';
 
 /**
@@ -14,33 +18,38 @@ import Button from 'components/button';
 import { getCurrentPlan } from 'state/sites/plans/selectors';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getPlanClass, isMonthly } from 'lib/plans/constants';
+import { planLevelsMatch } from 'lib/plans/index';
 import { recordTracksEvent } from 'state/analytics/actions';
 
 const PlanFeaturesActions = ( {
+	available = true,
 	canPurchase,
 	className,
-	available = true,
+	currentSitePlan,
 	current = false,
-	primaryUpgrade = false,
 	freePlan = false,
-	onUpgradeClick = noop,
+	manageHref,
+	isLandingPage,
 	isPlaceholder = false,
 	isPopular,
 	isInSignup,
-	translate,
-	manageHref,
-	isLandingPage,
+	onUpgradeClick = noop,
 	planName,
-	currentSitePlan,
 	planType,
+	primaryUpgrade = false,
+	selectedPlan,
 	recordTracksEvent: trackTracksEvent,
+	translate,
 } ) => {
 	let upgradeButton;
+
 	const classes = classNames(
 		'plan-features__actions-button',
 		{
 			'is-current': current,
-			'is-primary': ( primaryUpgrade && ! isPlaceholder ) || ( isPopular )
+			'is-primary': selectedPlan
+				? planLevelsMatch( selectedPlan, planType )
+				: ( primaryUpgrade && ! isPlaceholder ) || isPopular,
 		},
 		className
 	);
@@ -61,12 +70,15 @@ const PlanFeaturesActions = ( {
 		if ( isInSignup ) {
 			buttonText = translate( 'Start with %(plan)s', {
 				args: {
-					plan: planName
-				}
+					plan: planName,
+				},
 			} );
 		}
 		const isCurrentPlanMonthly = currentSitePlan && isMonthly( currentSitePlan.productSlug );
-		if ( isCurrentPlanMonthly && getPlanClass( planType ) === getPlanClass( currentSitePlan.productSlug ) ) {
+		if (
+			isCurrentPlanMonthly &&
+			getPlanClass( planType ) === getPlanClass( currentSitePlan.productSlug )
+		) {
 			buttonText = translate( 'Upgrade to Yearly' );
 		}
 
@@ -84,11 +96,7 @@ const PlanFeaturesActions = ( {
 		};
 
 		upgradeButton = (
-			<Button
-				className={ classes }
-				onClick={ handleUpgradeButtonClick }
-				disabled={ isPlaceholder }
-			>
+			<Button className={ classes } onClick={ handleUpgradeButtonClick } disabled={ isPlaceholder }>
 				{ buttonText }
 			</Button>
 		);
@@ -96,24 +104,23 @@ const PlanFeaturesActions = ( {
 
 	return (
 		<div className="plan-features__actions">
-			<div className="plan-features__actions-buttons">
-				{ upgradeButton }
-			</div>
+			<div className="plan-features__actions-buttons">{ upgradeButton }</div>
 		</div>
 	);
 };
 
 PlanFeaturesActions.propTypes = {
+	available: PropTypes.bool,
 	canPurchase: PropTypes.bool.isRequired,
 	className: PropTypes.string,
-	primaryUpgrade: PropTypes.bool,
 	current: PropTypes.bool,
-	available: PropTypes.bool,
-	onUpgradeClick: PropTypes.func,
 	freePlan: PropTypes.bool,
 	isPlaceholder: PropTypes.bool,
 	isLandingPage: PropTypes.bool,
+	onUpgradeClick: PropTypes.func,
 	planType: PropTypes.string,
+	primaryUpgrade: PropTypes.bool,
+	selectedPlan: PropTypes.string,
 };
 
 export default connect(
@@ -126,6 +133,6 @@ export default connect(
 		};
 	},
 	{
-		recordTracksEvent
+		recordTracksEvent,
 	}
 )( localize( PlanFeaturesActions ) );

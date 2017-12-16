@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
@@ -28,11 +31,11 @@ export function PostStatus( { translate, post, showAll, showIcon = true } ) {
 		text = translate( 'Pending Review' );
 		classModifier = 'is-pending';
 		icon = 'aside';
-	} else if ( 'future' === status ) {
+	} else if ( showAll && 'future' === status ) {
 		text = translate( 'Scheduled' );
 		classModifier = 'is-scheduled';
 		icon = 'calendar';
-	} else if ( 'trash' === status ) {
+	} else if ( showAll && 'trash' === status ) {
 		text = translate( 'Trashed' );
 		classModifier = 'is-trash';
 		icon = 'trash';
@@ -54,15 +57,8 @@ export function PostStatus( { translate, post, showAll, showIcon = true } ) {
 
 	return (
 		<span className={ classes }>
-			{ showIcon &&
-				<Gridicon
-					icon={ icon }
-					size={ 18 }
-					className="post-status__icon" />
-			}
-			<span className="post-status__text">
-				{ text }
-			</span>
+			{ showIcon && <Gridicon icon={ icon } size={ 18 } className="post-status__icon" /> }
+			<span className="post-status__text">{ text }</span>
 		</span>
 	);
 }
@@ -74,11 +70,11 @@ PostStatus.propTypes = {
 	translate: PropTypes.func,
 	post: PropTypes.object,
 	showAll: PropTypes.bool,
-	showIcon: PropTypes.bool
+	showIcon: PropTypes.bool,
 };
 
 export default connect( ( state, { globalId } ) => {
 	return {
-		post: getNormalizedPost( state, globalId )
+		post: getNormalizedPost( state, globalId ),
 	};
 } )( localize( PostStatus ) );

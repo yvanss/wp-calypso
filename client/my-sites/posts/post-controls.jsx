@@ -1,7 +1,11 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { PropTypes } from 'react';
+
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
 import classNames from 'classnames';
@@ -13,9 +17,14 @@ import Gridicon from 'gridicons';
  */
 import { isEnabled } from 'config';
 import { ga } from 'lib/analytics';
+import { preload } from 'sections-preload';
 import { userCan } from 'lib/posts/utils';
 import { isPublicizeEnabled } from 'state/selectors';
 import { getSiteSlug, isSitePreviewable } from 'state/sites/selectors';
+
+function preloadEditor() {
+	preload( 'post-editor' );
+}
 
 const edit = () => ga.recordEvent( 'Posts', 'Clicked Edit Post' );
 const copy = () => ga.recordEvent( 'Posts', 'Clicked Copy Post' );
@@ -50,6 +59,7 @@ const getAvailableControls = props => {
 			href: editURL,
 			icon: 'pencil',
 			onClick: edit,
+			onMouseOver: preloadEditor,
 			text: translate( 'Edit' ),
 		} );
 	}
@@ -132,6 +142,7 @@ const getAvailableControls = props => {
 			href: `/post/${ siteSlug }?copy=${ post.ID }`,
 			icon: 'clipboard',
 			onClick: copy,
+			onMouseOver: preloadEditor,
 			text: translate( 'Copy' ),
 		} );
 	}
@@ -162,39 +173,33 @@ const getAvailableControls = props => {
 	return controls;
 };
 
-const getControlElements = controls => controls.map( ( control, index ) =>
-	<li
-		className={ classNames( { 'post-controls__disabled': control.disabled } ) }
-		key={ index }
-	>
-		<a
-			className={ `post-controls__${ control.className }` }
-			href={ control.href }
-			onClick={ control.disabled ? noop : control.onClick }
-			target={ control.target ? control.target : null }
-		>
-			<Gridicon icon={ control.icon } size={ 18 } />
-			<span>
-				{ control.text }
-			</span>
-		</a>
-	</li>
-);
+const getControlElements = controls =>
+	controls.map( ( control, index ) => (
+		<li className={ classNames( { 'post-controls__disabled': control.disabled } ) } key={ index }>
+			<a
+				className={ `post-controls__${ control.className }` }
+				href={ control.href }
+				onClick={ control.disabled ? noop : control.onClick }
+				onMouseOver={ control.onMouseOver ? control.onMouseOver : noop }
+				target={ control.target ? control.target : null }
+			>
+				<Gridicon icon={ control.icon } size={ 18 } />
+				<span>{ control.text }</span>
+			</a>
+		</li>
+	) );
 
 export const PostControls = props => {
 	const { main, more } = getAvailableControls( props );
-	const classes = classNames(
-		'post-controls',
-		{ 'post-controls--desk-nomore': more <= 2 }
-	);
+	const classes = classNames( 'post-controls', { 'post-controls--desk-nomore': more <= 2 } );
 
 	return (
 		<div className={ classes }>
-			{ more.length > 0 &&
+			{ more.length > 0 && (
 				<ul className="posts__post-controls post-controls__pane post-controls__more-options">
 					{ getControlElements( more ) }
 				</ul>
-			}
+			) }
 			<ul className="posts__post-controls post-controls__pane post-controls__main-options">
 				{ getControlElements( main ) }
 			</ul>

@@ -1,51 +1,32 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
-var Dispatcher = require( 'dispatcher' );
+
+import Dispatcher from 'dispatcher';
 
 /**
  * Internal Dependencies
  */
 import { action as InvitesActionTypes } from 'lib/invites/constants';
-let User = require( './user' ),
-	_user = false;
+import User from './user';
+let _user = false;
 
-module.exports = function() {
+export default function() {
 	if ( ! _user ) {
 		_user = new User();
 	}
 	return _user;
-};
+}
 
 User.dispatchToken = Dispatcher.register( function( payload ) {
 	var action = payload.action;
 	switch ( action.type ) {
-		case 'RECEIVE_DELETED_SITE':
-			decrementSiteCount();
-			_user.fetch();
-			break;
 		case InvitesActionTypes.INVITE_ACCEPTED:
 			if ( [ 'follower', 'viewer' ].indexOf( action.invite.role ) === -1 ) {
-				incrementSiteCount();
+				_user.incrementSiteCount();
 			}
 			break;
 	}
 } );
-
-function decrementSiteCount() {
-	var data = _user.get(),
-		attributes = {
-			visible_site_count: data.visible_site_count - 1,
-			site_count: data.site_count - 1
-		};
-	_user.set( attributes );
-}
-
-function incrementSiteCount() {
-	const data = _user.get(),
-		attributes = {
-			visible_site_count: data.visible_site_count + 1,
-			site_count: data.site_count + 1
-		};
-	_user.set( attributes );
-}

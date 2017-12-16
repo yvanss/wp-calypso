@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,10 +8,10 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import { getBlogStickers } from '../';
+import { getBlogStickers } from 'state/selectors';
 
 describe( 'getBlogStickers()', () => {
-	it( 'should return stickers for a known blog', () => {
+	test( 'should return stickers for a known blog', () => {
 		const prevState = {
 			sites: {
 				blogStickers: {
@@ -24,7 +26,7 @@ describe( 'getBlogStickers()', () => {
 		expect( nextState ).to.eql( [ 'dont-recommend' ] );
 	} );
 
-	it( 'should return null for an unknown blog', () => {
+	test( 'should return null for an unknown blog', () => {
 		const prevState = {
 			sites: {
 				blogStickers: {

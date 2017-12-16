@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import { isEqual, toArray, some } from 'lodash';
@@ -26,8 +29,19 @@ import {
 } from 'state/sharing/keyring/selectors';
 import { requestKeyringConnections } from 'state/sharing/keyring/actions';
 
-const isConnected = props => props.source === '' || some( props.connectedServices, item => item.service === props.source );
-const needsKeyring = props => ! props.isRequesting && props.source !== '' && props.connectedServices.length === 0;
+// External media sources that do not need a user to connect them
+// should be listed here.
+const noConnectionNeeded = [ 'pexels' ];
+
+const isConnected = props =>
+	noConnectionNeeded.indexOf( props.source ) !== -1 ||
+	props.source === '' ||
+	some( props.connectedServices, item => item.service === props.source );
+const needsKeyring = props =>
+	noConnectionNeeded.indexOf( props.source ) === -1 &&
+	! props.isRequesting &&
+	props.source !== '' &&
+	props.connectedServices.length === 0;
 
 class MediaLibrary extends Component {
 	static propTypes = {
@@ -48,6 +62,7 @@ class MediaLibrary extends Component {
 		single: PropTypes.bool,
 		scrollable: PropTypes.bool,
 		postId: PropTypes.number,
+		disableLargeImageSources: PropTypes.bool,
 	};
 
 	static defaultProps = {
@@ -56,6 +71,7 @@ class MediaLibrary extends Component {
 		onScaleChange: () => {},
 		scrollable: false,
 		source: '',
+		disableLargeImageSources: false,
 	};
 
 	componentWillMount() {
@@ -104,16 +120,20 @@ class MediaLibrary extends Component {
 		}
 
 		this.props.onAddMedia();
-	}
+	};
 
 	filterRequiresUpgrade() {
-		const { filter, site } = this.props;
+		const { filter, site, source } = this.props;
+		if ( source ) {
+			return false;
+		}
+
 		switch ( filter ) {
 			case 'audio':
-				return ! ( site && site.options.upgraded_filetypes_enabled || site.jetpack );
+				return ! ( ( site && site.options.upgraded_filetypes_enabled ) || site.jetpack );
 
 			case 'videos':
-				return ! ( site && site.options.videopress_enabled || site.jetpack );
+				return ! ( ( site && site.options.videopress_enabled ) || site.jetpack );
 		}
 
 		return false;
@@ -129,7 +149,8 @@ class MediaLibrary extends Component {
 				site={ this.props.site }
 				filter={ this.props.filter }
 				fullScreen={ this.props.fullScreenDropZone }
-				onAddMedia={ this.onAddMedia } />
+				onAddMedia={ this.onAddMedia }
+			/>
 		);
 	}
 
@@ -155,21 +176,20 @@ class MediaLibrary extends Component {
 				onDeleteItem={ this.props.onDeleteItem }
 				onEditItem={ this.props.onEditItem }
 				onViewDetails={ this.props.onViewDetails }
-				postId={ this.props.postId } />
+				postId={ this.props.postId }
+			/>
 		);
 
 		if ( this.props.site ) {
 			content = (
-				<MediaValidationData siteId={ this.props.site.ID }>
-					{ content }
-				</MediaValidationData>
+				<MediaValidationData siteId={ this.props.site.ID }>{ content }</MediaValidationData>
 			);
 		}
 
 		const classes = classNames(
 			'media-library',
 			{ 'is-single': this.props.single },
-			this.props.className,
+			this.props.className
 		);
 
 		return (
@@ -187,16 +207,23 @@ class MediaLibrary extends Component {
 					source={ this.props.source }
 					onSearch={ this.doSearch }
 					isConnected={ isConnected( this.props ) }
-					post={ !! this.props.postId } />
+					post={ !! this.props.postId }
+					disableLargeImageSources={ this.props.disableLargeImageSources }
+				/>
 				{ content }
 			</div>
 		);
 	}
 }
 
-export default connect( state => ( {
-	connectedServices: toArray( getKeyringConnections( state ) ).filter( item => item.type === 'other' && item.status === 'ok' ),
-	isRequesting: isKeyringConnectionsFetching( state ),
-} ), {
-	requestKeyringConnections,
-} )( MediaLibrary );
+export default connect(
+	state => ( {
+		connectedServices: toArray( getKeyringConnections( state ) ).filter(
+			item => item.type === 'other' && item.status === 'ok'
+		),
+		isRequesting: isKeyringConnectionsFetching( state ),
+	} ),
+	{
+		requestKeyringConnections,
+	}
+)( MediaLibrary );

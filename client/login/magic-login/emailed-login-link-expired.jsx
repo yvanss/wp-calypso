@@ -1,8 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import PropTypes from 'prop-types';
 
+import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
@@ -16,12 +18,16 @@ import addQueryArgs from 'lib/route/add-query-args';
 import EmptyContent from 'components/empty-content';
 import RedirectWhenLoggedIn from 'components/redirect-when-logged-in';
 import { hideMagicLoginRequestForm } from 'state/login/magic-login/actions';
-import { recordPageView } from 'state/analytics/actions';
+import { recordPageViewWithClientId as recordPageView } from 'state/analytics/actions';
 
-const nativeLoginUrl = login( { isNative: true } );
-const lostPasswordURL = addQueryArgs( {
-	action: 'lostpassword',
-}, login() );
+const nativeLoginUrl = login( { isNative: true, twoFactorAuthType: 'link' } );
+
+const lostPasswordURL = addQueryArgs(
+	{
+		action: 'lostpassword',
+	},
+	login()
+);
 
 class EmailedLoginLinkExpired extends React.Component {
 	static propTypes = {
@@ -31,12 +37,15 @@ class EmailedLoginLinkExpired extends React.Component {
 
 	onClickTryAgainLink = event => {
 		event.preventDefault();
+
 		this.props.hideMagicLoginRequestForm();
+
 		page( nativeLoginUrl );
 	};
 
 	render() {
 		const { translate } = this.props;
+
 		this.props.recordPageView( '/log-in/link/use', 'Login > Link > Expired' );
 
 		return (

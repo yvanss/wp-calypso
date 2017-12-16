@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -7,10 +9,10 @@ import deepFreeze from 'deep-freeze';
 /**
  * Internal dependencies
  */
-import { isRequestingAccountRecoveryReset } from '../';
+import { isRequestingAccountRecoveryReset } from 'state/selectors';
 
 describe( 'isRequestingAccountRecoveryReset()', () => {
-	it( 'should return the requesting status flag under the request-reset state tree.', () => {
+	test( 'should return the requesting status flag under the request-reset state tree.', () => {
 		const state = deepFreeze( {
 			accountRecovery: {
 				reset: {

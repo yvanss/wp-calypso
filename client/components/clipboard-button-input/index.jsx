@@ -1,9 +1,15 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { PropTypes } from 'react';
+
+import React from 'react';
+import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import { omit } from 'lodash';
+import { localize } from 'i18n-calypso';
+import { connect } from 'react-redux';
 
 /**
  * Internal dependencies
@@ -11,69 +17,84 @@ import { omit } from 'lodash';
 import { withoutHttp } from 'lib/url';
 import ClipboardButton from 'components/forms/clipboard-button';
 import FormTextInput from 'components/forms/form-text-input';
+import { recordTracksEvent } from 'state/analytics/actions';
 
-export default React.createClass( {
-	displayName: 'ClipboardButtonInput',
-
-	propTypes: {
+class ClipboardButtonInputExport extends React.Component {
+	constructor( props ) {
+		super( props );
+		this.state = {
+			isCopied: false,
+			disabled: false,
+		};
+	}
+	static propTypes = {
 		value: PropTypes.string,
 		disabled: PropTypes.bool,
 		className: PropTypes.string,
-		hideHttp: PropTypes.bool
-	},
+		hideHttp: PropTypes.bool,
+		moment: PropTypes.func,
+		numberFormat: PropTypes.func,
+		translate: PropTypes.func,
+	};
 
-	getInitialState() {
-		return {
-			isCopied: false,
-			disabled: false
-		};
-	},
-
-	getDefaultProps() {
-		return {
-			value: ''
-		};
-	},
+	static defaultProps = {
+		value: '',
+	};
 
 	componentWillUnmount() {
 		clearTimeout( this.confirmationTimeout );
 		delete this.confirmationTimeout;
-	},
+	}
 
-	showConfirmation() {
+	showConfirmation = () => {
 		this.setState( {
-			isCopied: true
+			isCopied: true,
 		} );
 
 		this.confirmationTimeout = setTimeout( () => {
 			this.setState( {
-				isCopied: false
+				isCopied: false,
 			} );
 		}, 4000 );
-	},
+		this.props.recordTracksEvent( 'calypso_editor_clipboard_url_button_click' );
+	};
 
 	render() {
-		const { value, className, disabled, hideHttp } = this.props;
+		const { value, className, disabled, hideHttp, translate } = this.props;
 		const classes = classnames( 'clipboard-button-input', className );
 
 		return (
 			<span className={ classes }>
 				<FormTextInput
-					{ ...omit( this.props, 'className', 'hideHttp' ) }
+					{ ...omit(
+						this.props,
+						'className',
+						'hideHttp',
+						'moment',
+						'numberFormat',
+						'translate',
+						'recordTracksEvent'
+					) }
 					value={ hideHttp ? withoutHttp( value ) : value }
 					type="text"
 					selectOnFocus
-					readOnly />
+					readOnly
+				/>
 				<ClipboardButton
 					text={ value }
 					onCopy={ this.showConfirmation }
 					disabled={ disabled }
-					compact>
+					compact
+				>
 					{ this.state.isCopied
-						? this.translate( 'Copied!' )
-						: this.translate( 'Copy', { context: 'verb' } ) }
+						? translate( 'Copied!' )
+						: translate( 'Copy', { context: 'verb' } ) }
 				</ClipboardButton>
 			</span>
 		);
 	}
-} );
+}
+
+export default connect( null, {
+	recordTracksEvent,
+} )( localize( ClipboardButtonInputExport ) );

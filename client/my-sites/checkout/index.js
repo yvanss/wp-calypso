@@ -1,60 +1,92 @@
+/** @format */
 /**
  * External dependencies
  */
-const page = require( 'page' );
+import page from 'page';
 
 /**
  * Internal dependencies
  */
-const controller = require( 'my-sites/controller' ),
-	checkoutController = require( './controller' ),
-	SiftScience = require( 'lib/siftscience' );
+import { noSite, siteSelection } from 'my-sites/controller';
+import checkoutController from './controller';
+import SiftScience from 'lib/siftscience';
+import { makeLayout, render as clientRender } from 'controller';
 
-module.exports = function() {
+export default function() {
 	SiftScience.recordUser();
 
 	page(
 		'/checkout/thank-you/no-site/:receiptId?',
-		controller.noSite,
-		checkoutController.checkoutThankYou
+		noSite,
+		checkoutController.checkoutThankYou,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/thank-you/:site/:receiptId?',
-		controller.siteSelection,
-		checkoutController.checkoutThankYou
+		siteSelection,
+		checkoutController.checkoutThankYou,
+		makeLayout,
+		clientRender
+	);
+
+	page(
+		'/checkout/thank-you/:site/:receiptId/with-gsuite/:gsuiteReceiptId',
+		siteSelection,
+		checkoutController.checkoutThankYou,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/features/:feature/:domain/:plan_name?',
-		controller.siteSelection,
-		checkoutController.checkout
+		siteSelection,
+		checkoutController.checkout,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/thank-you/features/:feature/:site/:receiptId?',
-		controller.siteSelection,
-		checkoutController.checkoutThankYou
+		siteSelection,
+		checkoutController.checkoutThankYou,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/no-site',
-		controller.noSite,
-		checkoutController.sitelessCheckout
+		noSite,
+		checkoutController.sitelessCheckout,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/:domain/:product?',
-		controller.siteSelection,
-		checkoutController.checkout
+		siteSelection,
+		checkoutController.checkout,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/checkout/:product/renew/:purchaseId/:domain',
-		controller.siteSelection,
-		checkoutController.checkout
+		siteSelection,
+		checkoutController.checkout,
+		makeLayout,
+		clientRender
+	);
+
+	page(
+		'/checkout/:site/with-gsuite/:domain/:receiptId?',
+		siteSelection,
+		checkoutController.gsuiteNudge,
+		makeLayout,
+		clientRender
 	);
 
 	// Visting /checkout without a plan or product should be redirected to /plans
 	page( '/checkout', '/plans' );
-};
+}

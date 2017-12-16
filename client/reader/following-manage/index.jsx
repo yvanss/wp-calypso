@@ -2,11 +2,12 @@
 /**
  * External Dependencies
  */
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { trim, debounce, random, take, reject, includes } from 'lodash';
 import { localize } from 'i18n-calypso';
 import page from 'page';
+import PropTypes from 'prop-types';
 import qs from 'qs';
 
 /**
@@ -23,6 +24,7 @@ import {
 	getReaderRecommendedSitesPagingOffset,
 	getBlockedSites,
 	getReaderAliasedFollowFeedUrl,
+	getReaderFollowsCount,
 } from 'state/selectors';
 import QueryReaderFeedsSearch from 'components/data/query-reader-feeds-search';
 import QueryReaderRecommendedSites from 'components/data/query-reader-recommended-sites';
@@ -31,14 +33,12 @@ import FollowingManageSubscriptions from './subscriptions';
 import FollowingManageSearchFeedsResults from './feed-search-results';
 import FollowingManageEmptyContent from './empty';
 import MobileBackToSidebar from 'components/mobile-back-to-sidebar';
-import { addQueryArgs } from 'lib/url';
 import FollowButton from 'reader/follow-button';
 import {
 	READER_FOLLOWING_MANAGE_URL_INPUT,
 	READER_FOLLOWING_MANAGE_RECOMMENDATION,
-} from 'reader/follow-button/follow-sources';
-import { resemblesUrl, withoutHttp, addSchemeIfMissing } from 'lib/url';
-import { getReaderFollowsCount } from 'state/selectors';
+} from 'reader/follow-sources';
+import { resemblesUrl, withoutHttp, addSchemeIfMissing, addQueryArgs } from 'lib/url';
 import { recordTrack, recordAction } from 'reader/stats';
 import { SORT_BY_RELEVANCE } from 'state/reader/feed-searches/actions';
 
@@ -196,20 +196,18 @@ class FollowingManage extends Component {
 			<ReaderMain className="following-manage">
 				<DocumentHead title={ 'Manage Following' } />
 				<MobileBackToSidebar>
-					<h1>
-						{ translate( 'Streams' ) }
-					</h1>
+					<h1>{ translate( 'Streams' ) }</h1>
 				</MobileBackToSidebar>
-				{ ! searchResults &&
-					<QueryReaderFeedsSearch query={ sitesQuery } excludeFollowed={ true } /> }
-				{ this.shouldRequestMoreRecs() &&
+				{ ! searchResults && (
+					<QueryReaderFeedsSearch query={ sitesQuery } excludeFollowed={ true } />
+				) }
+				{ this.shouldRequestMoreRecs() && (
 					<QueryReaderRecommendedSites
 						seed={ recommendationsSeed }
 						offset={ recommendedSitesPagingOffset + PAGE_SIZE || 0 }
-					/> }
-				<h2 className="following-manage__header">
-					{ translate( 'Follow Something New' ) }
-				</h2>
+					/>
+				) }
+				<h2 className="following-manage__header">{ translate( 'Follow Something New' ) }</h2>
 				<div ref={ this.handleStreamMounted } />
 				<div className="following-manage__fixed-area" ref={ this.handleSearchBoxMounted }>
 					<CompactCard className="following-manage__input-card">
@@ -228,7 +226,7 @@ class FollowingManage extends Component {
 						/>
 					</CompactCard>
 
-					{ showFollowByUrl &&
+					{ showFollowByUrl && (
 						<div className="following-manage__url-follow">
 							<FollowButton
 								followLabel={ translate( 'Follow %s', { args: sitesQueryWithoutProtocol } ) }
@@ -236,31 +234,34 @@ class FollowingManage extends Component {
 								siteUrl={ addSchemeIfMissing( readerAliasedFollowFeedUrl, 'http' ) }
 								followSource={ READER_FOLLOWING_MANAGE_URL_INPUT }
 							/>
-						</div> }
+						</div>
+					) }
 				</div>
-				{ hasFollows &&
-					! sitesQuery &&
+				{ ! sitesQuery && (
 					<RecommendedSites
 						sites={ take( filteredRecommendedSites, 2 ) }
 						followSource={ READER_FOLLOWING_MANAGE_RECOMMENDATION }
-					/> }
+					/>
+				) }
 				{ !! sitesQuery &&
-					! isFollowByUrlWithNoSearchResults &&
-					<FollowingManageSearchFeedsResults
-						searchResults={ searchResults }
-						showMoreResults={ showMoreResults }
-						onShowMoreResultsClicked={ this.handleShowMoreClicked }
-						width={ this.state.width }
-						searchResultsCount={ searchResultsCount }
-						query={ sitesQuery }
-					/> }
-				{ showExistingSubscriptions &&
+					! isFollowByUrlWithNoSearchResults && (
+						<FollowingManageSearchFeedsResults
+							searchResults={ searchResults }
+							showMoreResults={ showMoreResults }
+							onShowMoreResultsClicked={ this.handleShowMoreClicked }
+							width={ this.state.width }
+							searchResultsCount={ searchResultsCount }
+							query={ sitesQuery }
+						/>
+					) }
+				{ showExistingSubscriptions && (
 					<FollowingManageSubscriptions
 						width={ this.state.width }
 						query={ subsQuery }
 						sortOrder={ subsSortOrder }
 						windowScrollerRef={ this.handleWindowScrollerMounted }
-					/> }
+					/>
+				) }
 				{ ! hasFollows && <FollowingManageEmptyContent /> }
 			</ReaderMain>
 		);

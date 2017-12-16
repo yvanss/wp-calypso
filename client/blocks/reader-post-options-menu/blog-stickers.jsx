@@ -20,12 +20,12 @@ class ReaderPostOptionsMenuBlogStickers extends React.Component {
 	};
 
 	render() {
-		const blogStickersOffered = [ 'dont-recommend', 'broken-in-reader' ];
+		const blogStickersOffered = [ 'dont-recommend', 'broken-in-reader', 'a8c-test-blog' ];
 		const { blogId, stickers } = this.props;
 
 		return (
 			<div className="reader-post-options-menu__blog-stickers">
-				{ map( blogStickersOffered, blogStickerName =>
+				{ map( blogStickersOffered, blogStickerName => (
 					<ReaderPostOptionsMenuBlogStickerMenuItem
 						key={ blogStickerName }
 						blogId={ blogId }
@@ -34,7 +34,7 @@ class ReaderPostOptionsMenuBlogStickers extends React.Component {
 					>
 						{ blogStickerName }
 					</ReaderPostOptionsMenuBlogStickerMenuItem>
-				) }
+				) ) }
 				{ ! stickers && <QueryBlogStickers blogId={ blogId } /> }
 			</div>
 		);

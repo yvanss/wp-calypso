@@ -1,28 +1,35 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import React, { PropTypes } from 'react';
+
+import PropTypes from 'prop-types';
+import React from 'react';
 import classnames from 'classnames';
 import { connect } from 'react-redux';
-import { get } from 'lodash';
+import { get, noop } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import resizeImageUrl from 'lib/resize-image-url';
+import safeImageUrl from 'lib/safe-image-url';
 import { getNormalizedPost } from 'state/posts/selectors';
 
-function PostTypeListPostThumbnail( { thumbnail } ) {
+function PostTypeListPostThumbnail( { onClick, thumbnail } ) {
 	const classes = classnames( 'post-type-list__post-thumbnail-wrapper', {
-		'has-image': !! thumbnail
+		'has-image': !! thumbnail,
 	} );
 
 	return (
 		<div className={ classes }>
 			{ thumbnail && (
 				<img
-					src={ resizeImageUrl( thumbnail, { h: 80 } ) }
-					className="post-type-list__post-thumbnail" />
+					src={ resizeImageUrl( safeImageUrl( thumbnail ), { h: 80 } ) }
+					className="post-type-list__post-thumbnail"
+					onClick={ onClick }
+				/>
 			) }
 		</div>
 	);
@@ -30,7 +37,12 @@ function PostTypeListPostThumbnail( { thumbnail } ) {
 
 PostTypeListPostThumbnail.propTypes = {
 	globalId: PropTypes.string,
-	thumbnail: PropTypes.string
+	onClick: PropTypes.func,
+	thumbnail: PropTypes.string,
+};
+
+PostTypeListPostThumbnail.defaultProps = {
+	onClick: noop,
 };
 
 export default connect( ( state, ownProps ) => {

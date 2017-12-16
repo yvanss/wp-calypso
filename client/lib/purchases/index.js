@@ -1,8 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import { find, includes } from 'lodash';
 
+import { find, includes } from 'lodash';
 import moment from 'moment';
 import i18n from 'i18n-calypso';
 
@@ -12,8 +14,9 @@ import i18n from 'i18n-calypso';
 import {
 	isJetpackPlan,
 	isDomainRegistration,
+	isDomainTransfer,
 	isPlan,
-	isTheme
+	isTheme,
 } from 'lib/products-values';
 
 function getIncludedDomain( purchase ) {
@@ -28,29 +31,31 @@ function getIncludedDomain( purchase ) {
  * @return {array} An array of sites with purchases attached.
  */
 function getPurchasesBySite( purchases, sites ) {
-	return purchases.reduce( ( result, currentValue ) => {
-		const site = find( result, { id: currentValue.siteId } );
-		if ( site ) {
-			site.purchases = site.purchases.concat( currentValue );
-		} else {
-			const siteObject = find( sites, { ID: currentValue.siteId } );
+	return purchases
+		.reduce( ( result, currentValue ) => {
+			const site = find( result, { id: currentValue.siteId } );
+			if ( site ) {
+				site.purchases = site.purchases.concat( currentValue );
+			} else {
+				const siteObject = find( sites, { ID: currentValue.siteId } );
 
-			result = result.concat( {
-				id: currentValue.siteId,
-				name: currentValue.siteName,
-				/* if the purchase is attached to a deleted site,
+				result = result.concat( {
+					id: currentValue.siteId,
+					name: currentValue.siteName,
+					/* if the purchase is attached to a deleted site,
 				 * there will be no site with this ID in `sites`, so
 				 * we fall back on the domain. */
-				slug: siteObject ? siteObject.slug : currentValue.domain,
-				isDomainOnly: siteObject ? siteObject.options.is_domain_only : false,
-				title: currentValue.siteName || currentValue.domain || '',
-				purchases: [ currentValue ],
-				domain: siteObject ? siteObject.domain : currentValue.domain
-			} );
-		}
+					slug: siteObject ? siteObject.slug : currentValue.domain,
+					isDomainOnly: siteObject ? siteObject.options.is_domain_only : false,
+					title: currentValue.siteName || currentValue.domain || '',
+					purchases: [ currentValue ],
+					domain: siteObject ? siteObject.domain : currentValue.domain,
+				} );
+			}
 
-		return result;
-	}, [] ).sort( ( a, b ) => a.title.toLowerCase() > b.title.toLowerCase() ? 1 : -1 );
+			return result;
+		}, [] )
+		.sort( ( a, b ) => ( a.title.toLowerCase() > b.title.toLowerCase() ? 1 : -1 ) );
 }
 
 function getName( purchase ) {
@@ -74,7 +79,14 @@ function hasIncludedDomain( purchase ) {
 }
 
 function hasPaymentMethod( purchase ) {
-	return isPaidWithPaypal( purchase ) || isPaidWithCreditCard( purchase ) || isPaidWithPayPalDirect( purchase );
+	return (
+		isPaidWithPaypal( purchase ) ||
+		isPaidWithCreditCard( purchase ) ||
+		isPaidWithPayPalDirect( purchase ) ||
+		isPaidWithIdeal( purchase ) ||
+		isPaidWithGiropay( purchase ) ||
+		isPaidWithBancontact( purchase )
+	);
 }
 
 function hasPrivacyProtection( purchase ) {
@@ -115,12 +127,10 @@ function isExpired( purchase ) {
 }
 
 function isExpiring( purchase ) {
-	return includes( [
-		'cardExpired',
-		'cardExpiring',
-		'manualRenew',
-		'expiring'
-	], purchase.expiryStatus );
+	return includes(
+		[ 'cardExpired', 'cardExpiring', 'manualRenew', 'expiring' ],
+		purchase.expiryStatus
+	);
 }
 
 function isIncludedWithPlan( purchase ) {
@@ -133,6 +143,18 @@ function isOneTimePurchase( purchase ) {
 
 function isPaidWithPaypal( purchase ) {
 	return 'paypal' === purchase.payment.type;
+}
+
+function isPaidWithIdeal( purchase ) {
+	return 'iDEAL' === purchase.payment.type;
+}
+
+function isPaidWithGiropay( purchase ) {
+	return 'Giropay' === purchase.payment.type;
+}
+
+function isPaidWithBancontact( purchase ) {
+	return 'Bancontact' === purchase.payment.type;
 }
 
 function isPendingTransfer( purchase ) {
@@ -168,7 +190,24 @@ function isRemovable( purchase ) {
 		return false;
 	}
 
-	return isExpiring( purchase ) || isExpired( purchase );
+	return (
+		isExpiring( purchase ) ||
+		isExpired( purchase ) ||
+		( isDomainTransfer( purchase ) &&
+			! isRefundable( purchase ) &&
+			isPurchaseCancelable( purchase ) )
+	);
+}
+
+/**
+ * Returns the purchase cancelable flag, as opposed to the super weird isCancelable function which
+ * manually checks all kinds of stuff
+ *
+ * @param {Object} purchase - the purchase with which we are concerned
+ * @return {boolean} true if the purchase has cancelable flag, false otherwise
+ */
+function isPurchaseCancelable( purchase ) {
+	return purchase.isCancelable;
 }
 
 /**
@@ -192,10 +231,7 @@ function isRenewing( purchase ) {
 }
 
 function isSubscription( purchase ) {
-	const nonSubscriptionFunctions = [
-		isDomainRegistration,
-		isOneTimePurchase
-	];
+	const nonSubscriptionFunctions = [ isDomainRegistration, isOneTimePurchase ];
 
 	return ! nonSubscriptionFunctions.some( fn => fn( purchase ) );
 }
@@ -225,7 +261,11 @@ function canExplicitRenew( purchase ) {
 }
 
 function creditCardExpiresBeforeSubscription( purchase ) {
-	return isPaidWithCreditCard( purchase ) && hasCreditCardData( purchase ) && purchase.payment.creditCard.expiryMoment.diff( purchase.expiryMoment, 'months' ) < 0;
+	return (
+		isPaidWithCreditCard( purchase ) &&
+		hasCreditCardData( purchase ) &&
+		purchase.payment.creditCard.expiryMoment.diff( purchase.expiryMoment, 'months' ) < 0
+	);
 }
 
 function monthsUntilCardExpires( purchase ) {
@@ -239,6 +279,18 @@ function paymentLogoType( purchase ) {
 
 	if ( isPaidWithPaypal( purchase ) ) {
 		return 'paypal';
+	}
+
+	if ( isPaidWithIdeal( purchase ) ) {
+		return 'ideal';
+	}
+
+	if ( isPaidWithGiropay( purchase ) ) {
+		return 'giropay';
+	}
+
+	if ( isPaidWithBancontact( purchase ) ) {
+		return 'bancontact';
 	}
 
 	if ( isPaidWithPayPalDirect( purchase ) ) {
@@ -269,10 +321,12 @@ function purchaseType( purchase ) {
 }
 
 function showCreditCardExpiringWarning( purchase ) {
-	return ! isIncludedWithPlan( purchase ) &&
+	return (
+		! isIncludedWithPlan( purchase ) &&
 		isPaidWithCreditCard( purchase ) &&
 		creditCardExpiresBeforeSubscription( purchase ) &&
-		monthsUntilCardExpires( purchase ) < 3;
+		monthsUntilCardExpires( purchase ) < 3
+	);
 }
 
 export {

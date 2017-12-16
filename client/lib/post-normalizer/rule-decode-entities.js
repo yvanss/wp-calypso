@@ -1,5 +1,7 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
 
 import { forOwn } from 'lodash';

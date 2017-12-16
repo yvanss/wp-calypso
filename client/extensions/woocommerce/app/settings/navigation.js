@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -16,11 +18,7 @@ import NavItem from 'components/section-nav/item';
 import NavTabs from 'components/section-nav/tabs';
 import SectionNav from 'components/section-nav';
 
-export const SettingsNavigation = ( {
-	site,
-	activeSection,
-	translate,
-} ) => {
+export const SettingsNavigation = ( { site, activeSection, translate } ) => {
 	const items = [
 		{
 			id: 'payments',
@@ -36,6 +34,11 @@ export const SettingsNavigation = ( {
 			id: 'taxes',
 			path: '/store/settings/taxes/:site',
 			title: translate( 'Taxes' ),
+		},
+		{
+			id: 'email',
+			path: '/store/settings/email/:site',
+			title: translate( 'Email' ),
 		},
 	];
 
@@ -65,10 +68,8 @@ SettingsNavigation.propTypes = {
 	translate: PropTypes.func,
 };
 
-export default connect(
-	( state ) => {
-		return {
-			site: getSelectedSiteWithFallback( state ),
-		};
-	},
-)( localize( SettingsNavigation ) );
+export default connect( state => {
+	return {
+		site: getSelectedSiteWithFallback( state ),
+	};
+} )( localize( SettingsNavigation ) );

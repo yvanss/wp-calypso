@@ -1,6 +1,32 @@
-.post-type-list:not( .is-empty ) {
-	box-shadow: 0 0 0 1px transparentize( lighten( $gray, 20% ), .5 ),
-		0 1px 2px lighten( $gray, 30% );
+.post-type-list__bulk-edit-bar {
+	display: flex;
+	align-items: center;
+	padding: 8px 16px;
+
+	.count {
+		display: inline-block;
+		margin-right: 8px;
+	}
+
+	.button {
+		width: 90px;
+		line-height: 14px;
+		margin-left: 8px;
+	}
+
+	.post-type-list__bulk-edit-bar-close {
+		width: 50px;
+		height: 100%;
+		margin: 0;
+		position: absolute;
+			top: 0;
+			right: 0;
+		line-height: 1;
+
+		.gridicon {
+			top: 4px;
+		}
+	}
 }
 
 .post-type-list__post-thumbnail-wrapper {
@@ -10,7 +36,7 @@
 	align-self: stretch;
 	overflow: hidden;
 
-	margin: 8px 0;
+	margin: 8px 0 8px 8px;
 	.post-item__card.is-mini & {
 		margin: 0;
 	}
@@ -30,6 +56,21 @@
 		top: 50%;
 		left: 50%;
 	transform: translate( -50%, -50% );
-	max-height: 100%;
+	height: 100%;
+	max-height: 80px;
 	max-width: none;
+}
+
+
+.post-type-list__max-pages-notice {
+	text-align: center;
+	margin: 16px 0;
+	font-size: 14px;
+	color: $gray-text-min;
+}
+
+a.post-type-list__max-pages-notice-link {
+	cursor: pointer;
+	color: $gray-text-min;
+	text-decoration: underline;
 }

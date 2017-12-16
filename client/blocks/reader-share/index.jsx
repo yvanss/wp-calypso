@@ -8,6 +8,7 @@ import url from 'url';
 import { defer } from 'lodash';
 import config from 'config';
 import classnames from 'classnames';
+import PropTypes from 'prop-types';
 import qs from 'qs';
 import page from 'page';
 import SocialLogo from 'social-logos';
@@ -20,9 +21,13 @@ import ReaderPopoverMenu from 'components/reader-popover/menu';
 import PopoverMenuItem from 'components/popover/menu-item';
 import Gridicon from 'gridicons';
 import * as stats from 'reader/stats';
-import { preload as preloadSection } from 'sections-preload';
+import { preload } from 'sections-preload';
 import SiteSelector from 'components/site-selector';
 import { getPrimarySiteId } from 'state/selectors';
+
+function preloadEditor() {
+	preload( 'post-editor' );
+}
 
 /**
  * Local variables
@@ -80,7 +85,7 @@ function buildQuerystringForPost( post ) {
 
 class ReaderShare extends React.Component {
 	static propTypes = {
-		iconSize: React.PropTypes.number,
+		iconSize: PropTypes.number,
 	};
 
 	static defaultProps = {
@@ -163,10 +168,6 @@ class ReaderShare extends React.Component {
 		}
 	};
 
-	preloadEditor() {
-		preloadSection( 'post-editor' );
-	}
-
 	render() {
 		const { translate } = this.props;
 		const buttonClasses = classnames( {
@@ -180,8 +181,8 @@ class ReaderShare extends React.Component {
 			{
 				className: 'reader-share',
 				onClick: this.toggle,
-				onTouchStart: this.preloadEditor,
-				onMouseEnter: this.preloadEditor,
+				onTouchStart: preloadEditor,
+				onMouseEnter: preloadEditor,
 				ref: 'shareButton',
 			},
 			[
@@ -191,7 +192,7 @@ class ReaderShare extends React.Component {
 						{ translate( 'Share', { comment: 'Share the post' } ) }
 					</span>
 				</span>,
-				this.state.showingMenu &&
+				this.state.showingMenu && (
 					<ReaderPopoverMenu
 						key="menu"
 						context={ this.refs && this.refs.shareButton }
@@ -219,7 +220,7 @@ class ReaderShare extends React.Component {
 							<SocialLogo icon="twitter" />
 							<span>Twitter</span>
 						</PopoverMenuItem>
-						{ this.props.hasSites &&
+						{ this.props.hasSites && (
 							<SiteSelector
 								className="reader-share__site-selector"
 								siteBasePath="/post"
@@ -228,8 +229,10 @@ class ReaderShare extends React.Component {
 								indicator={ false }
 								autoFocus={ false }
 								groups={ true }
-							/> }
-					</ReaderPopoverMenu>,
+							/>
+						) }
+					</ReaderPopoverMenu>
+				),
 			]
 		);
 	}

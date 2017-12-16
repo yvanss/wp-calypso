@@ -15,9 +15,9 @@ import classnames from 'classnames';
  */
 import { isEnabled } from 'config';
 import { getCurrentUser } from 'state/current-user/selectors';
-import PostTime from 'reader/post-time';
+import TimeSince from 'components/time-since';
 import Gravatar from 'components/gravatar';
-import { recordAction, recordGaEvent, recordTrack } from 'reader/stats';
+import { recordAction, recordGaEvent, recordTrack, recordPermalinkClick } from 'reader/stats';
 import { getStreamUrl } from 'reader/route';
 import PostCommentContent from './post-comment-content';
 import PostCommentForm from './form';
@@ -25,7 +25,7 @@ import CommentEditForm from './comment-edit-form';
 import { PLACEHOLDER_STATE } from 'state/comments/constants';
 import { decodeEntities } from 'lib/formatting';
 import PostCommentWithError from './post-comment-with-error';
-import PostTrackback from './post-trackback.jsx';
+import PostTrackback from './post-trackback';
 import CommentActions from './comment-actions';
 import Emojify from 'components/emojify';
 import { POST_COMMENT_DISPLAY_TYPES } from 'state/comments/constants';
@@ -65,6 +65,7 @@ class PostComment extends React.PureComponent {
 		maxDepth: PropTypes.number,
 		showNestingReplyArrow: PropTypes.bool,
 		showReadMoreInActions: PropTypes.bool,
+		hidePingbacksAndTrackbacks: PropTypes.bool,
 
 		/**
 		 * If commentsToShow is not provided then it is assumed that all child comments should be displayed.
@@ -93,6 +94,7 @@ class PostComment extends React.PureComponent {
 		onCommentSubmit: noop,
 		showNestingReplyArrow: false,
 		showReadMoreInActions: false,
+		hidePingbacksAndTrackbacks: false,
 	};
 
 	state = {
@@ -120,6 +122,19 @@ class PostComment extends React.PureComponent {
 		} );
 	};
 
+	handleCommentPermalinkClick = event => {
+		recordPermalinkClick(
+			'timestamp_comment',
+			{},
+			{
+				blog_id: this.props.post.site_ID,
+				post_id: this.props.post.ID,
+				comment_id: this.props.commentId,
+				author_url: event.target.href,
+			}
+		);
+	};
+
 	getAllChildrenIds = id => {
 		const { commentsTree } = this.props;
 
@@ -129,7 +144,7 @@ class PostComment extends React.PureComponent {
 
 		const immediateChildren = get( commentsTree, [ id, 'children' ], [] );
 		return immediateChildren.concat(
-			flatMap( immediateChildren, child => this.getAllChildrenIds( child.ID ) )
+			flatMap( immediateChildren, childId => this.getAllChildrenIds( childId ) )
 		);
 	};
 
@@ -158,6 +173,7 @@ class PostComment extends React.PureComponent {
 			maxChildrenToShow,
 			enableCaterpillar,
 			post,
+			maxDepth,
 		} = this.props;
 
 		const commentChildrenIds = get( commentsTree, [ commentId, 'children' ] );
@@ -197,18 +213,20 @@ class PostComment extends React.PureComponent {
 
 		return (
 			<div>
-				{ !! replyVisibilityText &&
+				{ !! replyVisibilityText && (
 					<button className="comments__view-replies-btn" onClick={ this.handleToggleRepliesClick }>
 						<Gridicon icon="reply" size={ 18 } /> { replyVisibilityText }
-					</button> }
-				{ showReplies &&
+					</button>
+				) }
+				{ showReplies && (
 					<ol className="comments__list">
-						{ commentChildrenIds.map( childId =>
+						{ commentChildrenIds.map( childId => (
 							<ConnectedPostComment
 								showNestingReplyArrow={ this.props.showNestingReplyArrow }
 								showReadMoreInActions={ this.props.showReadMoreInActions }
 								enableCaterpillar={ enableCaterpillar }
 								depth={ childDepth }
+								maxDepth={ maxDepth }
 								key={ childId }
 								commentId={ childId }
 								commentsTree={ commentsTree }
@@ -221,16 +239,27 @@ class PostComment extends React.PureComponent {
 								onEditCommentCancel={ this.props.onEditCommentCancel }
 								activeEditCommentId={ this.props.activeEditCommentId }
 								onUpdateCommentText={ this.props.onUpdateCommentText }
-								onCommentSubmit={ this.props.resetActiveReplyComment }
+								onCommentSubmit={ this.props.onCommentSubmit }
 							/>
-						) }
-					</ol> }
+						) ) }
+					</ol>
+				) }
 			</div>
 		);
 	}
 
 	renderCommentForm() {
 		if ( this.props.activeReplyCommentId !== this.props.commentId ) {
+			return null;
+		}
+
+		// If a comment save is pending, don't show the form
+		const placeholderState = get( this.props.commentsTree, [
+			this.props.commentId,
+			'data',
+			'placeholderState',
+		] );
+		if ( placeholderState === PLACEHOLDER_STATE.PENDING ) {
 			return null;
 		}
 
@@ -257,22 +286,20 @@ class PostComment extends React.PureComponent {
 	};
 
 	renderAuthorTag = ( { authorName, authorUrl, commentId, className } ) => {
-		return !! authorUrl
-			? <a
-					href={ authorUrl }
-					className={ className }
-					onClick={ this.handleAuthorClick }
-					id={ `comment-${ commentId }` }
-				>
-					<Emojify>
-						{ authorName }
-					</Emojify>
-				</a>
-			: <strong className={ className } id={ `comment-${ commentId }` }>
-					<Emojify>
-						{ authorName }
-					</Emojify>
-				</strong>;
+		return !! authorUrl ? (
+			<a
+				href={ authorUrl }
+				className={ className }
+				onClick={ this.handleAuthorClick }
+				id={ `comment-${ commentId }` }
+			>
+				<Emojify>{ authorName }</Emojify>
+			</a>
+		) : (
+			<strong className={ className } id={ `comment-${ commentId }` }>
+				<Emojify>{ authorName }</Emojify>
+			</strong>
+		);
 	};
 
 	onReadMore = () => {
@@ -284,6 +311,13 @@ class PostComment extends React.PureComponent {
 				postId: this.props.post.ID,
 				displayType: POST_COMMENT_DISPLAY_TYPES.full,
 			} );
+		recordAction( 'comment_read_more_click' );
+		recordGaEvent( 'Clicked Comment Read More' );
+		recordTrack( 'calypso_reader_comment_read_more_click', {
+			blog_id: this.props.post.site_ID,
+			post_id: this.props.post.ID,
+			comment_id: this.props.commentId,
+		} );
 	};
 
 	render() {
@@ -297,21 +331,17 @@ class PostComment extends React.PureComponent {
 			commentsToShow,
 			overflowY,
 			showReadMoreInActions,
+			hidePingbacksAndTrackbacks,
 		} = this.props;
 
 		const comment = get( commentsTree, [ commentId, 'data' ] );
 		const isPingbackOrTrackback = comment.type === 'trackback' || comment.type === 'pingback';
 
-		if ( ! comment || ( this.props.hidePingbacksAndTrackbacks && isPingbackOrTrackback ) ) {
+		if ( ! comment || ( hidePingbacksAndTrackbacks && isPingbackOrTrackback ) ) {
 			return null;
 		} else if ( commentsToShow && ! commentsToShow[ commentId ] ) {
 			// this comment should be hidden so just render children
-			return (
-				this.shouldRenderReplies() &&
-				<div>
-					{ this.renderRepliesList() }
-				</div>
-			);
+			return this.shouldRenderReplies() && <div>{ this.renderRepliesList() }</div>;
 		}
 
 		const displayType =
@@ -360,11 +390,13 @@ class PostComment extends React.PureComponent {
 		return (
 			<li className={ postCommentClassnames }>
 				<div className="comments__comment-author">
-					{ commentAuthorUrl
-						? <a href={ commentAuthorUrl } onClick={ this.handleAuthorClick }>
-								<Gravatar user={ comment.author } />
-							</a>
-						: <Gravatar user={ comment.author } /> }
+					{ commentAuthorUrl ? (
+						<a href={ commentAuthorUrl } onClick={ this.handleAuthorClick }>
+							<Gravatar user={ comment.author } />
+						</a>
+					) : (
+						<Gravatar user={ comment.author } />
+					) }
 
 					{ this.renderAuthorTag( {
 						authorUrl: commentAuthorUrl,
@@ -373,45 +405,53 @@ class PostComment extends React.PureComponent {
 						className: 'comments__comment-username',
 					} ) }
 					{ this.props.showNestingReplyArrow &&
-						parentAuthorName &&
-						<span className="comments__comment-respondee">
-							<Gridicon icon="chevron-right" size={ 16 } />
-							{ this.renderAuthorTag( {
-								className: 'comments__comment-respondee-link',
-								authorName: parentAuthorName,
-								authorUrl: parentAuthorUrl,
-								commentId: parentCommentId,
-							} ) }
-						</span> }
+						parentAuthorName && (
+							<span className="comments__comment-respondee">
+								<Gridicon icon="chevron-right" size={ 16 } />
+								{ this.renderAuthorTag( {
+									className: 'comments__comment-respondee-link',
+									authorName: parentAuthorName,
+									authorUrl: parentAuthorUrl,
+									commentId: parentCommentId,
+								} ) }
+							</span>
+						) }
 					<div className="comments__comment-timestamp">
-						<a href={ comment.URL }>
-							<PostTime date={ comment.date } />
+						<a
+							href={ comment.URL }
+							target="_blank"
+							rel="noopener noreferrer"
+							onClick={ this.handleCommentPermalinkClick }
+						>
+							<TimeSince date={ comment.date } />
 						</a>
 					</div>
 				</div>
 
-				{ comment.status && comment.status === 'unapproved'
-					? <p className="comments__comment-moderation">
-							{ translate( 'Your comment is awaiting moderation.' ) }
-						</p>
-					: null }
+				{ comment.status && comment.status === 'unapproved' ? (
+					<p className="comments__comment-moderation">
+						{ translate( 'Your comment is awaiting moderation.' ) }
+					</p>
+				) : null }
 
-				{ this.props.activeEditCommentId !== this.props.commentId &&
+				{ this.props.activeEditCommentId !== this.props.commentId && (
 					<PostCommentContent
 						content={ comment.content }
 						setWithDimensionsRef={ this.props.setWithDimensionsRef }
 						isPlaceholder={ comment.isPlaceholder }
 						className={ displayType }
-					/> }
+					/>
+				) }
 
 				{ isEnabled( 'comments/moderation-tools-in-posts' ) &&
-					this.props.activeEditCommentId === this.props.commentId &&
-					<CommentEditForm
-						post={ this.props.post }
-						commentId={ this.props.commentId }
-						commentText={ comment.content }
-						onCommentSubmit={ this.props.onEditCommentCancel }
-					/> }
+					this.props.activeEditCommentId === this.props.commentId && (
+						<CommentEditForm
+							post={ this.props.post }
+							commentId={ this.props.commentId }
+							commentText={ comment.content }
+							onCommentSubmit={ this.props.onEditCommentCancel }
+						/>
+					) }
 
 				<CommentActions
 					post={ this.props.post || {} }
@@ -429,12 +469,14 @@ class PostComment extends React.PureComponent {
 				/>
 
 				{ haveReplyWithError ? null : this.renderCommentForm() }
-				{ this.shouldRenderCaterpillar() &&
+				{ this.shouldRenderCaterpillar() && (
 					<ConversationCaterpillar
 						blogId={ post.site_ID }
 						postId={ post.ID }
 						parentCommentId={ commentId }
-					/> }
+						commentsToShow={ commentsToShow }
+					/>
+				) }
 				{ this.renderRepliesList() }
 			</li>
 		);

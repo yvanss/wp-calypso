@@ -38,18 +38,19 @@ function AuthorAndSiteFollow( { post, site, onSiteClick, followSource } ) {
 			</a>
 			<div className="reader-related-card-v2__byline">
 				{ authorName &&
-					authorAndSiteAreDifferent &&
-					<span className="reader-related-card-v2__byline-author">
-						<ReaderAuthorLink
-							author={ post.author }
-							siteUrl={ siteUrl }
-							post={ post }
-							onClick={ onSiteClick }
-							className="reader-related-card-v2__link"
-						>
-							{ authorName }
-						</ReaderAuthorLink>
-					</span> }
+					authorAndSiteAreDifferent && (
+						<span className="reader-related-card-v2__byline-author">
+							<ReaderAuthorLink
+								author={ post.author }
+								siteUrl={ siteUrl }
+								post={ post }
+								onClick={ onSiteClick }
+								className="reader-related-card-v2__link"
+							>
+								{ authorName }
+							</ReaderAuthorLink>
+						</span>
+					) }
 				<span className="reader-related-card-v2__byline-site">
 					<a href={ siteUrl } onClick={ onSiteClick } className="reader-related-card-v2__link">
 						{ siteName }
@@ -155,9 +156,7 @@ export function RelatedPostCard( {
 				onClick={ postClickTracker }
 			>
 				<div className="reader-related-card-v2__site-info">
-					<h1 className="reader-related-card-v2__title">
-						{ post.title }
-					</h1>
+					<h1 className="reader-related-card-v2__title">{ post.title }</h1>
 					<div className="reader-related-card-v2__excerpt post-excerpt">
 						{ !! post.canonical_media ? post.short_excerpt : post.better_excerpt_no_html }
 					</div>

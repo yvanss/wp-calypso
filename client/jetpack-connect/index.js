@@ -1,3 +1,4 @@
+/** @format */
 /**
  * External dependencies
  */
@@ -6,71 +7,88 @@ import page from 'page';
 /**
  * Internal dependencies
  */
-import controller from './controller';
-import sitesController from 'my-sites/controller';
-
-const redirectToStoreWithInterval = context => {
-	const interval = context && context.params && context.params.interval
-		? context.params.interval
-		: '';
-	page.redirect( `/jetpack/connect/store/${ interval }` );
-};
+import userFactory from 'lib/user';
+import * as controller from './controller';
+import { login } from 'lib/paths';
+import { siteSelection } from 'my-sites/controller';
+import { makeLayout, render as clientRender } from 'controller';
 
 export default function() {
-	page( '/jetpack/connect/:type(personal|premium|pro)/:interval(yearly|monthly)?', controller.connect );
+	const user = userFactory();
+	const isLoggedOut = ! user.get();
 
-	page( '/jetpack/connect/:type(install)/:locale?',
-		controller.redirectWithoutLocaleifLoggedIn,
-		controller.connect
+	page(
+		'/jetpack/connect/:type(personal|premium|pro)/:interval(yearly|monthly)?',
+		controller.connect,
+		makeLayout,
+		clientRender
 	);
 
-	page( '/jetpack/connect', controller.connect );
+	page(
+		'/jetpack/connect/:type(install)/:locale?',
+		controller.redirectWithoutLocaleifLoggedIn,
+		controller.connect,
+		makeLayout,
+		clientRender
+	);
 
-	page( '/jetpack/connect/choose/:site', controller.plansPreSelection );
+	page( '/jetpack/connect', controller.connect, makeLayout, clientRender );
 
 	page(
 		'/jetpack/connect/authorize/:localeOrInterval?',
+		controller.maybeOnboard,
 		controller.redirectWithoutLocaleifLoggedIn,
-		controller.saveQueryObject,
-		controller.authorizeForm
+		controller.authorizeForm,
+		makeLayout,
+		clientRender
 	);
 
 	page(
 		'/jetpack/connect/authorize/:interval/:locale',
+		controller.maybeOnboard,
 		controller.redirectWithoutLocaleifLoggedIn,
-		controller.saveQueryObject,
-		controller.authorizeForm
+		controller.authorizeForm,
+		makeLayout,
+		clientRender
 	);
 
-	page( '/jetpack/connect/store', controller.plansLanding );
-	page( '/jetpack/connect/store/:interval', controller.plansLanding );
+	page(
+		'/jetpack/connect/store/:interval(yearly|monthly)?',
+		controller.plansLanding,
+		makeLayout,
+		clientRender
+	);
 
-	page( '/jetpack/connect/vaultpress', '/jetpack/connect/store' );
-	page( '/jetpack/connect/vaultpress/:interval', redirectToStoreWithInterval );
+	page(
+		'/jetpack/connect/:_(akismet|plans|vaultpress)/:interval(yearly|monthly)?',
+		( { params } ) =>
+			page.redirect( `/jetpack/connect/store${ params.interval ? '/' + params.interval : '' }` )
+	);
 
-	page( '/jetpack/connect/akismet', '/jetpack/connect/store' );
-	page( '/jetpack/connect/akismet/:interval', redirectToStoreWithInterval );
+	if ( isLoggedOut ) {
+		page( '/jetpack/connect/plans/:interval(yearly|monthly)?/:site', ( { path } ) =>
+			page.redirect( login( { isNative: true, redirectTo: path } ) )
+		);
+	}
+
+	page(
+		'/jetpack/connect/plans/:interval(yearly|monthly)?/:site',
+		siteSelection,
+		controller.plansSelection,
+		makeLayout,
+		clientRender
+	);
 
 	page(
 		'/jetpack/connect/:locale?',
 		controller.redirectWithoutLocaleifLoggedIn,
-		controller.connect
+		controller.connect,
+		makeLayout,
+		clientRender
 	);
 
-	page(
-		'/jetpack/connect/plans/:site',
-		sitesController.siteSelection,
-		controller.plansSelection
-	);
-
-	page(
-		'/jetpack/connect/plans/:interval/:site',
-		sitesController.siteSelection,
-		controller.plansSelection
-	);
-
-	page( '/jetpack/sso/:siteId?/:ssoNonce?', controller.sso );
-	page( '/jetpack/sso/*', controller.sso );
-	page( '/jetpack/new', controller.newSite );
+	page( '/jetpack/sso/:siteId?/:ssoNonce?', controller.sso, makeLayout, clientRender );
+	page( '/jetpack/sso/*', controller.sso, makeLayout, clientRender );
+	page( '/jetpack/new', controller.newSite, makeLayout, clientRender );
 	page( '/jetpack/new/*', '/jetpack/connect' );
 }

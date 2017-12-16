@@ -1,8 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import {
-	assign,
 	compact,
 	every,
 	filter,
@@ -33,7 +35,7 @@ import { fromApi as seoTitleFromApi } from 'components/seo/meta-title-editor/map
 import versionCompare from 'lib/version-compare';
 import { getCustomizerFocus } from 'my-sites/customize/panels';
 import { getSiteComputedAttributes } from './utils';
-import { isSiteUpgradeable } from 'state/selectors';
+import { isSiteUpgradeable, getSiteOptions } from 'state/selectors';
 
 /**
  * Returns a raw site object by its ID.
@@ -54,45 +56,55 @@ export const getRawSite = ( state, siteId ) => {
  * @return {?Object}           Site object
  */
 export const getSiteBySlug = createSelector(
-	( state, siteSlug ) => (
-		find( state.sites.items, ( item, siteId ) => (
-			// find always passes the siteId as a string. We need it as a integer
-			getSiteSlug( state, parseInt( siteId, 10 ) ) === siteSlug
-		) ) || null
-	),
-	( state ) => state.sites.items
+	( state, siteSlug ) =>
+		find(
+			state.sites.items,
+			( item, siteId ) =>
+				// find always passes the siteId as a string. We need it as a integer
+				getSiteSlug( state, parseInt( siteId, 10 ) ) === siteSlug
+		) || null,
+	state => state.sites.items
 );
 
 /**
- * Returns a normalized site object by its ID. Intends to replicate
- * the site object returned from the legacy `sites-list` module.
- *
+ * Memoization cache for the `getSite` selector
+ */
+let getSiteCache = new WeakMap();
+
+/**
+ * Returns a normalized site object by its ID or site slug.
  *
  * @param  {Object}  state  Global state tree
- * @param  {Number}  siteId Site ID
+ * @param  {Number|String}  siteIdOrSlug Site ID or site slug
  * @return {?Object}        Site object
  */
-export const getSite = createSelector(
-	( state, siteId ) => {
-		let site = getRawSite( state, siteId ) ||
-			// Support for non-ID site retrieval
-			// Replaces SitesList#getSite
-			getSiteBySlug( state, siteId );
+export function getSite( state, siteIdOrSlug ) {
+	const rawSite = getRawSite( state, siteIdOrSlug ) || getSiteBySlug( state, siteIdOrSlug );
+	if ( ! rawSite ) {
+		return null;
+	}
 
-		if ( ! site ) {
-			return null;
-		}
+	// Use the rawSite object itself as a WeakMap key
+	const cachedSite = getSiteCache.get( rawSite );
+	if ( cachedSite ) {
+		return cachedSite;
+	}
 
-		// To avoid mutating the original site object, create a shallow clone
-		// before assigning computed properties
-		site = { ...site };
-		assign( site, getSiteComputedAttributes( state, siteId ) );
-		assign( site, getJetpackComputedAttributes( state, siteId ) );
+	const site = {
+		...rawSite,
+		...getSiteComputedAttributes( state, rawSite.ID ),
+		...getJetpackComputedAttributes( state, rawSite.ID ),
+	};
 
-		return site;
-	},
-	( state ) => [ state.sites.items, state.currentUser.capabilities ]
-);
+	// Once the `rawSite` object becomes outdated, i.e., state gets updated with a newer version
+	// and no more references are held, the key will be automatically removed from the WeakMap.
+	getSiteCache.set( rawSite, site );
+	return site;
+}
+
+getSite.clearCache = () => {
+	getSiteCache = new WeakMap();
+};
 
 export function getJetpackComputedAttributes( state, siteId ) {
 	if ( ! isJetpackSite( state, siteId ) ) {
@@ -116,20 +128,20 @@ export function getJetpackComputedAttributes( state, siteId ) {
  * @param  {Object}   state Global state tree
  * @return {Number[]}       WordPress.com site IDs with collisions
  */
-export const getSiteCollisions = createSelector(
-	( state ) => {
-		return map( filter( state.sites.items, ( wpcomSite ) => {
+export const getSiteCollisions = createSelector( state => {
+	return map(
+		filter( state.sites.items, wpcomSite => {
 			const wpcomSiteUrlSansProtocol = withoutHttp( wpcomSite.URL );
-			return ! wpcomSite.jetpack && some( state.sites.items, ( jetpackSite ) => {
-				return (
-					jetpackSite.jetpack &&
-					wpcomSiteUrlSansProtocol === withoutHttp( jetpackSite.URL )
-				);
-			} );
-		} ), 'ID' );
-	},
-	( state ) => state.sites.items
-);
+			return (
+				! wpcomSite.jetpack &&
+				some( state.sites.items, jetpackSite => {
+					return jetpackSite.jetpack && wpcomSiteUrlSansProtocol === withoutHttp( jetpackSite.URL );
+				} )
+			);
+		} ),
+		'ID'
+	);
+}, state => state.sites.items );
 
 /**
  * Returns true if a collision exists for the specified WordPress.com site ID.
@@ -313,12 +325,7 @@ export function isSitePreviewable( state, siteId ) {
  * @return {*}  The value of that option or null
  */
 export function getSiteOption( state, siteId, optionName ) {
-	const site = getRawSite( state, siteId );
-	if ( ! site || ! site.options ) {
-		return null;
-	}
-
-	return site.options[ optionName ];
+	return get( getSiteOptions( state, siteId ), optionName, null );
 }
 
 /**
@@ -366,54 +373,55 @@ export const getSeoTitleFormatsForSite = compose(
  * @param  {Number} siteId Selected site
  * @return {Object} Formats by type e.g. { frontPage: { type: 'siteName' } }
  */
-export const getSeoTitleFormats = compose(
-	getSeoTitleFormatsForSite,
-	getRawSite
-);
+export const getSeoTitleFormats = compose( getSeoTitleFormatsForSite, getRawSite );
 
 export const buildSeoTitle = ( titleFormats, type, { site, post = {}, tag = '', date = '' } ) => {
 	const processPiece = ( piece = {}, data ) =>
-		'string' === piece.type
-			? piece.value
-			: get( data, piece.type, '' );
+		'string' === piece.type ? piece.value : get( data, piece.type, '' );
 
 	const buildTitle = ( format, data ) =>
-		get( titleFormats, format, [] )
-			.reduce( ( title, piece ) => title + processPiece( piece, data ), '' );
+		get( titleFormats, format, [] ).reduce(
+			( title, piece ) => title + processPiece( piece, data ),
+			''
+		);
 
 	switch ( type ) {
 		case 'frontPage':
-			return buildTitle( 'frontPage', {
-				siteName: site.name,
-				tagline: site.description
-			} ) || site.name;
+			return (
+				buildTitle( 'frontPage', {
+					siteName: site.name,
+					tagline: site.description,
+				} ) || site.name
+			);
 
 		case 'posts':
-			return buildTitle( 'posts', {
-				siteName: site.name,
-				tagline: site.description,
-				postTitle: get( post, 'title', '' )
-			} ) || get( post, 'title', '' );
+			return (
+				buildTitle( 'posts', {
+					siteName: site.name,
+					tagline: site.description,
+					postTitle: get( post, 'title', '' ),
+				} ) || get( post, 'title', '' )
+			);
 
 		case 'pages':
 			return buildTitle( 'pages', {
 				siteName: site.name,
 				tagline: site.description,
-				pageTitle: get( post, 'title', '' )
+				pageTitle: get( post, 'title', '' ),
 			} );
 
 		case 'groups':
 			return buildTitle( 'groups', {
 				siteName: site.name,
 				tagline: site.description,
-				groupTitle: tag
+				groupTitle: tag,
 			} );
 
 		case 'archives':
 			return buildTitle( 'archives', {
 				siteName: site.name,
 				tagline: site.description,
-				date: date
+				date: date,
 			} );
 
 		default:
@@ -495,7 +503,7 @@ export function getSitePlan( state, siteId ) {
 				product_slug: 'jetpack_free',
 				product_name_short: 'Free',
 				free_trial: false,
-				expired: false
+				expired: false,
 			};
 		}
 
@@ -504,7 +512,7 @@ export function getSitePlan( state, siteId ) {
 			product_slug: 'free_plan',
 			product_name_short: 'Free',
 			free_trial: false,
-			expired: false
+			expired: false,
 		};
 	}
 
@@ -646,7 +654,7 @@ export function canJetpackSiteUpdateFiles( state, siteId ) {
 		return false;
 	}
 
-	if ( ! isJetpackSiteMainNetworkSite( state, siteId ) ) {
+	if ( isJetpackSiteSecondaryNetworkSite( state, siteId ) ) {
 		return false;
 	}
 
@@ -770,16 +778,6 @@ export function isJetpackSiteMainNetworkSite( state, siteId ) {
 		return null;
 	}
 
-	const isMultiNetwork = getSiteOption( state, siteId, 'is_multi_network' );
-
-	if ( isMultiNetwork ) {
-		return false;
-	}
-
-	if ( site.is_multisite === false ) {
-		return true;
-	}
-
 	if ( ! site.is_multisite ) {
 		return false;
 	}
@@ -810,14 +808,16 @@ export function isJetpackSiteSecondaryNetworkSite( state, siteId ) {
 		return null;
 	}
 
-	const isMultiNetwork = getSiteOption( state, siteId, 'is_multi_network' );
-
-	if ( site.is_multisite === false || isMultiNetwork === false ) {
+	if ( ! site.is_multisite ) {
 		return false;
 	}
 
 	const unmappedUrl = getSiteOption( state, siteId, 'unmapped_url' ),
 		mainNetworkSite = getSiteOption( state, siteId, 'main_network_site' );
+
+	if ( ! unmappedUrl || ! mainNetworkSite ) {
+		return false;
+	}
 
 	// Compare unmapped_url with the main_network_site to see if is not the main network site.
 	return withoutHttp( unmappedUrl ) !== withoutHttp( mainNetworkSite );
@@ -905,27 +905,38 @@ export function getJetpackSiteUpdateFilesDisabledReasons( state, siteId, action 
 
 	const fileModDisabled = getSiteOption( state, siteId, 'file_mod_disabled' );
 
-	return compact( fileModDisabled.map( clue => {
-		if ( action === 'modifyFiles' || action === 'autoupdateFiles' || action === 'autoupdateCore' ) {
-			if ( clue === 'has_no_file_system_write_access' ) {
-				return i18n.translate( 'The file permissions on this host prevent editing files.' );
+	return compact(
+		fileModDisabled.map( clue => {
+			if (
+				action === 'modifyFiles' ||
+				action === 'autoupdateFiles' ||
+				action === 'autoupdateCore'
+			) {
+				if ( clue === 'has_no_file_system_write_access' ) {
+					return i18n.translate( 'The file permissions on this host prevent editing files.' );
+				}
+				if ( clue === 'disallow_file_mods' ) {
+					return i18n.translate(
+						'File modifications are explicitly disabled by a site administrator.'
+					);
+				}
 			}
-			if ( clue === 'disallow_file_mods' ) {
-				return i18n.translate( 'File modifications are explicitly disabled by a site administrator.' );
+
+			if (
+				( action === 'autoupdateFiles' || action === 'autoupdateCore' ) &&
+				clue === 'automatic_updater_disabled'
+			) {
+				return i18n.translate( 'Any autoupdates are explicitly disabled by a site administrator.' );
 			}
-		}
 
-		if ( ( action === 'autoupdateFiles' || action === 'autoupdateCore' ) &&
-			clue === 'automatic_updater_disabled' ) {
-			return i18n.translate( 'Any autoupdates are explicitly disabled by a site administrator.' );
-		}
-
-		if ( action === 'autoupdateCore' &&
-			clue === 'wp_auto_update_core_disabled' ) {
-			return i18n.translate( 'Core autoupdates are explicitly disabled by a site administrator.' );
-		}
-		return null;
-	} ) );
+			if ( action === 'autoupdateCore' && clue === 'wp_auto_update_core_disabled' ) {
+				return i18n.translate(
+					'Core autoupdates are explicitly disabled by a site administrator.'
+				);
+			}
+			return null;
+		} )
+	);
 }
 
 /**
@@ -996,10 +1007,13 @@ export function getCustomizerUrl( state, siteId, panel ) {
 		returnUrl = window.location.href;
 	}
 
-	return addQueryArgs( {
-		'return': returnUrl,
-		...getCustomizerFocus( panel )
-	}, adminUrl );
+	return addQueryArgs(
+		{
+			return: returnUrl,
+			...getCustomizerFocus( panel ),
+		},
+		adminUrl
+	);
 }
 
 /**
@@ -1029,4 +1043,40 @@ export const hasDefaultSiteTitle = ( state, siteId ) => {
  */
 export const siteSupportsJetpackSettingsUi = ( state, siteId ) => {
 	return isJetpackMinimumVersion( state, siteId, '4.5.0' );
+};
+
+/**
+ * Returns true if the version of Jetpack on the site supports Google Analytics IP Anonymization.
+ * False otherwise.
+ *
+ * @param {Object} state  Global state tree
+ * @param {Object} siteId Site ID
+ * @return {?Boolean}     Whether site supports the setting.
+ */
+export const siteSupportsGoogleAnalyticsIPAnonymization = ( state, siteId ) => {
+	return isJetpackMinimumVersion( state, siteId, '5.4-beta3' );
+};
+
+/**
+ * Returns true if the version of Jetpack on the site supports Google Analytics Basic eCommerce Tracking.
+ * False otherwise.
+ *
+ * @param {Object} state  Global state tree
+ * @param {Object} siteId Site ID
+ * @return {?Boolean}     Whether site supports the settings.
+ */
+export const siteSupportsGoogleAnalyticsBasicEcommerceTracking = ( state, siteId ) => {
+	return isJetpackMinimumVersion( state, siteId, '5.4-beta3' );
+};
+
+/**
+ * Returns true if the version of Jetpack on the site supports Google Analytics Enhanced eCommerce Tracking.
+ * False otherwise.
+ *
+ * @param {Object} state  Global state tree
+ * @param {Object} siteId Site ID
+ * @return {?Boolean}     Whether site supports the settings.
+ */
+export const siteSupportsGoogleAnalyticsEnhancedEcommerceTracking = ( state, siteId ) => {
+	return isJetpackMinimumVersion( state, siteId, '5.6-beta2' );
 };

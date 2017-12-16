@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -7,10 +9,10 @@ import deepFreeze from 'deep-freeze';
 /**
  * Internal dependencies
  */
-import { getAccountRecoveryResetUserData } from '../';
+import { getAccountRecoveryResetUserData } from 'state/selectors';
 
 describe( 'getAccountRecoveryResetUserData()', () => {
-	it( 'should return the userData substate tree.', () => {
+	test( 'should return the userData substate tree.', () => {
 		const expectedUserData = {
 			user: 'userlogin',
 			firstName: 'Foo',

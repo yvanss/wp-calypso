@@ -1,5 +1,5 @@
-FROM       node:6.11.2
-MAINTAINER Automattic
+FROM       node:8.9.3
+LABEL maintainer="Automattic"
 
 WORKDIR    /calypso
 
@@ -25,20 +25,33 @@ RUN        bash /tmp/env-config.sh
 # and should only change as often as the dependencies
 # change. This layer should allow for final build times
 # to be limited only by the Calypso build speed.
-#
-# Sometimes "npm install" fails the first time when the
-# cache is empty, so we retry once if it failed
 COPY       ./package.json ./npm-shrinkwrap.json /calypso/
 RUN        true \
-           && npm install --production || npm install --production \
+           && npm install --production \
            && rm -rf /root/.npm \
            && true
+
+# Build a "source" layer
+#
+# This layer is populated with up-to-date files from
+# Calypso development.
+#
+# If package.json and npm-shrinkwrap are unchanged,
+# `install-if-deps-outdated` should require no action.
+# However, time is being spent in the build step on
+# `install-if-deps-outdated`. This is because in the
+# following COPY, the npm-shrinkwrap mtime is being
+# updated, which is confusing `install-if-deps-outdated`.
+# Touch after copy to ensure that this layer will
+# not trigger additional install as part of the build
+# in the following step.
+COPY       . /calypso/
+RUN        touch node_modules
 
 # Build the final layer
 #
 # This contains built environments of Calypso. It will
 # change any time any of the Calypso source-code changes.
-COPY       . /calypso/
 RUN        true \
            && CALYPSO_ENV=production npm run build \
            && chown -R nobody /calypso \

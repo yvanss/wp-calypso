@@ -18,14 +18,13 @@ node_modules
 test-results*.xml
 /stats.json
 
-# script used during docker build that is specific to the environment
-env-config.sh
-
 # added during build
 /config/secrets.json
 
 # config overrides
 /config/*.local.json
+
+/coverage
 
 /build
 
@@ -35,6 +34,8 @@ env-config.sh
 /public/style*.css.map
 /public/editor*.css
 /public/directly*.css
+/public/sections/*
+/public/sections-rtl/*
 /public/images/flags/*.svg
 /public/images/flags/*.png
 /server/devdocs/search-index.js

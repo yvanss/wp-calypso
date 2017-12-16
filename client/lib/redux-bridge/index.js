@@ -1,7 +1,19 @@
+/** @format */
 let reduxStore = null;
 
 export function setReduxStore( store ) {
 	reduxStore = store;
+}
+
+/**
+ * Get the state of the current redux store
+ * @returns {Object} Redux state
+ */
+export function reduxGetState() {
+	if ( ! reduxStore ) {
+		return;
+	}
+	return reduxStore.getState();
 }
 
 /**

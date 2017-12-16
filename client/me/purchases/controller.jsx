@@ -1,6 +1,9 @@
+/** @format */
+
 /**
- * External Dependencies
+ * External dependencies
  */
+
 import { partial } from 'lodash';
 import React from 'react';
 
@@ -19,7 +22,7 @@ import NoSitesMessage from 'components/empty-content/no-sites-message';
 import paths from './paths';
 import PurchasesHeader from './purchases-list/header';
 import PurchasesList from './purchases-list';
-import { concatTitle, recordPageView, renderPage } from 'lib/react-helpers';
+import { concatTitle, recordPageView } from 'lib/react-helpers';
 import { setDocumentHeadTitle } from 'state/document-head/actions';
 import titles from './titles';
 import userFactory from 'lib/user';
@@ -33,90 +36,88 @@ function setTitle( context, ...title ) {
 }
 
 export default {
-	addCardDetails( context ) {
+	addCardDetails( context, next ) {
 		setTitle( context, titles.addCardDetails );
 
 		recordPurchasesPageView( paths.addCardDetails(), 'Add Card Details' );
 
-		renderPage(
-			context,
-			<AddCardDetails purchaseId={ parseInt( context.params.purchaseId, 10 ) } />
-		);
+		context.primary = <AddCardDetails purchaseId={ parseInt( context.params.purchaseId, 10 ) } />;
+		next();
 	},
 
-	addCreditCard( context ) {
+	addCreditCard( context, next ) {
 		recordPurchasesPageView( paths.addCreditCard(), 'Add Credit Card' );
 
-		renderPage( context, <AddCreditCard /> );
+		context.primary = <AddCreditCard />;
+		next();
 	},
 
-	cancelPrivacyProtection( context ) {
+	cancelPrivacyProtection( context, next ) {
 		setTitle( context, titles.cancelPrivacyProtection );
 
 		recordPurchasesPageView( paths.cancelPrivacyProtection(), 'Cancel Privacy Protection' );
 
-		renderPage(
-			context,
+		context.primary = (
 			<CancelPrivacyProtection purchaseId={ parseInt( context.params.purchaseId, 10 ) } />
 		);
+		next();
 	},
 
-	cancelPurchase( context ) {
+	cancelPurchase( context, next ) {
 		setTitle( context, titles.cancelPurchase );
 
 		recordPurchasesPageView( paths.cancelPurchase(), 'Cancel Purchase' );
 
-		renderPage(
-			context,
-			<CancelPurchase purchaseId={ parseInt( context.params.purchaseId, 10 ) } />
-		);
+		context.primary = <CancelPurchase purchaseId={ parseInt( context.params.purchaseId, 10 ) } />;
+		next();
 	},
 
-	confirmCancelDomain( context ) {
+	confirmCancelDomain( context, next ) {
 		setTitle( context, titles.confirmCancelDomain );
 
 		recordPurchasesPageView( paths.confirmCancelDomain(), 'Confirm Cancel Domain' );
 
-		renderPage(
-			context,
+		context.primary = (
 			<ConfirmCancelDomain purchaseId={ parseInt( context.params.purchaseId, 10 ) } />
 		);
+		next();
 	},
 
-	editCardDetails( context ) {
+	editCardDetails( context, next ) {
 		setTitle( context, titles.editCardDetails );
 
 		recordPurchasesPageView( paths.editCardDetails(), 'Edit Card Details' );
 
-		renderPage(
-			context,
+		context.primary = (
 			<EditCardDetails
 				cardId={ context.params.cardId }
 				purchaseId={ parseInt( context.params.purchaseId, 10 ) }
 			/>
 		);
+		next();
 	},
 
-	list( context ) {
+	list( context, next ) {
 		setTitle( context );
 
 		recordPurchasesPageView( paths.purchasesRoot() );
 
-		renderPage( context, <PurchasesList noticeType={ context.params.noticeType } /> );
+		context.primary = <PurchasesList noticeType={ context.params.noticeType } />;
+		next();
 	},
 
-	managePurchase( context ) {
+	managePurchase( context, next ) {
 		setTitle( context, titles.managePurchase );
 
 		recordPurchasesPageView( paths.managePurchase(), 'Manage Purchase' );
 
-		renderPage(
-			context,
+		context.primary = (
 			<ManagePurchase
 				purchaseId={ parseInt( context.params.purchaseId, 10 ) }
 				destinationType={ context.params.destinationType }
 			/>
 		);
+		next();
 	},
 
 	noSitesMessage( context, next ) {
@@ -128,8 +129,7 @@ export default {
 
 		recordPurchasesPageView( context.path, 'No Sites' );
 
-		renderPage(
-			context,
+		context.primary = (
 			<Main>
 				<PurchasesHeader section={ 'purchases' } />
 				<NoSitesMessage />

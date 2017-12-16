@@ -1,6 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
+import PropTypes from 'prop-types';
 import React from 'react';
 import { noop } from 'lodash';
 
@@ -12,39 +16,37 @@ import DropZone from 'components/drop-zone';
 import MediaActions from 'lib/media/actions';
 import { userCan } from 'lib/site/utils';
 
-module.exports = React.createClass( {
-	displayName: 'MediaLibraryDropZone',
+export default class extends React.Component {
+	static displayName = 'MediaLibraryDropZone';
 
-	propTypes: {
-		site: React.PropTypes.object,
-		fullScreen: React.PropTypes.bool,
-		onAddMedia: React.PropTypes.func,
-		trackStats: React.PropTypes.bool
-	},
+	static propTypes = {
+		site: PropTypes.object,
+		fullScreen: PropTypes.bool,
+		onAddMedia: PropTypes.func,
+		trackStats: PropTypes.bool,
+	};
 
-	getDefaultProps: function() {
-		return {
-			fullScreen: true,
-			onAddMedia: noop,
-			trackStats: true
-		};
-	},
+	static defaultProps = {
+		fullScreen: true,
+		onAddMedia: noop,
+		trackStats: true,
+	};
 
-	uploadFiles: function( files ) {
+	uploadFiles = files => {
 		if ( ! this.props.site ) {
 			return;
 		}
 
 		MediaActions.clearValidationErrors( this.props.site.ID );
-		MediaActions.add( this.props.site.ID, files );
+		MediaActions.add( this.props.site, files );
 		this.props.onAddMedia();
 
 		if ( this.props.trackStats ) {
 			analytics.mc.bumpStat( 'editor_upload_via', 'drop' );
 		}
-	},
+	};
 
-	isValidTransfer: function( transfer ) {
+	isValidTransfer = transfer => {
 		if ( ! transfer ) {
 			return false;
 		}
@@ -65,9 +67,9 @@ module.exports = React.createClass( {
 		//
 		// See: http://www.w3.org/html/wg/drafts/html/master/editing.html#the-datatransfer-interface
 		return ! transfer.types || -1 !== Array.prototype.indexOf.call( transfer.types, 'Files' );
-	},
+	};
 
-	render: function() {
+	render() {
 		if ( ! userCan( 'upload_files', this.props.site ) ) {
 			return null;
 		}
@@ -76,7 +78,8 @@ module.exports = React.createClass( {
 			<DropZone
 				fullScreen={ this.props.fullScreen }
 				onVerifyValidTransfer={ this.isValidTransfer }
-				onFilesDrop={ this.uploadFiles } />
+				onFilesDrop={ this.uploadFiles }
+			/>
 		);
 	}
-} );
+}

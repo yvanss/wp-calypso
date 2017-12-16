@@ -1,13 +1,16 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React from 'react';
 import { connect } from 'react-redux';
-import createFragment from 'react-addons-create-fragment';
-import { groupBy, head, mapValues, noop, values } from 'lodash';
+import { groupBy, head, map, noop, values } from 'lodash';
 import PropTypes from 'prop-types';
 import page from 'page';
 import { localize } from 'i18n-calypso';
+import Gridicon from 'gridicons';
 
 /**
  * Internal dependencies
@@ -54,19 +57,23 @@ class MediaLibraryContent extends React.Component {
 		mediaValidationErrors: Object.freeze( {} ),
 		onAddMedia: noop,
 		source: '',
-	}
+	};
 
 	renderErrors() {
 		const errorTypes = values( this.props.mediaValidationErrors ).map( head );
-		const notices = mapValues( groupBy( errorTypes ), ( occurrences, errorType ) => {
+		return map( groupBy( errorTypes ), ( occurrences, errorType ) => {
 			let message, onDismiss;
 			const i18nOptions = {
 				count: occurrences.length,
-				args: occurrences.length
+				args: occurrences.length,
 			};
 
 			if ( this.props.site ) {
-				onDismiss = MediaActions.clearValidationErrorsByType.bind( null, this.props.site.ID, errorType );
+				onDismiss = MediaActions.clearValidationErrorsByType.bind(
+					null,
+					this.props.site.ID,
+					errorType
+				);
 			}
 
 			let status = 'is-error';
@@ -138,27 +145,23 @@ class MediaLibraryContent extends React.Component {
 			}
 
 			return (
-				<Notice status={ status } text={ message } onDismissClick={ onDismiss } >
+				<Notice key={ errorType } status={ status } text={ message } onDismissClick={ onDismiss }>
 					{ this.renderNoticeAction( upgradeNudgeName, upgradeNudgeFeature ) }
 					{ tryAgain && this.renderTryAgain() }
 				</Notice>
 			);
 		} );
-
-		return createFragment( notices );
 	}
 
 	renderTryAgain() {
 		return (
-			<NoticeAction onClick={ this.retryList }>
-				{ this.props.translate( 'Retry' ) }
-			</NoticeAction>
+			<NoticeAction onClick={ this.retryList }>{ this.props.translate( 'Retry' ) }</NoticeAction>
 		);
 	}
 
 	retryList = () => {
 		MediaActions.sourceChanged( this.props.site.ID );
-	}
+	};
 
 	renderNoticeAction( upgradeNudgeName, upgradeNudgeFeature ) {
 		if ( ! upgradeNudgeName ) {
@@ -167,13 +170,22 @@ class MediaLibraryContent extends React.Component {
 		const eventName = 'calypso_upgrade_nudge_impression';
 		const eventProperties = {
 			cta_name: upgradeNudgeName,
-			cta_feature: upgradeNudgeFeature
+			cta_feature: upgradeNudgeFeature,
 		};
 		return (
 			<NoticeAction
 				external={ true }
-				href={ upgradeNudgeFeature ? `/plans/compare/${ this.props.siteSlug }?feature=${ upgradeNudgeFeature }` : `/plans/${ this.props.siteSlug }` }
-				onClick={ this.recordPlansNavigation.bind( this, 'calypso_upgrade_nudge_cta_click', eventProperties ) }>
+				href={
+					upgradeNudgeFeature
+						? `/plans/compare/${ this.props.siteSlug }?feature=${ upgradeNudgeFeature }`
+						: `/plans/${ this.props.siteSlug }`
+				}
+				onClick={ this.recordPlansNavigation.bind(
+					this,
+					'calypso_upgrade_nudge_cta_click',
+					eventProperties
+				) }
+			>
 				{ this.props.translate( 'Upgrade Plan' ) }
 				<TrackComponentView eventName={ eventName } eventProperties={ eventProperties } />
 			</NoticeAction>
@@ -188,21 +200,32 @@ class MediaLibraryContent extends React.Component {
 	goToSharing = ev => {
 		ev.preventDefault();
 		page( `/sharing/${ this.props.site.slug }` );
-	}
+	};
 
-	renderExternalMedia() {
+	renderGooglePhotosConnect() {
 		const connectMessage = this.props.translate(
 			'To show Photos from Google, you need to connect your Google account.'
 		);
 
 		return (
 			<div className="media-library__connect-message">
-				<p><img src="/calypso/images/sharing/google-photos-logo.svg" width="96" height="96" /></p>
+				<p>
+					<Gridicon icon="image" size={ 72 } />
+				</p>
 				<p>{ connectMessage }</p>
 
 				<InlineConnection serviceName="google_photos" />
 			</div>
 		);
+	}
+
+	renderConnectExternalMedia() {
+		const { source } = this.props;
+		switch ( source ) {
+			case 'google_photos':
+				return this.renderGooglePhotosConnect();
+		}
+		return null;
 	}
 
 	getThumbnailType() {
@@ -217,14 +240,23 @@ class MediaLibraryContent extends React.Component {
 		return MEDIA_IMAGE_PHOTON;
 	}
 
+	needsToBeConnected() {
+		return this.props.source !== '' && ! this.props.isConnected;
+	}
+
 	renderMediaList() {
 		if ( ! this.props.site || ( this.props.isRequesting && ! this.hasRequested ) ) {
-			this.hasRequested = true;   // We only want to do this once
-			return <MediaLibraryList key="list-loading" filterRequiresUpgrade={ this.props.filterRequiresUpgrade } />;
+			this.hasRequested = true; // We only want to do this once
+			return (
+				<MediaLibraryList
+					key="list-loading"
+					filterRequiresUpgrade={ this.props.filterRequiresUpgrade }
+				/>
+			);
 		}
 
-		if ( this.props.source !== '' && ! this.props.isConnected ) {
-			return this.renderExternalMedia();
+		if ( this.needsToBeConnected() ) {
+			return this.renderConnectExternalMedia();
 		}
 
 		return (
@@ -233,10 +265,11 @@ class MediaLibraryContent extends React.Component {
 				postId={ this.props.postId }
 				filter={ this.props.filter }
 				search={ this.props.search }
-				source={ this.props.source }>
+				source={ this.props.source }
+			>
 				<MediaLibrarySelectedData siteId={ this.props.site.ID }>
 					<MediaLibraryList
-						key={ 'list-' + ( [ this.props.site.ID, this.props.search, this.props.filter ].join() ) }
+						key={ 'list-' + [ this.props.site.ID, this.props.search, this.props.filter ].join() }
 						site={ this.props.site }
 						filter={ this.props.filter }
 						filterRequiresUpgrade={ this.props.filterRequiresUpgrade }
@@ -245,14 +278,15 @@ class MediaLibraryContent extends React.Component {
 						thumbnailType={ this.getThumbnailType() }
 						single={ this.props.single }
 						scrollable={ this.props.scrollable }
-						onEditItem={ this.props.onEditItem } />
+						onEditItem={ this.props.onEditItem }
+					/>
 				</MediaLibrarySelectedData>
 			</MediaListData>
 		);
 	}
 
 	renderHeader() {
-		if ( ! this.props.isConnected ) {
+		if ( ! this.props.isConnected && this.needsToBeConnected() ) {
 			return null;
 		}
 
@@ -267,6 +301,8 @@ class MediaLibraryContent extends React.Component {
 					onSourceChange={ this.props.onSourceChange }
 					selectedItems={ this.props.selectedItems }
 					sticky={ ! this.props.scrollable }
+					hasAttribution={ 'pexels' === this.props.source }
+					hasRefreshButton={ 'pexels' !== this.props.source }
 				/>
 			);
 		}
@@ -301,7 +337,12 @@ class MediaLibraryContent extends React.Component {
 	}
 }
 
-export default connect( ( state, ownProps ) => ( {
-	siteSlug: ownProps.site ? getSiteSlug( state, ownProps.site.ID ) : '',
-	isRequesting: isKeyringConnectionsFetching( state ),
-} ), null, null, { pure: false } )( localize( MediaLibraryContent ) );
+export default connect(
+	( state, ownProps ) => ( {
+		siteSlug: ownProps.site ? getSiteSlug( state, ownProps.site.ID ) : '',
+		isRequesting: isKeyringConnectionsFetching( state ),
+	} ),
+	null,
+	null,
+	{ pure: false }
+)( localize( MediaLibraryContent ) );

@@ -1,22 +1,27 @@
+/** @format */
 /**
  * External dependencies
  */
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import page from 'page';
 
 /**
  * Internal dependencies
  */
+import HelpButton from './help-button';
+import JetpackConnectHappychatButton from './happychat-button';
+import LoggedOutFormLinks from 'components/logged-out-form/links';
+import { PLAN_JETPACK_FREE } from 'lib/plans/constants';
 import PlansGrid from './plans-grid';
 import PlansSkipButton from './plans-skip-button';
-import { abtest } from 'lib/abtest';
 import { recordTracksEvent } from 'state/analytics/actions';
-import { selectPlanInAdvance } from 'state/jetpack-connect/actions';
 import { getJetpackSiteByUrl } from 'state/jetpack-connect/selectors';
-import { getSite } from 'state/sites/selectors';
+import { getSite, isRequestingSites } from 'state/sites/selectors';
 import QueryPlans from 'components/data/query-plans';
 import addQueryArgs from 'lib/route/add-query-args';
+import { storePlan } from './persistence-utils';
 
 const CALYPSO_JETPACK_CONNECT = '/jetpack/connect';
 
@@ -51,7 +56,7 @@ class PlansLanding extends Component {
 		}
 	}
 
-	storeSelectedPlan = ( cartItem ) => {
+	storeSelectedPlan = cartItem => {
 		const { url } = this.props;
 		let redirectUrl = CALYPSO_JETPACK_CONNECT;
 
@@ -60,9 +65,10 @@ class PlansLanding extends Component {
 		}
 
 		this.props.recordTracksEvent( 'calypso_jpc_plans_store_plan', {
-			plan: cartItem ? cartItem.product_slug : 'free'
+			plan: cartItem ? cartItem.product_slug : 'free',
 		} );
-		this.props.selectPlanInAdvance( cartItem ? cartItem.product_slug : 'free', '*' );
+
+		storePlan( cartItem ? cartItem.product_slug : PLAN_JETPACK_FREE );
 
 		setTimeout( () => {
 			page.redirect( redirectUrl );
@@ -75,12 +81,18 @@ class PlansLanding extends Component {
 		this.storeSelectedPlan( null );
 	};
 
+	handleHelpButtonClick = () => {
+		this.props.recordTracksEvent( 'calypso_jpc_help_link_click' );
+	};
+
 	render() {
-		const {
-			basePlansPath,
-			interval,
-		} = this.props;
-		const hideFreePlanTest = abtest( 'jetpackConnectHideFreePlan' ) === 'hide';
+		const { basePlansPath, interval, requestingSites, site, url } = this.props;
+
+		// We're redirecting in componentDidMount if the site is already connected
+		// so don't bother rendering any markup if this is the case
+		if ( url && ( site || requestingSites ) ) {
+			return null;
+		}
 
 		return (
 			<div>
@@ -89,15 +101,17 @@ class PlansLanding extends Component {
 				<PlansGrid
 					basePlansPath={ basePlansPath }
 					calypsoStartedConnection={ true }
-					hideFreePlan={ hideFreePlanTest }
+					hideFreePlan={ true }
 					interval={ interval }
 					isLanding={ true }
 					onSelect={ this.storeSelectedPlan }
 				>
-					{
-						hideFreePlanTest &&
-						<PlansSkipButton onClick={ this.handleSkipButtonClick } />
-					}
+					<PlansSkipButton onClick={ this.handleSkipButtonClick } />
+					<LoggedOutFormLinks>
+						<JetpackConnectHappychatButton eventName="calypso_jpc_planslanding_chat_initiated">
+							<HelpButton onClick={ this.handleHelpButtonClick } />
+						</JetpackConnectHappychatButton>
+					</LoggedOutFormLinks>
 				</PlansGrid>
 			</div>
 		);
@@ -110,11 +124,11 @@ export default connect(
 		const site = rawSite ? getSite( state, rawSite.ID ) : null;
 
 		return {
+			requestingSites: isRequestingSites( state ),
 			site,
 		};
 	},
 	{
 		recordTracksEvent,
-		selectPlanInAdvance,
 	}
 )( PlansLanding );

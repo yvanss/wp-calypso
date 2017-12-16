@@ -1,7 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import { isNumber } from 'lodash';
+import { isNumber, isUndefined, mapValues } from 'lodash';
 
 /**
  * Internal dependencies
@@ -28,17 +30,15 @@ export function handleProductVariationsRequest( store, action ) {
 	const { siteId, productId, successAction, failureAction } = action;
 
 	const updatedAction = ( dispatch, getState, { data } ) => {
-		data.map( ( variation ) => {
-			return dispatch( productVariationUpdated(
-				siteId, productId, variation, action
-			) );
+		data.map( variation => {
+			return dispatch( productVariationUpdated( siteId, productId, variation, action ) );
 		} );
 
 		const props = { productId, receivedData: data };
 		dispatchWithProps( dispatch, getState, successAction, props );
 	};
 
-	const endpoint = 'products/' + productId + '/variations';
+	const endpoint = 'products/' + productId + '/variations?per_page=100';
 	store.dispatch( get( siteId, endpoint, updatedAction, failureAction ) );
 }
 
@@ -49,10 +49,12 @@ export function handleProductVariationCreate( store, action ) {
 	const { id, ...variationData } = variation;
 
 	if ( isNumber( id ) ) {
-		store.dispatch( setError( siteId, action, {
-			message: 'Attempting to create a variation which already has a valid id.',
-			variation,
-		} ) );
+		store.dispatch(
+			setError( siteId, action, {
+				message: 'Attempting to create a variation which already has a valid id.',
+				variation,
+			} )
+		);
 		return;
 	}
 
@@ -72,10 +74,12 @@ export function handleProductVariationUpdate( store, action ) {
 
 	// Ensure we have a valid id.
 	if ( ! isNumber( variation.id ) ) {
-		store.dispatch( setError( siteId, action, {
-			message: 'Attempting to update a variation without a valid id.',
-			variation,
-		} ) );
+		store.dispatch(
+			setError( siteId, action, {
+				message: 'Attempting to update a variation without a valid id.',
+				variation,
+			} )
+		);
 		return;
 	}
 
@@ -86,8 +90,17 @@ export function handleProductVariationUpdate( store, action ) {
 		dispatchWithProps( dispatch, getState, successAction, props );
 	};
 
+	const data = mapValues( variation, value => {
+		// JSON doesn't allow undefined,
+		// so change it to empty string for properties to be removed.
+		if ( isUndefined( value ) ) {
+			return '';
+		}
+		return value;
+	} );
+
 	const endpoint = 'products/' + productId + '/variations/' + variation.id;
-	store.dispatch( put( siteId, endpoint, variation, updatedAction, failureAction ) );
+	store.dispatch( put( siteId, endpoint, data, updatedAction, failureAction ) );
 }
 
 export function handleProductVariationDelete( store, action ) {
@@ -95,10 +108,12 @@ export function handleProductVariationDelete( store, action ) {
 
 	// Ensure we have a valid id.
 	if ( ! isNumber( variationId ) ) {
-		store.dispatch( setError( siteId, action, {
-			message: 'Attempting to delete a variation without a valid id.',
-			variationId,
-		} ) );
+		store.dispatch(
+			setError( siteId, action, {
+				message: 'Attempting to delete a variation without a valid id.',
+				variationId,
+			} )
+		);
 		return;
 	}
 

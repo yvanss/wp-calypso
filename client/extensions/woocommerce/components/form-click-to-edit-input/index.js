@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -14,7 +17,6 @@ import Button from 'components/button';
 import FormTextInput from 'components/forms/form-text-input';
 
 class FormClickToEditInput extends Component {
-
 	static propTypes = {
 		onChange: PropTypes.func,
 		value: PropTypes.string,
@@ -42,9 +44,9 @@ class FormClickToEditInput extends Component {
 		const { value } = this.props;
 		this.setState( {
 			isEditing: true,
-			value
+			value,
 		} );
-	}
+	};
 
 	editEnd = () => {
 		const { onChange } = this.props;
@@ -56,16 +58,17 @@ class FormClickToEditInput extends Component {
 			isEditing: false,
 			value: '',
 		} );
-	}
+	};
 
-	onInputChange = ( e ) => {
+	onInputChange = e => {
 		this.setState( {
-			value: e.target.value
+			value: e.target.value,
 		} );
-	}
+	};
 
 	renderInput() {
-		const props = { ...this.props,
+		const props = {
+			...this.props,
 			onChange: this.onInputChange,
 			value: this.state.value,
 		};
@@ -79,7 +82,7 @@ class FormClickToEditInput extends Component {
 				/>
 				<Button
 					borderless
-					onClick={ this.editEnd }
+					onClick={ this.editEnd ? this.editEnd : undefined }
 					aria-label={ this.props.updateAriaLabel }
 				>
 					<Gridicon icon="checkmark" />
@@ -91,14 +94,14 @@ class FormClickToEditInput extends Component {
 	renderText() {
 		const { value, placeholder, disabled, editAriaLabel } = this.props;
 		const classes = classNames( 'form-click-to-edit-input__wrapper', {
-			'is-empty': ! ( value ),
-			'has-value': ( value ),
+			'is-empty': ! value,
+			'has-value': value,
 		} );
 		return (
 			<span className={ classes }>
 				<span
 					className="form-click-to-edit-input__text"
-					onClick={ ! disabled && this.editStart }
+					onClick={ ! disabled && this.editStart ? this.editStart : undefined }
 				>
 					{ value || placeholder }
 				</span>
@@ -106,7 +109,7 @@ class FormClickToEditInput extends Component {
 				{ ! disabled && (
 					<Button
 						borderless
-						onClick={ this.editStart }
+						onClick={ this.editStart ? this.ediStart : undefined }
 						aria-label={ editAriaLabel }
 					>
 						<Gridicon icon="pencil" />

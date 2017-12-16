@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -19,7 +22,7 @@ import viewport from 'lib/viewport';
  */
 const HIDE_BACK_CRITERIA = {
 	windowWidth: 480,
-	characterLength: 8
+	characterLength: 8,
 };
 
 class HeaderCakeBack extends Component {
@@ -28,11 +31,13 @@ class HeaderCakeBack extends Component {
 		href: PropTypes.string,
 		text: PropTypes.string,
 		spacer: PropTypes.bool,
+		alwaysShowActionText: PropTypes.bool,
 	};
 
 	static defaultProps = {
 		spacer: false,
 		disabled: false,
+		alwaysShowActionText: false,
 	};
 
 	state = {
@@ -52,13 +57,14 @@ class HeaderCakeBack extends Component {
 		this.setState( {
 			windowWidth: viewport.getWindowInnerWidth(),
 		} );
-	}
+	};
 
 	hideText( text ) {
 		if (
-			this.state.windowWidth <= HIDE_BACK_CRITERIA.windowWidth &&
-			text.length >= HIDE_BACK_CRITERIA.characterLength ||
-			this.state.windowWidth <= 300
+			! this.props.alwaysShowActionText &&
+			( ( this.state.windowWidth <= HIDE_BACK_CRITERIA.windowWidth &&
+				text.length >= HIDE_BACK_CRITERIA.characterLength ) ||
+				this.state.windowWidth <= 300 )
 		) {
 			return true;
 		}
@@ -67,25 +73,23 @@ class HeaderCakeBack extends Component {
 	}
 
 	render() {
-		const {
-			href,
-			icon,
-			onClick,
-			spacer,
-			text,
-			translate,
-		} = this.props;
-		const backText = text === undefined
-			? translate( 'Back' )
-			: text;
+		const { href, icon, onClick, spacer, text, translate } = this.props;
+		const backText = text === undefined ? translate( 'Back' ) : text;
 		const linkClasses = classNames( {
 			'header-cake__back': true,
 			'is-spacer': spacer,
-			'is-action': !! icon
+			'is-action': !! icon,
 		} );
 
 		return (
-			<Button compact borderless className={ linkClasses } href={ href } onClick={ onClick } disabled={ spacer }>
+			<Button
+				compact
+				borderless
+				className={ linkClasses }
+				href={ href }
+				onClick={ onClick }
+				disabled={ spacer }
+			>
 				<Gridicon icon={ icon || 'arrow-left' } size={ 18 } />
 				{ ! this.hideText( backText ) && backText }
 			</Button>

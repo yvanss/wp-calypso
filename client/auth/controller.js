@@ -1,7 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import ReactDom from 'react-dom';
+
 import React from 'react';
 import { startsWith } from 'lodash';
 import page from 'page';
@@ -21,24 +23,27 @@ import Main from 'components/main';
 import PulsingDot from 'components/pulsing-dot';
 
 export default {
-
-	oauthLogin: function() {
+	oauthLogin: function( context, next ) {
 		if ( config.isEnabled( 'oauth' ) ) {
 			if ( OAuthToken.getToken() ) {
 				page( '/' );
 			} else {
-				ReactDom.render(
-					<OAuthLogin />,
-					document.getElementById( 'primary' )
-				);
+				context.primary = <OAuthLogin />;
 			}
 		} else {
 			page( '/' );
 		}
+		next();
 	},
 
 	checkToken: function( context, next ) {
-		const loggedOutRoutes = [ '/oauth-login', '/oauth', '/start', '/authorize', '/api/oauth/token' ],
+		const loggedOutRoutes = [
+				'/oauth-login',
+				'/oauth',
+				'/start',
+				'/authorize',
+				'/api/oauth/token',
+			],
 			isValidSection = loggedOutRoutes.some( route => startsWith( context.path, route ) );
 
 		// Check we have an OAuth token, otherwise redirect to auth/login page
@@ -55,33 +60,32 @@ export default {
 
 	// This controller renders the API authentication screen
 	// for granting the app access to the user data using oauth
-	authorize: function() {
+	authorize: function( context, next ) {
 		let authUrl;
 
 		if ( config( 'oauth_client_id' ) ) {
+			const port = process.env.PORT || config( 'port' );
 			const oauthSettings = {
 				response_type: 'token',
 				client_id: config( 'oauth_client_id' ),
 				client_secret: 'n/a',
 				url: {
-					redirect: 'http://calypso.localhost:3000/api/oauth/token'
-				}
+					redirect: `http://calypso.localhost:${ port }/api/oauth/token`,
+				},
 			};
 
 			const wpoauth = WPOAuth( oauthSettings );
 			authUrl = wpoauth.urlToConnect( { scope: 'global', blog_id: 0 } );
 		}
 
-		ReactDom.render(
-			React.createElement( ConnectComponent, {
-				authUrl: authUrl
-			} ),
-			document.getElementById( 'primary' )
-		);
+		context.primary = React.createElement( ConnectComponent, {
+			authUrl: authUrl,
+		} );
+		next();
 	},
 
 	// Retrieve token from local storage
-	getToken: function( context ) {
+	getToken: function( context, next ) {
 		if ( context.hash && context.hash.access_token ) {
 			store.set( 'wpcom_token', context.hash.access_token );
 			wpcom.loadToken( context.hash.access_token );
@@ -92,14 +96,12 @@ export default {
 		}
 
 		// Extract this into a component...
-		ReactDom.render( (
+		context.primary = (
 			<Main className="auth">
-				<p className="auth__welcome">
-					Loading user...
-				</p>
+				<p className="auth__welcome">Loading user...</p>
 				<PulsingDot active />
 			</Main>
-		), document.getElementById( 'primary' ) );
+		);
 
 		// Fetch user and redirect to /sites on success.
 		const user = userFactory();
@@ -112,5 +114,6 @@ export default {
 				window.location = '/';
 			}
 		} );
-	}
+		next();
+	},
 };

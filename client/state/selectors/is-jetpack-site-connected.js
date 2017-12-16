@@ -1,12 +1,15 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { get } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import { getJetpackConnectionStatus } from './';
+import { getJetpackConnectionStatus } from 'state/selectors';
 
 /**
  * Returns true if we the Jetpack site is connected. False otherwise.

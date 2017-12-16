@@ -1,15 +1,15 @@
+/** @format */
 /**
  * External dependencies
  */
 import { expect } from 'chai';
 import { assign } from 'lodash';
-import mockery from 'mockery';
 import sinon from 'sinon';
 
 /**
  * Internal dependencies
  */
-import useMockery from 'test/helpers/use-mockery';
+import { site } from './fixtures/site';
 
 /**
  * Module variables
@@ -18,12 +18,10 @@ const DUMMY_SITE_ID = 1;
 const DUMMY_MEDIA_OBJECT = { ID: 100, title: 'Image', extension: 'exe' };
 const ERROR_GLOBAL_ITEM_ID = 0;
 
-describe( 'MediaValidationStore', function() {
+describe( 'MediaValidationStore', () => {
 	let sandbox, MediaValidationStore, handler, Dispatcher, MediaValidationErrors;
 
-	useMockery();
-
-	before( function() {
+	beforeAll( function() {
 		Dispatcher = require( 'dispatcher' );
 		MediaValidationErrors = require( '../constants' ).ValidationErrors;
 
@@ -31,31 +29,16 @@ describe( 'MediaValidationStore', function() {
 		sandbox = sinon.sandbox.create();
 		sandbox.spy( Dispatcher, 'register' );
 
-		// Mockery
-		mockery.enable( { warnOnReplace: false, warnOnUnregistered: false } );
-		mockery.registerMock( 'lib/sites-list', function() {
-			return {
-				getSite: function() {
-					return {
-						options: {
-							allowed_file_types: [ 'gif', 'pdf', 'avi' ],
-							max_upload_size: 1024
-						}
-					};
-				}
-			};
-		} );
-
 		// Load store
 		MediaValidationStore = require( '../validation-store' );
 		handler = Dispatcher.register.lastCall.args[ 0 ];
 	} );
 
-	beforeEach( function() {
+	beforeEach( () => {
 		MediaValidationStore._errors = {};
 	} );
 
-	after( function() {
+	afterAll( function() {
 		sandbox.restore();
 	} );
 
@@ -68,28 +51,35 @@ describe( 'MediaValidationStore', function() {
 				error: {
 					error: error,
 				},
-			}
+			},
 		} );
 	}
 
 	function dispatchCreateMediaItem( action ) {
 		handler( {
-			action: assign( {
-				type: 'CREATE_MEDIA_ITEM',
-				siteId: DUMMY_SITE_ID,
-				data: DUMMY_MEDIA_OBJECT
-			}, action )
+			action: assign(
+				{
+					type: 'CREATE_MEDIA_ITEM',
+					siteId: DUMMY_SITE_ID,
+					data: DUMMY_MEDIA_OBJECT,
+					site,
+				},
+				action
+			),
 		} );
 	}
 
 	function dispatchReceiveMediaItem( action ) {
 		handler( {
-			action: assign( {
-				type: 'RECEIVE_MEDIA_ITEM',
-				siteId: DUMMY_SITE_ID,
-				id: DUMMY_MEDIA_OBJECT.ID,
-				data: DUMMY_MEDIA_OBJECT
-			}, action )
+			action: assign(
+				{
+					type: 'RECEIVE_MEDIA_ITEM',
+					siteId: DUMMY_SITE_ID,
+					id: DUMMY_MEDIA_OBJECT.ID,
+					data: DUMMY_MEDIA_OBJECT,
+				},
+				action
+			),
 		} );
 	}
 
@@ -98,76 +88,79 @@ describe( 'MediaValidationStore', function() {
 			action: {
 				type: 'CLEAR_MEDIA_VALIDATION_ERRORS',
 				siteId: DUMMY_SITE_ID,
-				itemId: itemId
-			}
+				itemId: itemId,
+			},
 		} );
 	}
 
-	describe( '#validateItem()', function() {
+	describe( '#validateItem()', () => {
 		var validateItem;
 
-		before( function() {
+		beforeAll( function() {
 			validateItem = MediaValidationStore.validateItem;
 		} );
 
-		it( 'should have no effect for a valid file', function() {
-			validateItem( DUMMY_SITE_ID, Object.assign( {}, DUMMY_MEDIA_OBJECT, { extension: 'gif' } ) );
+		test( 'should have no effect for a valid file', () => {
+			validateItem( site, Object.assign( {}, DUMMY_MEDIA_OBJECT, { extension: 'gif' } ) );
 
 			expect( MediaValidationStore._errors ).to.eql( {} );
 		} );
 
-		it( 'should set an error array for an invalid file', function() {
-			validateItem( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT );
+		test( 'should set an error array for an invalid file', () => {
+			validateItem( site, DUMMY_MEDIA_OBJECT );
 
 			expect( MediaValidationStore._errors ).to.eql( {
 				[ DUMMY_SITE_ID ]: {
-					[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ]
-				}
+					[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ],
+				},
 			} );
 		} );
 
-		it( 'should set an error array for a file exceeding acceptable size', function() {
-			validateItem( DUMMY_SITE_ID, Object.assign( {}, DUMMY_MEDIA_OBJECT, { size: 2048, extension: 'gif' } ) );
+		test( 'should set an error array for a file exceeding acceptable size', () => {
+			validateItem(
+				site,
+				Object.assign( {}, DUMMY_MEDIA_OBJECT, { size: 2048, extension: 'gif' } )
+			);
 
 			expect( MediaValidationStore._errors ).to.eql( {
 				[ DUMMY_SITE_ID ]: {
-					[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.EXCEEDS_MAX_UPLOAD_SIZE ]
-				}
+					[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.EXCEEDS_MAX_UPLOAD_SIZE ],
+				},
 			} );
 		} );
 
-		it( 'should accumulate multiple validation errors', function() {
-			validateItem( DUMMY_SITE_ID, Object.assign( {}, DUMMY_MEDIA_OBJECT, { size: 2048 } ) );
+		test( 'should accumulate multiple validation errors', () => {
+			validateItem( site, Object.assign( {}, DUMMY_MEDIA_OBJECT, { size: 2048 } ) );
 
 			expect( MediaValidationStore._errors ).to.eql( {
 				[ DUMMY_SITE_ID ]: {
 					[ DUMMY_MEDIA_OBJECT.ID ]: [
 						MediaValidationErrors.FILE_TYPE_UNSUPPORTED,
-						MediaValidationErrors.EXCEEDS_MAX_UPLOAD_SIZE
-					]
-				}
+						MediaValidationErrors.EXCEEDS_MAX_UPLOAD_SIZE,
+					],
+				},
 			} );
 		} );
 	} );
 
-	describe( '#clearValidationErrors()', function() {
+	describe( '#clearValidationErrors()', () => {
 		var clearValidationErrors;
 
-		before( function() {
+		beforeAll( function() {
 			clearValidationErrors = MediaValidationStore.clearValidationErrors;
 		} );
 
-		it( 'should remove validation errors for a single item on a given site', function() {
+		test( 'should remove validation errors for a single item on a given site', () => {
 			dispatchCreateMediaItem();
 
 			clearValidationErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( MediaValidationStore._errors ).to.eql( {
-				[ DUMMY_SITE_ID ]: {}
+				[ DUMMY_SITE_ID ]: {},
 			} );
 		} );
 
-		it( 'should remove all validation errors on a site if no item is specified', function() {
+		test( 'should remove all validation errors on a site if no item is specified', () => {
 			dispatchCreateMediaItem();
 
 			clearValidationErrors( DUMMY_SITE_ID );
@@ -176,57 +169,59 @@ describe( 'MediaValidationStore', function() {
 		} );
 	} );
 
-	describe( '#clearValidationErrorsByType', function() {
+	describe( '#clearValidationErrorsByType', () => {
 		var clearValidationErrorsByType;
 
-		before( function() {
+		beforeAll( function() {
 			clearValidationErrorsByType = MediaValidationStore.clearValidationErrorsByType;
 		} );
 
-		it( 'should remove errors for all items containing that error type on a given site', function() {
+		test( 'should remove errors for all items containing that error type on a given site', () => {
 			dispatchCreateMediaItem();
 			dispatchCreateMediaItem( {
-				data: assign( {}, DUMMY_MEDIA_OBJECT, { ID: DUMMY_MEDIA_OBJECT.ID + 1 } )
+				data: assign( {}, DUMMY_MEDIA_OBJECT, { ID: DUMMY_MEDIA_OBJECT.ID + 1 } ),
 			} );
 
-			expect( Object.keys( MediaValidationStore.getAllErrors( DUMMY_SITE_ID ) ).length ).to.equal( 2 );
+			expect( Object.keys( MediaValidationStore.getAllErrors( DUMMY_SITE_ID ) ).length ).to.equal(
+				2
+			);
 
 			clearValidationErrorsByType( DUMMY_SITE_ID, MediaValidationErrors.FILE_TYPE_UNSUPPORTED );
 
 			expect( MediaValidationStore._errors ).to.eql( {
-				[ DUMMY_SITE_ID ]: {}
+				[ DUMMY_SITE_ID ]: {},
 			} );
 		} );
 	} );
 
-	describe( '#getAllErrors()', function() {
-		it( 'should return an empty object when no errors exist', function() {
+	describe( '#getAllErrors()', () => {
+		test( 'should return an empty object when no errors exist', () => {
 			var errors = MediaValidationStore.getAllErrors( DUMMY_SITE_ID );
 
 			expect( errors ).to.eql( {} );
 		} );
 
-		it( 'should return an object of errors', function() {
+		test( 'should return an object of errors', () => {
 			var errors;
 
 			dispatchCreateMediaItem();
 			errors = MediaValidationStore.getAllErrors( DUMMY_SITE_ID );
 
 			expect( errors ).to.eql( {
-				[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ]
+				[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ],
 			} );
 		} );
 	} );
 
-	describe( '#getErrors()', function() {
-		it( 'should return an empty array when no errors exist', function() {
+	describe( '#getErrors()', () => {
+		test( 'should return an empty array when no errors exist', () => {
 			var errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( errors ).to.be.an.instanceof( Array );
 			expect( errors ).to.be.empty;
 		} );
 
-		it( 'should return an array of errors', function() {
+		test( 'should return an array of errors', () => {
 			var errors;
 
 			dispatchCreateMediaItem();
@@ -236,126 +231,136 @@ describe( 'MediaValidationStore', function() {
 		} );
 	} );
 
-	describe( '.dispatchToken', function() {
-		it( 'should expose its dispatcher ID', function() {
+	describe( '.dispatchToken', () => {
+		test( 'should expose its dispatcher ID', () => {
 			expect( MediaValidationStore.dispatchToken ).to.not.be.undefined;
 		} );
 
-		it( 'should emit a change event when receiving an item with an error', function( done ) {
+		test( 'should emit a change event when receiving an item with an error', done => {
 			MediaValidationStore.once( 'change', done );
 
 			dispatchCreateMediaItem();
 		} );
 
-		it( 'should emit a change event when clearing validation errors', function( done ) {
+		test( 'should emit a change event when clearing validation errors', done => {
 			MediaValidationStore.once( 'change', done );
 
 			dispatchClearMediaValidationErrors();
 		} );
 
-		it( 'should detect a 404 error from received item', function() {
+		test( 'should detect a 404 error from received item', () => {
 			var errors;
 
 			dispatchReceiveMediaItem( {
 				error: {
 					statusCode: 400,
-					errors: [ {
-						error: 'http_404',
-						file: 'https://wordpress.com/invalid.gif',
-						message: 'Not Found'
-					} ]
-				}
+					errors: [
+						{
+							error: 'http_404',
+							file: 'https://wordpress.com/invalid.gif',
+							message: 'Not Found',
+						},
+					],
+				},
 			} );
 			errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( errors ).to.eql( [ MediaValidationErrors.UPLOAD_VIA_URL_404 ] );
 		} );
 
-		it( 'should detect a not enough space error from received item', function() {
+		test( 'should detect a not enough space error from received item', () => {
 			var errors;
 
 			dispatchReceiveMediaItem( {
 				error: {
 					statusCode: 400,
-					errors: [ {
-						error: 'upload_error',
-						file: 'https://wordpress.com/hifive.gif',
-						message: 'Not enough space to upload. 20 KB needed.'
-					} ]
-				}
+					errors: [
+						{
+							error: 'upload_error',
+							file: 'https://wordpress.com/hifive.gif',
+							message: 'Not enough space to upload. 20 KB needed.',
+						},
+					],
+				},
 			} );
 			errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( errors ).to.eql( [ MediaValidationErrors.NOT_ENOUGH_SPACE ] );
 		} );
 
-		it( 'should detect an exceeds plan storage limit error from received item', function() {
+		test( 'should detect an exceeds plan storage limit error from received item', () => {
 			var errors;
 
 			dispatchReceiveMediaItem( {
 				error: {
 					statusCode: 400,
-					errors: [ {
-						error: 'upload_error',
-						file: 'https://wordpress.com/hifive.gif',
-						message: 'You have used your space quota. Please delete files before uploading.'
-					} ]
-				}
+					errors: [
+						{
+							error: 'upload_error',
+							file: 'https://wordpress.com/hifive.gif',
+							message: 'You have used your space quota. Please delete files before uploading.',
+						},
+					],
+				},
 			} );
 			errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( errors ).to.eql( [ MediaValidationErrors.EXCEEDS_PLAN_STORAGE_LIMIT ] );
 		} );
 
-		it( 'should detect general server error from received item', function() {
+		test( 'should detect general server error from received item', () => {
 			var errors;
 
 			dispatchReceiveMediaItem( {
-				error: new Error()
+				error: new Error(),
 			} );
 			errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, DUMMY_MEDIA_OBJECT.ID );
 
 			expect( errors ).to.eql( [ MediaValidationErrors.SERVER_ERROR ] );
 		} );
 
-		it( 'should set errors into the action object explicitly', function() {
+		test( 'should set errors into the action object explicitly', () => {
 			var action = {
 				type: 'CREATE_MEDIA_ITEM',
 				siteId: DUMMY_SITE_ID,
-				data: DUMMY_MEDIA_OBJECT
+				data: DUMMY_MEDIA_OBJECT,
+				site,
 			};
 
 			handler( { action } );
 
 			expect( action.error ).to.eql( {
-				[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ]
+				[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ],
 			} );
 		} );
 
-		it( 'should preserve existing errors when detecting a new one', function() {
+		test( 'should preserve existing errors when detecting a new one', () => {
 			var action = {
 				type: 'CREATE_MEDIA_ITEM',
 				siteId: DUMMY_SITE_ID,
-				data: DUMMY_MEDIA_OBJECT
+
+				data: DUMMY_MEDIA_OBJECT,
+				site,
 			};
 
 			handler( {
 				action: {
 					type: 'CREATE_MEDIA_ITEM',
 					siteId: DUMMY_SITE_ID,
-					data: assign( {}, DUMMY_MEDIA_OBJECT, { ID: 101 } )
-				}
+					data: assign( {}, DUMMY_MEDIA_OBJECT, { ID: 101 } ),
+					site,
+				},
 			} );
 
 			handler( { action } );
 
 			expect( action.error ).to.eql( {
 				[ DUMMY_MEDIA_OBJECT.ID ]: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ],
-				101: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ]
+				101: [ MediaValidationErrors.FILE_TYPE_UNSUPPORTED ],
 			} );
 		} );
 
-		it( 'should detect an external media error and set error on item ERROR_GLOBAL_ITEM_ID', () => {
+		test( 'should detect an external media error and set error on item ERROR_GLOBAL_ITEM_ID', () => {
 			dispatchError( 'servicefail' );
 
 			const errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, ERROR_GLOBAL_ITEM_ID );
@@ -363,7 +368,7 @@ describe( 'MediaValidationStore', function() {
 			expect( errors ).to.eql( [ MediaValidationErrors.SERVICE_FAILED ] );
 		} );
 
-		it( 'should require an action ID for all errors other than external media', () => {
+		test( 'should require an action ID for all errors other than external media', () => {
 			dispatchError( 'someothererror' );
 
 			const errors = MediaValidationStore.getErrors( DUMMY_SITE_ID, ERROR_GLOBAL_ITEM_ID );
@@ -371,7 +376,7 @@ describe( 'MediaValidationStore', function() {
 			expect( errors ).to.eql( [] );
 		} );
 
-		it( 'should remove all validation errors when changing the data source', () => {
+		test( 'should remove all validation errors when changing the data source', () => {
 			dispatchError( 'servicefail' );
 			handler( { action: { type: 'CHANGE_MEDIA_SOURCE', siteId: DUMMY_SITE_ID } } );
 

@@ -1,8 +1,11 @@
+/** @format */
+
 /**
  * Internal dependencies
  */
+
 import { makeLayout } from 'controller';
-import { siteSelection, makeNavigation, sites } from 'my-sites/controller';
+import { siteSelection, navigation, sites } from 'my-sites/controller';
 import { list, redirect } from './controller';
 import config from 'config';
 
@@ -11,7 +14,7 @@ export default function( router ) {
 		return;
 	}
 
-	router( '/types/:type/:status?/:site', siteSelection, makeNavigation, list, makeLayout );
+	router( '/types/:type/:status?/:site', siteSelection, navigation, list, makeLayout );
 	router( '/types/:type', siteSelection, sites, makeLayout );
 	router( '/types', redirect );
 }

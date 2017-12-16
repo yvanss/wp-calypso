@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -7,10 +9,10 @@ import deepFreeze from 'deep-freeze';
 /**
  * Internal dependencies
  */
-import { getAccountRecoveryResetRequestError } from '../';
+import { getAccountRecoveryResetRequestError } from 'state/selectors';
 
 describe( 'getAccountRecoveryResetRequestError()', () => {
-	it( 'should return the error field in the request-reset substate treee.', () => {
+	test( 'should return the error field in the request-reset substate treee.', () => {
 		const error = {
 			status: 404,
 			message: 'Fake error.',
@@ -28,11 +30,11 @@ describe( 'getAccountRecoveryResetRequestError()', () => {
 		assert.deepEqual( getAccountRecoveryResetRequestError( state ), error );
 	} );
 
-	it( 'should return null when there is no error stored in the request-reset substate tree.', () => {
+	test( 'should return null when there is no error stored in the request-reset substate tree.', () => {
 		const state = deepFreeze( {
 			accountRecovery: {
 				reset: {
-					requestReset: {}
+					requestReset: {},
 				},
 			},
 		} );

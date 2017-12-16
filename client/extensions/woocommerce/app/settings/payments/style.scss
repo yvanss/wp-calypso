@@ -1,9 +1,5 @@
 &.payments__dialog {
-	display: flex;
-	flex-direction: column;
-	flex-grow: 1;
-	max-height: 80%;
-	max-width: 600px;
+	max-width: 660px;
 
 	.dialog__content {
 		height: 100%;
@@ -23,13 +19,26 @@
 			}
 		}
 	}
+
+	.is-international-option {
+		display: none;
+	}
+
+	&.show-international-options {
+		.is-international-option {
+			display: block;
+		}
+	}
+}
+
+.payments__edit-international-options-checkbox {
+	margin-right: 8px;
 }
 
 .payments__address-currency-container {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
-	justify-content: space-between;
 
 	@include breakpoint( "<660px" ) {
 		flex-direction: column;
@@ -40,10 +49,6 @@
 		padding: 0;
 		box-shadow: none;
 	}
-}
-
-&.store-location__edit-dialog {
-	max-width: 600px;
 }
 
 .payments__currency-container {

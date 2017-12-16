@@ -1,13 +1,15 @@
+/** @format */
 /**
  * External dependencies
  */
+
 import { isEmpty, pick } from 'lodash';
 import qs from 'qs';
 
 /**
  * Internal dependencies
  */
-import { serverRender, serverRenderError } from 'render';
+import { serverRender } from 'render';
 import { setSection as setSectionMiddlewareFactory } from '../../client/controller';
 import { setRoute as setRouteAction } from 'state/ui/actions';
 
@@ -23,7 +25,11 @@ export function serverRouter( expressApp, setUpRoute, section ) {
 				( err, req, res, next ) => {
 					route( err, req.context, next );
 				},
-				serverRenderError
+				( err, req, res, next ) => {
+					req.error = err;
+					res.status( err.status || 404 );
+					serverRender( req, res, next );
+				}
 			);
 		} else {
 			expressApp.get(
@@ -34,18 +40,14 @@ export function serverRouter( expressApp, setUpRoute, section ) {
 					setRouteMiddleware,
 					...middlewares
 				),
-				serverRender,
-				serverRenderError
+				serverRender
 			);
 		}
 	};
 }
 
 function setRouteMiddleware( context, next ) {
-	context.store.dispatch( setRouteAction(
-		context.pathname,
-		context.query
-	) );
+	context.store.dispatch( setRouteAction( context.pathname, context.query ) );
 
 	next();
 }
@@ -71,25 +73,26 @@ function getEnhancedContext( req, res ) {
 		query: req.query,
 		protocol: req.protocol,
 		host: req.headers.host,
-		res
+		redirect: res.redirect.bind( res ),
+		res,
 	} );
 }
 
 function applyMiddlewares( context, expressNext, ...middlewares ) {
-	const liftedMiddlewares = middlewares.map( middleware => next => middleware( context, ( err ) => {
-		if ( err ) {
-			expressNext( err ); // Call express' next( err ) for error handling (and bail early from this route)
-		} else {
-			next();
-		}
-	} ) );
+	const liftedMiddlewares = middlewares.map( middleware => next =>
+		middleware( context, err => {
+			if ( err ) {
+				expressNext( err ); // Call express' next( err ) for error handling (and bail early from this route)
+			} else {
+				next();
+			}
+		} )
+	 );
 	compose( ...liftedMiddlewares )();
 }
 
 function compose( ...functions ) {
-	return functions.reduceRight( ( composed, f ) => (
-		() => f( composed )
-	), () => {} );
+	return functions.reduceRight( ( composed, f ) => () => f( composed ), () => {} );
 }
 
 export function getCacheKey( context ) {
@@ -98,5 +101,9 @@ export function getCacheKey( context ) {
 	}
 
 	const cachedQueryParams = pick( context.query, context.cacheQueryKeys );
-	return context.pathname + '?' + qs.stringify( cachedQueryParams, { sort: ( a, b ) => a.localCompare( b ) } );
+	return (
+		context.pathname +
+		'?' +
+		qs.stringify( cachedQueryParams, { sort: ( a, b ) => a.localCompare( b ) } )
+	);
 }

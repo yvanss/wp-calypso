@@ -3,7 +3,8 @@
  * External dependencies
  */
 import ReactDom from 'react-dom';
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import classnames from 'classnames';
 import { defer, findLast, noop, times, clamp, identity, map } from 'lodash';
 import { connect } from 'react-redux';
@@ -39,10 +40,9 @@ import PostLifecycle from './post-lifecycle';
 import { showSelectedPost } from 'reader/utils';
 import getBlockedSites from 'state/selectors/get-blocked-sites';
 import { getReaderFollows } from 'state/selectors';
-import { keysAreEqual } from 'lib/feed-stream-store/post-key';
+import { keysAreEqual, keyToString, keyForPost } from 'lib/feed-stream-store/post-key';
 import { resetCardExpansions } from 'state/ui/reader/card-expansions/actions';
 import { combineCards, injectRecommendations, RECS_PER_BLOCK } from './utils';
-import { keyToString, keyForPost } from 'lib/feed-stream-store/post-key';
 
 const GUESSED_POST_HEIGHT = 600;
 const HEADER_OFFSET_TOP = 46;
@@ -91,6 +91,7 @@ class ReaderStream extends React.Component {
 		useCompactCards: PropTypes.bool,
 		transformStreamItems: PropTypes.func,
 		isMain: PropTypes.bool,
+		intro: PropTypes.object,
 	};
 
 	static defaultProps = {
@@ -107,6 +108,7 @@ class ReaderStream extends React.Component {
 		transformStreamItems: identity,
 		isMain: true,
 		useCompactCards: false,
+		intro: null,
 	};
 
 	getStateFromStores( props = this.props ) {
@@ -140,6 +142,7 @@ class ReaderStream extends React.Component {
 			posts,
 			recs,
 			updateCount: store.getUpdateCount(),
+			pendingPostKeys: store.getPendingPostKeys(),
 			selectedPostKey: store.getSelectedPostKey(),
 			isFetchingNextPage: store.isFetchingNextPage && store.isFetchingNextPage(),
 			isLastPage: store.isLastPage(),
@@ -475,15 +478,19 @@ class ReaderStream extends React.Component {
 		return (
 			<TopLevel className={ classnames( 'following', this.props.className ) }>
 				{ this.props.isMain &&
-					this.props.showMobileBackToSidebar &&
-					<MobileBackToSidebar>
-						<h1>
-							{ this.props.translate( 'Streams' ) }
-						</h1>
-					</MobileBackToSidebar> }
+					this.props.showMobileBackToSidebar && (
+						<MobileBackToSidebar>
+							<h1>{ this.props.translate( 'Streams' ) }</h1>
+						</MobileBackToSidebar>
+					) }
 
-				<UpdateNotice count={ this.state.updateCount } onClick={ this.showUpdates } />
+				<UpdateNotice
+					count={ this.state.updateCount }
+					onClick={ this.showUpdates }
+					pendingPostKeys={ this.state.pendingPostKeys }
+				/>
 				{ this.props.children }
+				{ showingStream && this.state.posts.length ? this.props.intro : null }
 				{ body }
 				{ showingStream && store.isLastPage() && this.state.posts.length ? <ListEnd /> : null }
 			</TopLevel>

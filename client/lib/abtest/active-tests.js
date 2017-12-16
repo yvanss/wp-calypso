@@ -1,4 +1,5 @@
-module.exports = {
+/** @format */
+export default {
 	multiDomainRegistrationV1: {
 		datestamp: '20200721',
 		variations: {
@@ -8,13 +9,15 @@ module.exports = {
 		},
 		defaultVariation: 'singlePurchaseFlow',
 	},
-	signupSurveyStep: {
-		datestamp: '20170329',
+	signupAtomicStoreVsPressable: {
+		datestamp: '20171101',
 		variations: {
-			showSurveyStep: 20,
-			hideSurveyStep: 80,
+			atomic: 99,
+			pressable: 1,
 		},
-		defaultVariation: 'hideSurveyStep',
+		defaultVariation: 'atomic',
+		allowExistingUsers: true,
+		localeTargets: 'any',
 	},
 	businessPlanDescriptionAT: {
 		datestamp: '20170605',
@@ -32,22 +35,6 @@ module.exports = {
 		},
 		defaultVariation: 'original',
 		localeTargets: 'any',
-	},
-	jetpackConnectHideFreePlan: {
-		datestamp: '20170905',
-		variations: {
-			show: 50,
-			hide: 50,
-		},
-		defaultVariation: 'show',
-	},
-	newSiteWithJetpack: {
-		datestamp: '20170419',
-		variations: {
-			showNewJetpackSite: 50,
-			onlyDotComSites: 50,
-		},
-		defaultVariation: 'onlyDotComSites',
 	},
 	chatOfferOnCancel: {
 		datestamp: '20170421',
@@ -76,42 +63,6 @@ module.exports = {
 		defaultVariation: 'hide',
 		allowExistingUsers: true,
 	},
-	jetpackConnectPlansCopyChanges: {
-		datestamp: '20170728',
-		variations: {
-			original: 0,
-			modified: 100,
-		},
-		defaultVariation: 'modified',
-	},
-	readerIntroIllustration: {
-		datestamp: '20170718',
-		variations: {
-			blue: 33,
-			lightBlue: 33,
-			white: 34,
-		},
-		defaultVariation: 'white',
-		assignmentMethod: 'userId',
-	},
-	postSignupUpgradeScreen: {
-		datestamp: '20170810',
-		variations: {
-			original: 50,
-			modified: 50,
-		},
-		defaultVariation: 'original',
-		allowExistingUsers: true,
-	},
-	privacyNoPopup: {
-		datestamp: '20170830',
-		variations: {
-			original: 50,
-			nopopup: 50,
-		},
-		defaultVariation: 'original',
-		allowExistingUsers: true,
-	},
 	skipThemesSelectionModal: {
 		datestamp: '20170904',
 		variations: {
@@ -121,5 +72,59 @@ module.exports = {
 		defaultVariation: 'show',
 		allowExistingUsers: true,
 		localeTargets: 'any',
+	},
+	unlimitedThemeNudge: {
+		datestamp: '20171016',
+		variations: {
+			hide: 50,
+			show: 50,
+		},
+		defaultVariation: 'hide',
+		allowExistingUsers: true,
+	},
+	gsuiteUpsell: {
+		datestamp: '20171025',
+		variations: {
+			show: 0,
+			hide: 100,
+		},
+		defaultVariation: 'hide',
+		allowExistingUsers: true,
+	},
+	showNewPaymentMethods: {
+		datestamp: '20171115',
+		variations: {
+			hide: 50,
+			show: 50,
+		},
+		defaultVariation: 'hide',
+		allowExistingUsers: true,
+		localeTargets: 'any',
+	},
+	signupSiteSegmentStep: {
+		datestamp: '20170329',
+		variations: {
+			control: 0,
+			variant: 100,
+		},
+		defaultVariation: 'control',
+	},
+	checklistThankYouForFreeUser: {
+		datestamp: '20171204',
+		variations: {
+			show: 50,
+			hide: 50,
+		},
+		defaultVariation: 'hide',
+		allowExistingUsers: true,
+	},
+	checklistThankYouForPaidUser: {
+		datestamp: '20171204',
+		variations: {
+			show: 50,
+			hide: 50,
+		},
+		defaultVariation: 'hide',
+		allowExistingUsers: true,
 	},
 };

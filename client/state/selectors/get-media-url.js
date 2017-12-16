@@ -1,8 +1,11 @@
+/** @format */
+
 /**
  * Internal dependencies
  */
+
 import safeImageUrl from 'lib/safe-image-url';
-import { getMediaItem } from './';
+import { getMediaItem } from 'state/selectors';
 
 /**
  * Returns the URL for a media item, or null if not known

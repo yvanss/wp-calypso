@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,15 +8,15 @@ import { expect } from 'chai';
 /**
  * Internal dependencies
  */
-import { getMagicLoginRequestEmailError } from '../';
+import { getMagicLoginRequestEmailError } from 'state/selectors';
 
 describe( 'getMagicLoginRequestEmailError()', () => {
-	it( 'should return null if there is no information yet', () => {
+	test( 'should return null if there is no information yet', () => {
 		const error = getMagicLoginRequestEmailError( undefined );
 		expect( error ).to.be.null;
 	} );
 
-	it( 'should return the error if set', () => {
+	test( 'should return the error if set', () => {
 		const error = getMagicLoginRequestEmailError( {
 			login: {
 				magicLogin: {

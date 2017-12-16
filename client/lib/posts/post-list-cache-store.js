@@ -1,32 +1,33 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { intersection } from 'lodash';
 import debugFactory from 'debug';
 
 /**
  * Internal dependencies
  */
-import sitesFactory from 'lib/sites-list';
 import Dispatcher from 'dispatcher';
 import { cacheIndex } from 'lib/wp/sync-handler/cache-index';
 
 let cache = {};
 const _canonicalCache = {};
 const TTL_IN_MS = 5 * 60 * 1000; // five minutes
-const sites = sitesFactory();
 const PostsListCache = {
 	get,
 	_reset: function() {
 		cache = {};
-	}
+	},
 };
 const debug = debugFactory( 'calypso:posts-list:cache' );
 
 function isStale( list ) {
 	const now = new Date().getTime();
 	const { timeSaved } = list;
-	return ( now - timeSaved ) > TTL_IN_MS;
+	return now - timeSaved > TTL_IN_MS;
 }
 
 function get( listKey ) {
@@ -57,8 +58,7 @@ function set( list ) {
 	}
 }
 
-function markDirty( post, oldStatus ) {
-	const site = sites.getSite( post.site_ID );
+function markDirty( site, post, oldStatus ) {
 	const affectedSites = [ site.slug, site.ID, false ];
 	const affectedStatuses = [ post.status, oldStatus ];
 	let listStatuses, key, entry, list;
@@ -89,10 +89,14 @@ function markDirty( post, oldStatus ) {
 	}
 
 	// clear api cache for records with matching site/status
-	cacheIndex.clearRecordsByParamFilter( ( reqParams ) => {
+	cacheIndex.clearRecordsByParamFilter( reqParams => {
 		const siteIdentifiers = affectedSites.slice( 0, -1 ); // remove the `false` value from above
-		const affectedPaths = [ '/me/posts', ...siteIdentifiers.map( status => `/sites/${status}/posts` ) ]; // construct matching api routes
-		const recordStatuses = ( reqParams.query && reqParams.query.status ) ? reqParams.query.status.split( ',' ) : [];
+		const affectedPaths = [
+			'/me/posts',
+			...siteIdentifiers.map( status => `/sites/${ status }/posts` ),
+		]; // construct matching api routes
+		const recordStatuses =
+			reqParams.query && reqParams.query.status ? reqParams.query.status.split( ',' ) : [];
 		const intersectingStatuses = intersection( recordStatuses, affectedStatuses );
 		if ( affectedPaths.indexOf( reqParams.path ) === -1 ) {
 			return false;
@@ -105,7 +109,7 @@ function markDirty( post, oldStatus ) {
 }
 
 function isListKeyFresh( listKey ) {
-	return ( cache[ listKey ] && ! isStale( cache[ listKey ] ) && ! cache[ listKey ].dirty );
+	return cache[ listKey ] && ! isStale( cache[ listKey ] ) && ! cache[ listKey ].dirty;
 }
 
 PostsListCache.dispatchToken = Dispatcher.register( function( payload ) {
@@ -129,7 +133,7 @@ PostsListCache.dispatchToken = Dispatcher.register( function( payload ) {
 		case 'RECEIVE_UPDATED_POST':
 		case 'RECEIVE_POST_BEING_EDITED':
 			if ( action.post ) {
-				markDirty( action.post, action.original ? action.original.status : null );
+				markDirty( action.site, action.post, action.original ? action.original.status : null );
 				set( PostListStore.get() );
 			}
 			break;

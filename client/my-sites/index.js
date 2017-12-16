@@ -1,13 +1,17 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import page from 'page';
 
 /**
  * Internal dependencies
  */
-import controller from './controller';
+import { siteSelection, sites } from './controller';
+import { makeLayout, render as clientRender } from 'controller';
 
 export default function() {
-	page( '/sites/:sitesFilter?', controller.siteSelection, controller.sites );
-};
+	page( '/sites/:sitesFilter?', siteSelection, sites, makeLayout, clientRender );
+}

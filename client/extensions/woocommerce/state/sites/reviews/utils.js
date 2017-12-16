@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { omitBy } from 'lodash';
 
 export const DEFAULT_QUERY = {

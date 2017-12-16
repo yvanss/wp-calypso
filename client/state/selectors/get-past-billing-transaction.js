@@ -1,13 +1,16 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { find } from 'lodash';
 
 /**
  * Internal dependencies
  */
 import createSelector from 'lib/create-selector';
-import { getPastBillingTransactions } from './';
+import getPastBillingTransactions from './get-past-billing-transactions';
 
 /**
  * Returns a past billing transaction.
@@ -17,11 +20,8 @@ import { getPastBillingTransactions } from './';
  * @param  {String}  id      ID of the transaction
  * @return {?Object}         The transaction object
  */
-const getPastBillingTransaction = createSelector(
-	( state, id ) => {
-		return find( getPastBillingTransactions( state ), { id } ) || null;
-	},
-	getPastBillingTransactions
-);
+const getPastBillingTransaction = createSelector( ( state, id ) => {
+	return find( getPastBillingTransactions( state ), { id } ) || null;
+}, getPastBillingTransactions );
 
 export default getPastBillingTransaction;

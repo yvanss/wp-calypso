@@ -1,38 +1,49 @@
+/** @format */
+
 /**
  * External dependencies
  */
 import React from 'react';
+import page from 'page';
 import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
-import page from 'page';
 
 /**
  * Internal dependencies
  */
-import tableRows from './table-rows';
-import eventRecorder from 'me/event-recorder';
+import Button from 'components/button';
 import Card from 'components/card';
-import Main from 'components/main';
-import HeaderCake from 'components/header-cake';
 import DocumentHead from 'components/data/document-head';
+import HeaderCake from 'components/header-cake';
+import Main from 'components/main';
 import PageViewTracker from 'lib/analytics/page-view-tracker';
-import QueryBillingTransactions from 'components/data/query-billing-transactions';
 import purchasesPaths from 'me/purchases/paths';
-import {
-	getPastBillingTransaction,
-	getPastBillingTransactions,
-} from 'state/selectors';
+import QueryBillingTransactions from 'components/data/query-billing-transactions';
+import tableRows from './table-rows';
+import { getPastBillingTransaction, getPastBillingTransactions } from 'state/selectors';
+import { recordGoogleEvent } from 'state/analytics/actions';
 
-const BillingReceipt = React.createClass( {
-	mixins: [ eventRecorder ],
-
+class BillingReceipt extends React.Component {
 	componentDidMount() {
 		this.redirectIfInvalidTransaction();
-	},
+	}
 
 	componentDidUpdate() {
 		this.redirectIfInvalidTransaction();
-	},
+	}
+
+	recordClickEvent = action => {
+		this.props.recordGoogleEvent( 'Me', 'Clicked on ' + action );
+	};
+
+	handleSupportLinkClick = () => {
+		this.recordClickEvent( 'Contact {appName} Support in Billing History Receipt' );
+	};
+
+	handlePrintLinkClick = () => {
+		this.recordClickEvent( 'Print Receipt Button in Billing History Receipt' );
+		window.print();
+	};
 
 	redirectIfInvalidTransaction() {
 		const { totalTransactions, transaction } = this.props;
@@ -40,12 +51,7 @@ const BillingReceipt = React.createClass( {
 		if ( ! transaction && totalTransactions !== null ) {
 			page.redirect( purchasesPaths.billingHistory() );
 		}
-	},
-
-	printReceipt( event ) {
-		event.preventDefault();
-		window.print();
-	},
+	}
 
 	ref() {
 		const { transaction, translate } = this.props;
@@ -60,7 +66,7 @@ const BillingReceipt = React.createClass( {
 				<span>{ transaction.pay_ref }</span>
 			</li>
 		);
-	},
+	}
 
 	paymentMethod() {
 		const { transaction, translate } = this.props;
@@ -80,7 +86,7 @@ const BillingReceipt = React.createClass( {
 				<span>{ text }</span>
 			</li>
 		);
-	},
+	}
 
 	renderTitle() {
 		const { translate } = this.props;
@@ -90,7 +96,7 @@ const BillingReceipt = React.createClass( {
 				{ translate( 'Billing History' ) }
 			</HeaderCake>
 		);
-	},
+	}
 
 	renderPlaceholder() {
 		return (
@@ -106,7 +112,7 @@ const BillingReceipt = React.createClass( {
 				</div>
 			</Card>
 		);
-	},
+	}
 
 	renderBillingDetails() {
 		const { transaction, translate } = this.props;
@@ -121,7 +127,7 @@ const BillingReceipt = React.createClass( {
 				<div contentEditable="true">{ transaction.cc_email }</div>
 			</li>
 		);
-	},
+	}
 
 	renderEmptyBillingDetails() {
 		const { translate } = this.props;
@@ -129,24 +135,27 @@ const BillingReceipt = React.createClass( {
 		return (
 			<li className="billing-history__billing-details">
 				<strong>{ translate( 'Billing Details' ) }</strong>
-				<div contentEditable="true"></div>
+				<div contentEditable="true" />
 			</li>
 		);
-	},
+	}
 
 	renderLineItems() {
 		const { transaction, translate } = this.props;
-		const items = transaction.items.map( ( item ) => {
+		const items = transaction.items.map( item => {
 			return (
 				<tr key={ item.id }>
 					<td className="billing-history__receipt-item-name">
 						<span>{ item.variation }</span>
-						<small>({ item.type })</small><br />
+						<small>({ item.type })</small>
+						<br />
 						<em>{ item.domain }</em>
 					</td>
 					<td className={ 'billing-history__receipt-amount ' + transaction.credit }>
 						{ item.amount }
-						{ transaction.credit && <span className="billing-history__credit-badge">{ translate( 'Refund' ) }</span> }
+						{ transaction.credit && (
+							<span className="billing-history__credit-badge">{ translate( 'Refund' ) }</span>
+						) }
 					</td>
 				</tr>
 			);
@@ -167,18 +176,21 @@ const BillingReceipt = React.createClass( {
 							<td className="billing-history__receipt-desc">
 								<strong>{ translate( 'Total' ) }:</strong>
 							</td>
-							<td className={ 'billing-history__receipt-amount billing-history__total-amount ' + transaction.credit }>
+							<td
+								className={
+									'billing-history__receipt-amount billing-history__total-amount ' +
+									transaction.credit
+								}
+							>
 								{ transaction.amount }
 							</td>
 						</tr>
 					</tfoot>
-					<tbody>
-						{ items }
-					</tbody>
+					<tbody>{ items }</tbody>
 				</table>
 			</div>
 		);
-	},
+	}
 
 	renderBillingHistory() {
 		const { transaction, translate } = this.props;
@@ -190,23 +202,25 @@ const BillingReceipt = React.createClass( {
 				<Card compact className="billing-history__receipt-card">
 					<div className="billing-history__app-overview">
 						<img src={ transaction.icon } title={ transaction.service } />
-						<h2> {
-							translate( '{{link}}%(service)s{{/link}} {{small}}by %(organization)s{{/small}}',
-								{
-									components: {
-										link: serviceLink,
-										small: <small />
-									},
-									args: {
-										service: transaction.service,
-										organization: transaction.org,
-									},
-									comment: 'This string is "Service by Organization". ' +
-										'The {{link}} and {{small}} add html styling and attributes. ' +
-										'Screenshot: https://cloudup.com/isX-WEFYlOs'
-								} )
-							}
-							<div className="billing-history__transaction-date">{ tableRows.formatDate( transaction.date ) }</div>
+						<h2>
+							{' '}
+							{ translate( '{{link}}%(service)s{{/link}} {{small}}by %(organization)s{{/small}}', {
+								components: {
+									link: serviceLink,
+									small: <small />,
+								},
+								args: {
+									service: transaction.service,
+									organization: transaction.org,
+								},
+								comment:
+									'This string is "Service by Organization". ' +
+									'The {{link}} and {{small}} add html styling and attributes. ' +
+									'Screenshot: https://cloudup.com/isX-WEFYlOs',
+							} ) }
+							<div className="billing-history__transaction-date">
+								{ tableRows.formatDate( transaction.date ) }
+							</div>
 						</h2>
 					</div>
 					<ul className="billing-history__receipt-details group">
@@ -216,11 +230,9 @@ const BillingReceipt = React.createClass( {
 						</li>
 						{ this.ref() }
 						{ this.paymentMethod() }
-						{
-							transaction.cc_num !== 'XXXX'
-								? this.renderBillingDetails()
-								: this.renderEmptyBillingDetails()
-						}
+						{ transaction.cc_num !== 'XXXX'
+							? this.renderBillingDetails()
+							: this.renderEmptyBillingDetails() }
 					</ul>
 					{ this.renderLineItems() }
 				</Card>
@@ -229,26 +241,20 @@ const BillingReceipt = React.createClass( {
 					<a
 						href={ transaction.support }
 						className="button is-primary"
-						onClick={ this.recordClickEvent( 'Contact {appName} Support in Billing History Receipt' ) }
+						onClick={ this.handleSupportLinkClick }
 					>
 						{ translate( 'Contact %(transactionService)s Support', {
 							args: {
-								transactionService: transaction.service
+								transactionService: transaction.service,
 							},
-							context: 'transactionService is a website, such as WordPress.com.'
+							context: 'transactionService is a website, such as WordPress.com.',
 						} ) }
 					</a>
-					<a
-						href="#"
-						onClick={ this.recordClickEvent( 'Print Receipt Button in Billing History Receipt', this.printReceipt ) }
-						className="button is-secondary"
-					>
-						{ translate( 'Print Receipt' ) }
-					</a>
+					<Button onClick={ this.handlePrintLinkClick }>{ translate( 'Print Receipt' ) }</Button>
 				</Card>
 			</div>
 		);
-	},
+	}
 
 	render() {
 		const { transaction, translate } = this.props;
@@ -256,7 +262,10 @@ const BillingReceipt = React.createClass( {
 		return (
 			<Main>
 				<DocumentHead title={ translate( 'Billing History' ) } />
-				<PageViewTracker path="/me/purchases/billing/receipt" title="Me > Billing History > Receipt" />
+				<PageViewTracker
+					path="/me/purchases/billing/receipt"
+					title="Me > Billing History > Receipt"
+				/>
 				<QueryBillingTransactions />
 
 				{ this.renderTitle() }
@@ -264,8 +273,8 @@ const BillingReceipt = React.createClass( {
 				{ transaction ? this.renderBillingHistory() : this.renderPlaceholder() }
 			</Main>
 		);
-	},
-} );
+	}
+}
 
 export default connect(
 	( state, ownProps ) => {
@@ -276,4 +285,7 @@ export default connect(
 			totalTransactions: transactions ? transactions.length : null,
 		};
 	},
+	{
+		recordGoogleEvent,
+	}
 )( localize( BillingReceipt ) );

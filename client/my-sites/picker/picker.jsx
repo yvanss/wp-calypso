@@ -1,6 +1,10 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
+import PropTypes from 'prop-types';
 import React from 'react';
 import wrapWithClickOutside from 'react-click-outside';
 import { noop } from 'lodash';
@@ -15,30 +19,26 @@ import { hasTouch } from 'lib/touch-detect';
 import { getCurrentLayoutFocus } from 'state/ui/layout-focus/selectors';
 import { setNextLayoutFocus, setLayoutFocus } from 'state/ui/layout-focus/actions';
 
-const SitePicker = React.createClass( {
-	displayName: 'SitePicker',
+class SitePicker extends React.Component {
+	static displayName = 'SitePicker';
 
-	propTypes: {
-		onClose: React.PropTypes.func,
-		currentLayoutFocus: React.PropTypes.string,
-		setNextLayoutFocus: React.PropTypes.func.isRequired,
-		setLayoutFocus: React.PropTypes.func.isRequired,
-	},
+	static propTypes = {
+		onClose: PropTypes.func,
+		currentLayoutFocus: PropTypes.string,
+		setNextLayoutFocus: PropTypes.func.isRequired,
+		setLayoutFocus: PropTypes.func.isRequired,
+	};
 
-	getInitialState: function() {
-		return {
-			isAutoFocused: false,
-			isOpened: false
-		};
-	},
+	static defaultProps = {
+		onClose: noop,
+	};
 
-	getDefaultProps: function() {
-		return {
-			onClose: noop
-		};
-	},
+	state = {
+		isAutoFocused: false,
+		isOpened: false,
+	};
 
-	componentWillReceiveProps: function( nextProps ) {
+	componentWillReceiveProps( nextProps ) {
 		if ( ! nextProps.currentLayoutFocus || hasTouch() ) {
 			return;
 		}
@@ -47,37 +47,41 @@ const SitePicker = React.createClass( {
 		if ( isAutoFocused !== this.state.isAutoFocused ) {
 			this.setState( { isAutoFocused } );
 		}
-	},
+	}
 
-	onClose: function( event ) {
+	onClose = ( event, selectedSiteId ) => {
 		if ( event.key === 'Escape' ) {
 			this.closePicker();
 		} else {
 			// We use setNext here, because on mobile we want to show sidebar
 			// instead of Stats page after picking a site
 			this.props.setNextLayoutFocus( 'sidebar' );
-			this.scrollToTop();
+			if ( selectedSiteId ) {
+				this.scrollToTop();
+			}
 		}
-		this.props.onClose( event );
-	},
+		this.props.onClose( event, selectedSiteId );
+	};
 
-	scrollToTop: function() {
+	scrollToTop = () => {
 		document.getElementById( 'secondary' ).scrollTop = 0;
 		window.scrollTo( 0, 0 );
-	},
+	};
 
-	closePicker: function() {
+	closePicker = selectedSiteId => {
 		if ( this.props.currentLayoutFocus === 'sites' ) {
 			this.props.setLayoutFocus( 'sidebar' );
-			this.scrollToTop();
+			if ( selectedSiteId ) {
+				this.scrollToTop();
+			}
 		}
-	},
+	};
 
-	handleClickOutside: function() {
-		this.closePicker();
-	},
+	handleClickOutside = () => {
+		this.closePicker( null );
+	};
 
-	render: function() {
+	render() {
 		return (
 			<div>
 				<CloseOnEscape onEscape={ this.closePicker } />
@@ -95,7 +99,7 @@ const SitePicker = React.createClass( {
 			</div>
 		);
 	}
-} );
+}
 
 function mapStateToProps( state ) {
 	return {
@@ -103,4 +107,6 @@ function mapStateToProps( state ) {
 	};
 }
 
-export default connect( mapStateToProps, { setNextLayoutFocus, setLayoutFocus } )( wrapWithClickOutside( SitePicker ) );
+export default connect( mapStateToProps, { setNextLayoutFocus, setLayoutFocus } )(
+	wrapWithClickOutside( SitePicker )
+);

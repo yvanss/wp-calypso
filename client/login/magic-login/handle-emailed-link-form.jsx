@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -29,12 +32,9 @@ import {
 	getMagicLoginRequestedAuthSuccessfully,
 	isFetchingMagicLoginAuth,
 } from 'state/selectors';
-import {
-	getTwoFactorNotificationSent,
-	isTwoFactorEnabled,
-} from 'state/login/selectors';
+import { getTwoFactorNotificationSent, isTwoFactorEnabled } from 'state/login/selectors';
 import { getCurrentUser } from 'state/current-user/selectors';
-import { recordTracksEvent } from 'state/analytics/actions';
+import { recordTracksEventWithClientId as recordTracksEvent } from 'state/analytics/actions';
 
 const user = userFactory();
 
@@ -44,13 +44,9 @@ class HandleEmailedLinkForm extends React.Component {
 		clientId: PropTypes.string,
 		emailAddress: PropTypes.string.isRequired,
 		token: PropTypes.string.isRequired,
-		tokenTime: PropTypes.string.isRequired,
 
 		// Connected props
-		authError: PropTypes.oneOfType( [
-			PropTypes.string,
-			PropTypes.number,
-		] ),
+		authError: PropTypes.oneOfType( [ PropTypes.string, PropTypes.number ] ),
 		currentUser: PropTypes.object,
 		isAuthenticated: PropTypes.bool,
 		isExpired: PropTypes.bool,
@@ -71,24 +67,19 @@ class HandleEmailedLinkForm extends React.Component {
 	constructor( props ) {
 		super( props );
 
-		if (
-			isEmpty( props.emailAddress ) ||
-			isEmpty( props.token ) ||
-			isEmpty( props.tokenTime )
-		) {
-			// Required props are really required :)
+		if ( isEmpty( props.emailAddress ) || isEmpty( props.token ) ) {
 			this.props.showMagicLoginLinkExpiredPage();
 		}
 	}
 
-	handleSubmit = ( event ) => {
+	handleSubmit = event => {
 		event.preventDefault();
 
 		this.setState( {
 			hasSubmitted: true,
 		} );
 
-		this.props.fetchMagicLoginAuthenticate( this.props.emailAddress, this.props.token, this.props.tokenTime );
+		this.props.fetchMagicLoginAuthenticate( this.props.token );
 	};
 
 	// Lifted from `blocks/login`
@@ -97,11 +88,16 @@ class HandleEmailedLinkForm extends React.Component {
 		if ( ! this.props.twoFactorEnabled ) {
 			this.rebootAfterLogin();
 		} else {
-			page( login( {
-				isNative: true,
-				// If no notification is sent, the user is using the authenticator for 2FA by default
-				twoFactorAuthType: this.props.twoFactorNotificationSent.replace( 'none', 'authenticator' )
-			} ) );
+			page(
+				login( {
+					isNative: true,
+					// If no notification is sent, the user is using the authenticator for 2FA by default
+					twoFactorAuthType: this.props.twoFactorNotificationSent.replace(
+						'none',
+						'authenticator'
+					),
+				} )
+			);
 		}
 	};
 
@@ -121,17 +117,11 @@ class HandleEmailedLinkForm extends React.Component {
 		// user data is persisted in localstorage at `lib/user/user` line 157
 		// therefore we need to reset it before we redirect, otherwise we'll get
 		// mixed data from old and new user
-		user.clear();
-
-		window.location.href = url;
+		user.clear( () => ( window.location.href = url ) );
 	};
 
 	componentWillUpdate( nextProps, nextState ) {
-		const {
-			authError,
-			isAuthenticated,
-			isFetching,
-		} = nextProps;
+		const { authError, isAuthenticated, isFetching } = nextProps;
 
 		if ( ! nextState.hasSubmitted || isFetching ) {
 			// Don't do anything here unless the browser has received the `POST` response
@@ -148,13 +138,7 @@ class HandleEmailedLinkForm extends React.Component {
 	}
 
 	render() {
-		const {
-			currentUser,
-			emailAddress,
-			isExpired,
-			isFetching,
-			translate,
-		} = this.props;
+		const { currentUser, emailAddress, isExpired, isFetching, translate } = this.props;
 
 		if ( isExpired ) {
 			return <EmailedLoginLinkExpired />;
@@ -170,24 +154,25 @@ class HandleEmailedLinkForm extends React.Component {
 				? translate( 'Continue to WordPress.com' )
 				: translate( 'Continue to WordPress.com on your WordPress app' );
 		const line = [
-			translate(
-				'Logging in as %(emailAddress)s', {
-					args: {
-						emailAddress,
-					}
-				}
-			)
+			translate( 'Logging in as %(emailAddress)s', {
+				args: {
+					emailAddress,
+				},
+			} ),
 		];
 
 		if ( currentUser && currentUser.username ) {
-			line.push( <p>{
-				translate( 'NOTE: You are already logged in as user: %(user)s', {
-					args: {
-						user: currentUser.username,
-					}
-				} ) }<br />
-				{ translate( 'Continuing will switch users.' ) }
-				</p> );
+			line.push(
+				<p>
+					{ translate( 'NOTE: You are already logged in as user: %(user)s', {
+						args: {
+							user: currentUser.username,
+						},
+					} ) }
+					<br />
+					{ translate( 'Continuing will switch users.' ) }
+				</p>
+			);
 		}
 
 		this.props.recordTracksEvent( 'calypso_login_email_link_handle_click_view' );
@@ -202,7 +187,7 @@ class HandleEmailedLinkForm extends React.Component {
 				illustrationWidth={ 500 }
 				line={ line }
 				title={ title }
-				/>
+			/>
 		);
 	}
 }

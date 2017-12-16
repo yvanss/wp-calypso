@@ -1,10 +1,14 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import { connect } from 'react-redux';
 import { curry } from 'lodash';
 import page from 'page';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * Internal dependencies
@@ -12,7 +16,7 @@ import React, { Component, PropTypes } from 'react';
 import { addStoredCard } from 'state/stored-cards/actions';
 import analytics from 'lib/analytics';
 import { concatTitle } from 'lib/react-helpers';
-import { createPaygateToken } from 'lib/store-transactions';
+import { createCardToken } from 'lib/store-transactions';
 import CreditCardForm from 'blocks/credit-card-form';
 import DocumentHead from 'components/data/document-head';
 import HeaderCake from 'components/header-cake';
@@ -27,7 +31,7 @@ class AddCreditCard extends Component {
 
 	constructor( props ) {
 		super( props );
-		this.createPaygateToken = curry( createPaygateToken )( 'card_add' );
+		this.createCardToken = curry( createCardToken )( 'card_add' );
 	}
 
 	goToBillingHistory() {
@@ -46,7 +50,7 @@ class AddCreditCard extends Component {
 				<HeaderCake onClick={ this.goToBillingHistory }>{ titles.addCreditCard }</HeaderCake>
 
 				<CreditCardForm
-					createPaygateToken={ this.createPaygateToken }
+					createCardToken={ this.createCardToken }
 					recordFormSubmitEvent={ this.recordFormSubmitEvent }
 					saveStoredCard={ this.props.addStoredCard }
 					successCallback={ this.goToBillingHistory }

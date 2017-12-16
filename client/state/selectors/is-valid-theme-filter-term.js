@@ -1,7 +1,10 @@
+/** @format */
+
 /**
  * Internal dependencies
  */
-import { findThemeFilterTerm } from './';
+
+import { findThemeFilterTerm } from 'state/selectors';
 
 /**
  * Whether a filter term slug is valid

@@ -1,16 +1,15 @@
+/** @format */
+
 /**
  * External dependencies
  */
-import {
-	get,
-	map,
-	toPairs,
-} from 'lodash';
+
+import { get, map, toPairs } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import { getTimezonesLabel } from 'state/selectors/';
+import { getTimezonesLabel } from 'state/selectors';
 
 /**
  * Return all timezones ordered by arrays with
@@ -34,5 +33,8 @@ export default function getTimezones( state ) {
 		return null;
 	}
 
-	return map( continents, zones => [ zones[ 0 ], map( zones[ 1 ], value => [ value, getTimezonesLabel( state, value ) ] ) ] );
+	return map( continents, zones => [
+		zones[ 0 ],
+		map( zones[ 1 ], value => [ value, getTimezonesLabel( state, value ) ] ),
+	] );
 }

@@ -1,3 +1,4 @@
+/** @format */
 /**
  * External dependencies
  */
@@ -46,27 +47,29 @@ CountriesList.prototype.fetch = function() {
 	this.isFetching = true;
 
 	// Sends a request to the API endpoint defined in the subclass
-	this.requestFromEndpoint( function( error, countriesList ) {
-		if ( error ) {
-			debug( 'Unable to fetch ' + this.key + ' from api', error );
+	this.requestFromEndpoint(
+		function( error, countriesList ) {
+			if ( error ) {
+				debug( 'Unable to fetch ' + this.key + ' from api', error );
 
-			return;
-		}
+				return;
+			}
 
-		debug( this.key + ' fetched from api successfully:', countriesList );
+			debug( this.key + ' fetched from api successfully:', countriesList );
 
-		if ( ! this.initialized ) {
-			this.initialize( countriesList );
-		} else {
-			this.data = countriesList;
-		}
+			if ( ! this.initialized ) {
+				this.initialize( countriesList );
+			} else {
+				this.data = countriesList;
+			}
 
-		this.isFetching = false;
+			this.isFetching = false;
 
-		this.emit( 'change' );
+			this.emit( 'change' );
 
-		store.set( this.key, countriesList );
-	}.bind( this ) );
+			store.set( this.key, countriesList );
+		}.bind( this )
+	);
 };
 
 /**
@@ -160,18 +163,6 @@ SmsCountriesList.prototype.requestFromEndpoint = function( fn ) {
 	return wpcom.getSmsSupportedCountries( fn );
 };
 
-const domainRegistrationCountriesList = new DomainRegistrationCountriesList();
-const paymentCountriesList = new PaymentCountriesList();
-const smsCountriesList = new SmsCountriesList();
-
-module.exports = {
-	forDomainRegistrations: function() {
-		return domainRegistrationCountriesList;
-	},
-	forPayments: function() {
-		return paymentCountriesList;
-	},
-	forSms: function() {
-		return smsCountriesList;
-	}
-};
+export const forDomainRegistrations = new DomainRegistrationCountriesList();
+export const forPayments = new PaymentCountriesList();
+export const forSms = new SmsCountriesList();

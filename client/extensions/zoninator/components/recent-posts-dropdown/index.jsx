@@ -1,6 +1,9 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -12,7 +15,7 @@ import { find, flowRight, map } from 'lodash';
  */
 import QueryPosts from 'components/data/query-posts';
 import SelectDropdown from 'components/select-dropdown';
-import { getSitePostsForQuery } from 'state/posts/selectors';
+import { getPostsForQuery } from 'state/posts/selectors';
 import { getSelectedSiteId } from 'state/ui/selectors';
 
 const recentPostsQuery = {
@@ -27,19 +30,19 @@ class RecentPostsDropdown extends PureComponent {
 		posts: PropTypes.array,
 		siteId: PropTypes.number,
 		translate: PropTypes.func,
-	}
+	};
 
 	static defaultProps = {
 		posts: [],
 		exclude: [],
-	}
+	};
 
 	handleSelect = option => {
 		const { onSelect, posts } = this.props;
 		const slug = option.value;
 
 		onSelect( find( posts, { slug } ) );
-	}
+	};
 
 	render() {
 		const { exclude, posts, siteId, translate } = this.props;
@@ -55,7 +58,8 @@ class RecentPostsDropdown extends PureComponent {
 					compact
 					selectedText={ translate( 'Recent posts' ) }
 					options={ options }
-					onSelect={ this.handleSelect } />
+					onSelect={ this.handleSelect }
+				/>
 			</div>
 		);
 	}
@@ -65,12 +69,9 @@ const connectComponent = connect( ( state, { exclude } ) => {
 	const siteId = getSelectedSiteId( state );
 
 	return {
-		posts: getSitePostsForQuery( state, siteId, { ...recentPostsQuery, exclude } ) || [],
+		posts: getPostsForQuery( state, siteId, { ...recentPostsQuery, exclude } ) || [],
 		siteId,
 	};
 } );
 
-export default flowRight(
-	connectComponent,
-	localize,
-)( RecentPostsDropdown );
+export default flowRight( connectComponent, localize )( RecentPostsDropdown );

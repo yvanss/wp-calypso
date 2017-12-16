@@ -1,3 +1,5 @@
+/** @format */
+
 /**
  * External dependencies
  */
@@ -6,10 +8,10 @@ import { assert } from 'chai';
 /**
  * Internal dependencies
  */
-import { getAccountRecoveryResetOptions } from '../';
+import { getAccountRecoveryResetOptions } from 'state/selectors';
 
 describe( 'getAccountRecoveryResetOptions()', () => {
-	it( 'should return the items array under accountRecovery/reset substate tree.', () => {
+	test( 'should return the items array under accountRecovery/reset substate tree.', () => {
 		const resetOptionItems = [
 			{
 				email: 'primary@example.com',

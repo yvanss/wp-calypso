@@ -1,9 +1,12 @@
+/** @format */
+
 /**
  * External dependencies
  */
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { get, indexOf } from 'lodash';
+import { compact, get, indexOf } from 'lodash';
 
 /**
  * Internal dependencies
@@ -15,17 +18,19 @@ class Wizard extends Component {
 	static propTypes = {
 		backText: PropTypes.string,
 		basePath: PropTypes.string,
+		baseSuffix: PropTypes.string,
 		components: PropTypes.objectOf( PropTypes.element ).isRequired,
 		forwardText: PropTypes.string,
 		hideNavigation: PropTypes.bool,
 		steps: PropTypes.arrayOf( PropTypes.string ).isRequired,
 		stepName: PropTypes.string.isRequired,
-	}
+	};
 
 	static defaultProps = {
 		basePath: '',
+		baseSuffix: '',
 		hideNavigation: false,
-	}
+	};
 
 	getStepIndex = () => indexOf( this.props.steps, this.props.stepName );
 
@@ -36,21 +41,21 @@ class Wizard extends Component {
 			return;
 		}
 
-		const { basePath, steps } = this.props;
+		const { basePath, baseSuffix, steps } = this.props;
 		const previousStepName = steps[ stepIndex - 1 ];
 
 		if ( ! previousStepName ) {
 			return;
 		}
 
-		return `${ basePath }/${ previousStepName }`;
-	}
+		return compact( [ basePath, previousStepName, baseSuffix ] ).join( '/' );
+	};
 
 	getForwardUrl = () => {
-		const { basePath, steps } = this.props;
+		const { basePath, baseSuffix, steps } = this.props;
 		const stepIndex = this.getStepIndex();
 
-		if ( stepIndex === -1 || ( stepIndex === steps.length - 1 ) ) {
+		if ( stepIndex === -1 || stepIndex === steps.length - 1 ) {
 			return;
 		}
 
@@ -60,18 +65,11 @@ class Wizard extends Component {
 			return;
 		}
 
-		return `${ basePath }/${ nextStepName }`;
-	}
+		return compact( [ basePath, nextStepName, baseSuffix ] ).join( '/' );
+	};
 
 	render() {
-		const {
-			backText,
-			components,
-			forwardText,
-			hideNavigation,
-			steps,
-			stepName,
-		} = this.props;
+		const { backText, components, forwardText, hideNavigation, steps, stepName } = this.props;
 		const component = get( components, stepName );
 		const stepIndex = this.getStepIndex();
 		const totalSteps = steps.length;
@@ -80,31 +78,27 @@ class Wizard extends Component {
 
 		return (
 			<div className="wizard">
-				{ totalSteps > 1 &&
-					<ProgressIndicator
-						stepNumber={ stepIndex }
-						totalSteps={ totalSteps } />
-				}
+				{ totalSteps > 1 && (
+					<ProgressIndicator stepNumber={ stepIndex } totalSteps={ totalSteps } />
+				) }
 
-				{ component }
+				{ React.cloneElement( component, {
+					getBackUrl: this.getBackUrl,
+					getForwardUrl: this.getForwardUrl,
+				} ) }
 
-				{ ! hideNavigation && totalSteps > 1 &&
-					<div className="wizard__navigation-links">
-						{ stepIndex > 0 &&
-							<NavigationLink
-								direction="back"
-								href={ backUrl }
-								text={ backText } />
-						}
+				{ ! hideNavigation &&
+					totalSteps > 1 && (
+						<div className="wizard__navigation-links">
+							{ stepIndex > 0 && (
+								<NavigationLink direction="back" href={ backUrl } text={ backText } />
+							) }
 
-						{ stepIndex < totalSteps - 1 &&
-							<NavigationLink
-								direction="forward"
-								href={ forwardUrl }
-								text={ forwardText } />
-						}
-					</div>
-				}
+							{ stepIndex < totalSteps - 1 && (
+								<NavigationLink direction="forward" href={ forwardUrl } text={ forwardText } />
+							) }
+						</div>
+					) }
 			</div>
 		);
 	}
