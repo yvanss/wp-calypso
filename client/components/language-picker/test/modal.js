@@ -98,7 +98,7 @@ describe( 'LanguagePickerModal', () => {
 		} );
 	} );
 
-	describe( 'getDisplayedLanguages()', () => {
+	describe( 'getFilteredLanguages()', () => {
 		test( 'should return results by slug and autonym if localized language names not loaded', () => {
 			const props = Object.assign( {}, defaultProps, {
 				localizedLanguageNames: {},
@@ -107,7 +107,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'en', // for [en]glish
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 3 ],
 			] );
@@ -115,7 +115,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'english',
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 3 ],
 			] );
@@ -123,7 +123,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'inglese', // for [inglese] (English)
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [] );
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [] );
 		} );
 
 		test( 'should return list of popular languages', () => {
@@ -132,7 +132,7 @@ describe( 'LanguagePickerModal', () => {
 				filter: 'popular',
 				search: null,
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 2 ],
 			] );
@@ -147,7 +147,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'en', // for [en]glish
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 3 ],
 			] );
@@ -155,7 +155,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'english',
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 3 ],
 			] );
@@ -163,7 +163,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'in', // for [in]glese (English)
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 1 ], // Češt[in]a
 				defaultProps.languages[ 3 ],
@@ -172,21 +172,21 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'cs', // slug for Čeština
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 1 ],
 			] );
 
 			wrapper.setState( {
 				search: 'ceco', // slug for Čeština
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 1 ],
 			] );
 
 			wrapper.setState( {
 				search: 'Czech', // en for Čeština
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 1 ],
 			] );
 		} );
@@ -200,7 +200,7 @@ describe( 'LanguagePickerModal', () => {
 			wrapper.setState( {
 				search: 'éñglîsh', // for [en]glish
 			} );
-			expect( wrapper.instance().getDisplayedLanguages() ).toEqual( [
+			expect( wrapper.instance().getFilteredLanguages() ).toEqual( [
 				defaultProps.languages[ 0 ],
 				defaultProps.languages[ 3 ],
 			] );
@@ -295,26 +295,18 @@ describe( 'LanguagePickerModal', () => {
 			} );
 		} );
 
-		describe( 'language territories', () => {
-			test( 'should set `popular` territory filter when selected language is popular', () => {
+		describe( 'language groups', () => {
+			test( 'should set default language group filter when geolocation country code not available', () => {
 				const wrapper = shallow( <LanguagePickerModal { ...defaultProps } /> );
-				expect( wrapper.state().filter ).toEqual( 'popular' );
+				expect( wrapper.state().filter ).toEqual( DEFAULT_LANGUAGE_GROUP );
 			} );
 
-			test( 'should load corresponding territory when language is not popular', () => {
-				const notPopularLangSlugProps = Object.assign( {}, defaultProps, {
-					selected: 'cs',
-				} );
-				const wrapper = shallow( <LanguagePickerModal { ...notPopularLangSlugProps } /> );
-				expect( wrapper.state().filter ).toEqual( LANGUAGE_GROUPS[ 4 ].id );
+			test( 'should load correct language group  when geolocation country code available', () => {
+				const wrapper = shallow( <LanguagePickerModal { ...defaultProps } countryCode="IT" /> );
+				expect( wrapper.state().filter ).toEqual( 'western-europe' );
 			} );
 
-			test( 'should should switch country lists when user clicks a territory tab', () => {
-				const wrapper = shallow( <LanguagePickerModal { ...defaultProps } /> );
-				expect( wrapper.state().filter ).toEqual( 'popular' );
-			} );
-
-			test( 'should switch country lists when user clicks a territory tab', () => {
+			test( 'should switch country lists when user clicks a language group tab', () => {
 				const wrapper = shallow( <LanguagePickerModal { ...defaultProps } /> );
 				expect( wrapper.state().filter ).toEqual( DEFAULT_LANGUAGE_GROUP );
 				wrapper
