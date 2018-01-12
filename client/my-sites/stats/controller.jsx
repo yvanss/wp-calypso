@@ -20,8 +20,14 @@ import { getSite, isJetpackSite, getSiteOption } from 'state/sites/selectors';
 import { getCurrentLayoutFocus } from 'state/ui/layout-focus/selectors';
 import { setNextLayoutFocus } from 'state/ui/layout-focus/actions';
 import { getSelectedSiteId } from 'state/ui/selectors';
-import AsyncLoad from 'components/async-load';
-import StatsPagePlaceholder from 'my-sites/stats/stats-page-placeholder';
+import StatsInsights from './stats-insights';
+import StatsOverview from './overview';
+import StatsSite from './site';
+import StatsSummary from './summary';
+import StatsPostDetail from './stats-post-detail';
+import StatsCommentFollows from './comment-follows';
+import ActivityLog from './activity-log';
+
 const analyticsPageTitle = 'Stats';
 
 function rangeOfPeriod( period, date ) {
@@ -133,13 +139,7 @@ export default {
 		analytics.pageView.record( basePath, analyticsPageTitle + ' > Insights' );
 
 		const props = { followList };
-		context.primary = (
-			<AsyncLoad
-				require="my-sites/stats/stats-insights"
-				placeholder={ <StatsPagePlaceholder /> }
-				{ ...props }
-			/>
-		);
+		context.primary = <StatsInsights { ...props } />;
 		next();
 	},
 
@@ -191,13 +191,7 @@ export default {
 				period: activeFilter.period,
 				path: context.pathname,
 			};
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/overview"
-					{ ...props }
-				/>
-			);
+			context.primary = <StatsOverview { ...props } />;
 			next();
 		}
 	},
@@ -267,7 +261,7 @@ export default {
 			period = rangeOfPeriod( activeFilter.period, date );
 			chartTab = queryOptions.tab || 'views';
 
-			const siteComponentChildren = {
+			const props = {
 				path: context.pathname,
 				date,
 				chartTab,
@@ -275,13 +269,7 @@ export default {
 				period,
 			};
 
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/site"
-					{ ...siteComponentChildren }
-				/>
-			);
+			context.primary = <StatsSite { ...props } />;
 			next();
 		}
 	},
@@ -376,13 +364,7 @@ export default {
 				period,
 				...extraProps,
 			};
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/summary"
-					{ ...props }
-				/>
-			);
+			context.primary = <StatsSummary { ...props } />;
 			next();
 		}
 	},
@@ -409,13 +391,7 @@ export default {
 				postId,
 				context,
 			};
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/stats-post-detail"
-					{ ...props }
-				/>
-			);
+			context.primary = <StatsPostDetail { ...props } />;
 		}
 		next();
 	},
@@ -456,13 +432,7 @@ export default {
 				siteId,
 				followList,
 			};
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/comment-follows"
-					{ ...props }
-				/>
-			);
+			context.primary = <StatsCommentFollows { ...props } />;
 		}
 		next();
 	},
@@ -486,13 +456,7 @@ export default {
 				context,
 				startDate,
 			};
-			context.primary = (
-				<AsyncLoad
-					placeholder={ <StatsPagePlaceholder /> }
-					require="my-sites/stats/activity-log"
-					{ ...props }
-				/>
-			);
+			context.primary = <ActivityLog { ...props } />;
 		}
 		next();
 	},
