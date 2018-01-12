@@ -49,7 +49,7 @@ class StoreStats extends Component {
 		const unitQueryDate = getUnitPeriod( queryDate, unit );
 		const unitSelectedDate = getUnitPeriod( selectedDate, unit );
 		const endSelectedDate = getEndPeriod( selectedDate, unit );
-		const ordersQuery = {
+		const query = {
 			unit,
 			date: unitQueryDate,
 			quantity: UNITS[ unit ].quantity,
@@ -64,9 +64,7 @@ class StoreStats extends Component {
 
 		return (
 			<Main className="store-stats woocommerce" wideLayout={ true }>
-				{ siteId && (
-					<QuerySiteStats statType="statsOrders" siteId={ siteId } query={ ordersQuery } />
-				) }
+				{ siteId && <QuerySiteStats statType="statsOrders" siteId={ siteId } query={ query } /> }
 				<div className="store-stats__sidebar-nav">
 					<SidebarNavigation />
 				</div>
@@ -78,7 +76,7 @@ class StoreStats extends Component {
 				/>
 				<Chart
 					path={ path }
-					query={ ordersQuery }
+					query={ query }
 					selectedDate={ endSelectedDate }
 					siteId={ siteId }
 					unit={ unit }
@@ -98,30 +96,44 @@ class StoreStats extends Component {
 										.format( 'YYYY-MM-DD' )
 								: selectedDate
 						}
-						query={ ordersQuery }
+						query={ query }
 						statsType="statsOrders"
 						showQueryDate
 					/>
 				</StatsPeriodNavigation>
 				<div className="store-stats__widgets">
-					{ sparkWidgets.map( ( widget, index ) => (
-						<div className="store-stats__widgets-column spark-widgets" key={ index }>
-							<Module
+					<div className="store-stats__widgets-column widgets">
+						<Module
+							siteId={ siteId }
+							emptyMessage={ translate( 'No data found' ) }
+							query={ query }
+							statType="statsOrders"
+						>
+							<WidgetList
 								siteId={ siteId }
-								emptyMessage={ translate( 'No data found' ) }
-								query={ ordersQuery }
+								query={ query }
+								selectedDate={ endSelectedDate }
 								statType="statsOrders"
-							>
-								<WidgetList
-									siteId={ siteId }
-									query={ ordersQuery }
-									selectedDate={ endSelectedDate }
-									statType="statsOrders"
-									widgets={ widget }
-								/>
-							</Module>
-						</div>
-					) ) }
+								widgets={ sparkWidgets }
+							/>
+						</Module>
+					</div>
+					<div className="store-stats__widgets-column widgets">
+						<Module
+							siteId={ siteId }
+							emptyMessage={ translate( 'No data found' ) }
+							query={ query }
+							statType="statsReferrers"
+						>
+							<WidgetList
+								siteId={ siteId }
+								query={ query }
+								selectedDate={ endSelectedDate }
+								statType="statsReferrers"
+								widgets={ sparkWidgets }
+							/>
+						</Module>
+					</div>
 					{ topWidgets.map( widget => {
 						const header = (
 							<SectionHeader href={ widget.basePath + widgetPath } label={ widget.title } />
