@@ -2655,7 +2655,7 @@ Undocumented.prototype.importReaderFeed = function( file, fn ) {
 		apiVersion: '1.2',
 	};
 	return this.wpcom.req.post( params, query, null, fn );
-};
+}; //x
 
 /**
  * Creates a Push Notification registration for the device
@@ -2828,6 +2828,30 @@ Undocumented.prototype.oauth2ClientId = function( clientId, fn ) {
 	return this.wpcom.req.get(
 		`/oauth2/client-data/${ clientId }`,
 		{ apiNamespace: 'wpcom/v2' },
+		fn
+	);
+};
+
+/*
+ * Update any Jetpack settings on the site with id siteId to the specified settings
+ *
+ * @param {int} [siteId]
+ * @param {object} [newBlogName]	The desired new subdomain
+ * @param {bool} [discard]			Should the old blog name be discarded?
+ * @param {Function} fn
+ * @api public
+ */
+Undocumented.prototype.updateSiteName = function( siteId, newBlogName, discard, fn ) {
+	const path = `/sites/${ siteId }/site-rename?blogdomain=${ encodeURIComponent( newBlogName ) }&discard=${ discard ? 1 : 0 }`;
+	debug( { path } );
+
+	return this.wpcom.req.post(
+		{
+			path,
+			apiNamespace: 'wpcom/v2'
+		},
+		null,
+		null,
 		fn
 	);
 };

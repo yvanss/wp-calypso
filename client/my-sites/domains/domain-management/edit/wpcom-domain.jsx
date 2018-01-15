@@ -9,6 +9,10 @@ import React from 'react';
 import createReactClass from 'create-react-class';
 
 import { localize } from 'i18n-calypso';
+import { flow } from 'lodash';
+import { connect } from 'react-redux';
+
+
 
 /**
  * Internal dependencies
@@ -20,12 +24,38 @@ import Property from './card/property';
 import VerticalNav from 'components/vertical-nav';
 import VerticalNavItem from 'components/vertical-nav/item';
 
+import { getSelectedSiteId } from 'state/ui/selectors';
+
+import wp from 'lib/wp';
+const wpcom = wp.undocumented();
+
 const WpcomDomain = createReactClass( {
 	displayName: 'WpcomDomain',
 	mixins: [ analyticsMixin( 'domainManagement', 'edit' ) ],
 
 	handleEditSiteAddressClick() {
 		this.recordEvent( 'navigationClick', 'Edit Site Address', this.props.domain );
+	},
+
+	componentDidMount() {
+		const { siteId } = this.props;
+		const newBlogName = 'someotherreallysillysitename';
+		const discard = false;
+
+		console.log( {
+			siteId,
+			newBlogName,
+			discard,
+		} )
+
+		wpcom
+			.updateSiteName(
+				siteId,
+				newBlogName,
+				discard,
+				( err, data, something ) => { console.log( 'cb', { err, data, something } ) }
+			)
+			// .then( ( err, data, something ) => { console.log( { err, data, something } ) } );
 	},
 
 	getEditSiteAddressBlock() {
@@ -78,4 +108,11 @@ const WpcomDomain = createReactClass( {
 	},
 } );
 
-export default localize( WpcomDomain );
+export default flow(
+	localize,
+	connect( state => ( {
+		siteId: getSelectedSiteId( state ),
+	} ) )
+)( WpcomDomain );
+
+// export default localize( WpcomDomain );
