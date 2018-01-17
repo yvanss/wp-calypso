@@ -18,7 +18,7 @@ import User from 'lib/user';
 import userSettings from 'lib/user-settings';
 import { isMobile } from 'lib/viewport';
 import analytics from 'lib/analytics';
-import Translate from 'components/translate';
+import Translatable from 'components/translatable';
 
 const debug = debugModule( 'calypso:community-translator' );
 
@@ -93,7 +93,6 @@ const communityTranslatorJumpstart = {
 		}
 
 		const props = {
-			className: 'translatable',
 			'data-singular': originalFromPage,
 		};
 
@@ -110,7 +109,7 @@ const communityTranslatorJumpstart = {
 		// <data> returns a frozen object, therefore we make a copy so that we can modify it below
 		const dataElement = Object.assign(
 			{},
-			<Translate { ...props }>{ displayedTranslationFromPage }</Translate>
+			<Translatable { ...props }>{ displayedTranslationFromPage }</Translatable>
 		);
 
 		// now we can override the toString function which would otherwise return [object Object]
@@ -207,13 +206,13 @@ const communityTranslatorJumpstart = {
 			// Wrap DOM elements and then activate the translator
 			_shouldWrapTranslations = true;
 			i18n.reRenderTranslations();
-			window.communityTranslator.load();
+			//window.communityTranslator.load();
 			debug( 'Translator activated' );
 			return true;
 		}
 
 		function deactivate() {
-			window.communityTranslator.unload();
+			// window.communityTranslator.unload();
 			// Remove all the data tags from the DOM
 			_shouldWrapTranslations = false;
 			i18n.reRenderTranslations();
