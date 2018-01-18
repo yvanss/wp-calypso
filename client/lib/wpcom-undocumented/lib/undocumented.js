@@ -1623,22 +1623,42 @@ Undocumented.prototype.graduateNewReader = function( fn ) {
  *
  * @param {string} name - The name of the A/B test. No leading 'abtest_' needed
  * @param {string} variation - The variation the user is assigned to
- * @param {Function} fn - Function to invoke when request is complete
+ * @param {Function} callback - Function to invoke when request is complete
  * @api public
  * @returns {Object} wpcomRequest
  */
-Undocumented.prototype.saveABTestData = function( name, variation, fn ) {
+Undocumented.prototype.saveABTestData = function( name, variation, callback ) {
 	const body = {
 		name,
 		variation,
 	};
-	debug( `/me/abtests with ${ JSON.stringify( body ) }` );
+	debug( `POST /me/abtests with ${ JSON.stringify( body ) }` );
 	return this.wpcom.req.post(
 		{
 			path: '/me/abtests',
 			body,
 		},
-		fn
+		callback
+	);
+};
+
+/**
+ * Fetch a user's assigned A/B test variation given an array of test names
+ *
+ * @param {string[]} testNames - Array of A/B test names.
+ * @param {Function} callback - Function to invoke when request is complete
+ * @api public
+ * @returns {Object} wpcomRequest, response body in format { [testName]: assignedVariation }
+ */
+Undocumented.prototype.getABTestData = function( testNames, callback ) {
+	const body = { testNames: testNames.join( ',' ) };
+	debug( 'GET /me/abtests' );
+	return this.wpcom.req.get(
+		{
+			path: '/me/abtests',
+			body,
+		},
+		callback
 	);
 };
 
