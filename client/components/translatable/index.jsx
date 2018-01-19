@@ -5,6 +5,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { noop } from 'lodash';
+import superagent from 'superagent';
+
 /**
  * Internal dependencies
  */
@@ -20,8 +22,22 @@ class Translatable extends Component {
 	};
 
 	refCallback = elem => ( this.elem = elem );
+
 	togglePopover = event => {
 		event.preventDefault();
+		const { singular, context, plural } = this.props;
+		const request = superagent( 'post', 'https://translate.wordpress.com/api/translations/-query-by-originals' );
+		request.withCredentials();
+		request.accept( 'application/json' );
+		request.send( { singular, context, plural } );
+		request.then(
+			data => {
+				// eslint-disable-next-line
+				console.log( 'data',  data);
+			},
+			error => {}
+		);
+
 		this.setState( { showTooltip: true } );
 	};
 

@@ -111,7 +111,6 @@ const communityTranslatorJumpstart = {
 			props.plural = optionsFromPage.plural;
 		}
 
-		props.translated = displayedTranslationFromPage;
 		translationDataFromPage.original_strings.push( props );
 
 		// <data> returns a frozen object, therefore we make a copy so that we can modify it below
