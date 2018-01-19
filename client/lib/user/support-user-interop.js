@@ -14,12 +14,7 @@ import qs from 'qs';
 import wpcom from 'lib/wp';
 import config from 'config';
 import localforage from 'lib/localforage';
-import {
-	supportUserTokenFetch,
-	supportUserActivate,
-	supportUserError,
-	supportUserPrefill,
-} from 'state/support/actions';
+import { supportUserActivate } from 'state/support/actions';
 import localStorageBypass from 'lib/support/support-user/localstorage-bypass';
 
 /**
@@ -33,6 +28,8 @@ import localStorageBypass from 'lib/support/support-user/localstorage-bypass';
 
 const debug = debugModule( 'calypso:support-user' );
 const STORAGE_KEY = 'boot_support_user';
+const USER_PARAM = 'support_user';
+const TOKEN_PARAM = '_support_token';
 
 export const isEnabled = () => config.isEnabled( 'support-user' );
 
@@ -46,8 +43,8 @@ const reduxStoreReady = new Promise( resolve => {
 } );
 export const setReduxStore = _setReduxStore;
 
-// Get the value of the `?support_user=` query param for prefilling
-const getPrefillUsername = () => {
+// Get the value of the `?support_user=` query param
+const getQueryParameter = param => {
 	const queryString = get( window, 'location.search', null );
 
 	if ( ! queryString ) {
@@ -56,17 +53,8 @@ const getPrefillUsername = () => {
 
 	// Remove the initial ? character
 	const query = qs.parse( queryString.slice( 1 ) );
-	return query.support_user || null;
+	return query[ param ] || null;
 };
-
-// Check if we should prefill the support user login box
-reduxStoreReady.then( reduxStore => {
-	const prefillUsername = getPrefillUsername();
-
-	if ( prefillUsername ) {
-		reduxStore.dispatch( supportUserPrefill( prefillUsername ) );
-	}
-} );
 
 const getStorageItem = () => {
 	try {
@@ -85,6 +73,15 @@ const _isSupportUserSession = ( () => {
 		return false;
 	}
 
+	const user = getQueryParameter( USER_PARAM );
+	const token = getQueryParameter( TOKEN_PARAM );
+
+	// Check if we are starting support session with query parameters.
+	if ( user && token ) {
+		return true;
+	}
+
+	// Check if we are continuing support session after refresh.
 	const supportUser = getStorageItem();
 
 	return supportUser && supportUser.user && supportUser.token;
@@ -119,22 +116,6 @@ export const rebootNormally = () => {
 	window.location.search = '';
 };
 
-/**
- * Reboot Calypso as the support user
- * @param  {string} user  The support user's username
- * @param  {string} token The support token
- */
-export const rebootWithToken = ( user, token ) => {
-	if ( ! isEnabled() ) {
-		return;
-	}
-
-	debug( 'Rebooting Calypso with support user' );
-
-	window.sessionStorage.setItem( STORAGE_KEY, JSON.stringify( { user, token } ) );
-	window.location.search = '';
-};
-
 // Called when an API call fails due to a token error
 const onTokenError = error => {
 	debug( 'Deactivating support user and rebooting due to token error', error.message );
@@ -149,7 +130,20 @@ export const boot = () => {
 		return;
 	}
 
-	const { user, token } = getStorageItem();
+	let user = '';
+	let token = '';
+
+	if ( getStorageItem() ) {
+		user = getStorageItem().user;
+		token = getStorageItem().token;
+	}
+
+	// Override storage if query args are passed
+	if ( getQueryParameter( USER_PARAM ) && getQueryParameter( TOKEN_PARAM ) ) {
+		user = getQueryParameter( USER_PARAM );
+		token = getQueryParameter( TOKEN_PARAM );
+	}
+
 	debug( 'Booting Calypso with support user', user );
 
 	window.sessionStorage.removeItem( STORAGE_KEY );
@@ -170,30 +164,5 @@ export const boot = () => {
 	// wait for it to become available
 	reduxStoreReady.then( reduxStore => {
 		reduxStore.dispatch( supportUserActivate() );
-	} );
-};
-
-export const fetchToken = ( user, password ) => {
-	if ( ! isEnabled() ) {
-		return;
-	}
-
-	debug( 'Fetching support user token' );
-
-	return reduxStoreReady.then( reduxStore => {
-		reduxStore.dispatch( supportUserTokenFetch( user ) );
-
-		const setToken = ( { username, token } ) => {
-			rebootWithToken( username, token );
-		};
-
-		const errorFetchingToken = ( { message } ) => {
-			reduxStore.dispatch( supportUserError( message ) );
-		};
-
-		return wpcom
-			.fetchSupportUserToken( user, password )
-			.then( setToken )
-			.catch( errorFetchingToken );
 	} );
 };
