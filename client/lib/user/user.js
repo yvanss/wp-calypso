@@ -68,8 +68,19 @@ User.prototype.initialize = function() {
 		// Store the current user in localStorage so that we can use it to determine
 		// if the logged in user has changed when initializing in the future
 		if ( this.data ) {
-			this.clearStoreIfChanged( this.data.ID );
-			store.set( 'wpcom_user', this.data );
+			if ( ! this.data.abtests ) {
+				this.fetchABVariations( this.data.ID, ( variationError, variationData ) => {
+					const abtests = this.handleFetchABVariationsResponse( variationError, variationData );
+					if ( abtests !== null && typeof abtests === 'object' ) {
+						this.data.abtests = abtests;
+					}
+
+					this.clearStoreIfChanged( this.data.ID );
+					store.set( 'wpcom_user', this.data );
+					this.initialized = true;
+					this.emit( 'change' );
+				} );
+			}
 		} else {
 			// The user is logged out
 			this.initialized = true;
@@ -77,13 +88,13 @@ User.prototype.initialize = function() {
 	} else {
 		this.data = store.get( 'wpcom_user' ) || false;
 
+		if ( this.data ) {
+			this.initialized = true;
+			this.emit( 'change' );
+		}
+
 		// Make sure that the user stored in localStorage matches the logged-in user
 		this.fetch();
-	}
-
-	if ( this.data ) {
-		this.initialized = true;
-		this.emit( 'change' );
 	}
 };
 
