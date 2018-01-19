@@ -26,6 +26,12 @@ class Translatable extends Component {
 	};
 
 	render() {
+		// eslint-disable-next-line
+		console.log( 'this.props', this.props );
+
+		// eslint-disable-next-line
+		console.log( 'this.props.children', this.props.children );
+
 		return (
 			<data
 				title={ 'do it' }
@@ -44,7 +50,7 @@ class Translatable extends Component {
 				>
 					<FormFieldset>
 						<FormLabel htmlFor="something">something</FormLabel>
-						<FormTextInput name="something" placeholder="something" />
+						<FormTextInput name="something" placeholder="Add a new translation"  />
 					</FormFieldset>
 					<FormButton type="button" isPrimary={ true }>
 						Submit something
