@@ -5,7 +5,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { noop } from 'lodash';
-import superagent from 'superagent';
 
 /**
  * Internal dependencies
@@ -19,34 +18,53 @@ import FormLabel from 'components/forms/form-label';
 class Translatable extends Component {
 	state = {
 		showTooltip: false,
+		translatedData: null,
 	};
 
 	refCallback = elem => ( this.elem = elem );
 
 	togglePopover = event => {
 		event.preventDefault();
+
+		this.setState( { showTooltip: true } );
+
+		if ( this.state.translatedData ) {
+			return;
+		}
 		const { singular, context, plural } = this.props;
-		const request = superagent( 'post', 'https://translate.wordpress.com/api/translations/-query-by-originals' );
-		request.withCredentials();
-		request.accept( 'application/json' );
-		request.send( { singular, context, plural } );
-		request.then(
-			data => {
-				// eslint-disable-next-line
-				console.log( 'data',  data);
-			},
-			error => {}
-		);
+
+
+		const xhr = new XMLHttpRequest();
+		if ( 'withCredentials' in xhr ) {
+			xhr.open( 'POST', 'https://translate.wordpress.com/api/translations/-query-by-originals', true );
+			xhr.withCredentials = true;
+			xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+
+			// eslint-disable-next-line
+
+			const data = {
+				project: 'wpcom',
+				locale_slug: 'it',
+				original_strings:  { singular, context, plural },
+			};
+
+			xhr.onreadystatechange = ()  => {
+				if (xhr.readyState>3 && xhr.status==200) {
+					this.setState( { translatedData: JSON.parse(xhr.responseText) } );
+				};
+			};
+			const params = "project=wpcom&locale_slug=it&original_strings=" + encodeURIComponent(JSON.stringify( data ))
+
+			xhr.send( params  );
+		}
+
 
 		this.setState( { showTooltip: true } );
 	};
 
 	render() {
-		// eslint-disable-next-line
-		console.log( 'this.props', this.props );
 
-		// eslint-disable-next-line
-		console.log( 'this.props.children', this.props.children );
+		const translatedStr = this.state.translatedData ? this.state.translatedData[ 0 ].translations[0][ 'translation_0' ] : '';
 
 		return (
 			<data
@@ -66,7 +84,7 @@ class Translatable extends Component {
 				>
 					<FormFieldset>
 						<FormLabel htmlFor="something">something</FormLabel>
-						<FormTextInput name="something" placeholder="Add a new translation"  />
+						<FormTextInput name="something" placeholder="Add a new translation" value={ translatedStr } />
 					</FormFieldset>
 					<FormButton type="button" isPrimary={ true }>
 						Submit something
