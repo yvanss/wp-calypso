@@ -199,6 +199,7 @@
 		"woocommerce/extension-settings-tax": true,
 		"woocommerce/extension-wcservices": true,
 		"woocommerce/store-on-non-atomic-sites": true,
+		"wpcom-user-bootstrap-ab-variations": false,
 		"wpcom-user-bootstrap": false
 	}
 }
