@@ -5,7 +5,9 @@
  */
 
 import React from 'react';
+import { connect } from 'react-redux';
 import { localize } from 'i18n-calypso';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { omit } from 'lodash';
 
@@ -16,9 +18,17 @@ import CompactCard from 'components/card/compact';
 import PeopleProfile from 'my-sites/people/people-profile';
 import analytics from 'lib/analytics';
 import config from 'config';
+import Button from 'components/button';
+import { isRequestingInviteResend } from 'state/invites/selectors';
+import { resendInvite } from 'state/invites/actions';
 
 class PeopleListItem extends React.PureComponent {
 	static displayName = 'PeopleListItem';
+
+	static propTypes = {
+		site: PropTypes.object.isRequired,
+		invite: PropTypes.object.isRequired,
+	};
 
 	navigateToUser = () => {
 		window.scrollTo( 0, 0 );
@@ -52,8 +62,29 @@ class PeopleListItem extends React.PureComponent {
 		return type === 'invite' ? inviteLink : editLink;
 	};
 
+	onResend = () => {
+		const { requestingResend, site, invite } = this.props;
+		const siteId = site && site.ID;
+		const inviteKey = invite && invite.invite_key;
+
+		if ( requestingResend || ! siteId || ! inviteKey ) {
+			return null;
+		}
+
+		this.props.resendInvite( siteId, inviteKey );
+	};
+
 	render() {
-		const { className, gravatarUser, invite, onRemove, translate, type, user } = this.props;
+		const {
+			className,
+			gravatarUser,
+			invite,
+			onRemove,
+			translate,
+			type,
+			user,
+			requestingInviteResend,
+		} = this.props;
 		const canLinkToProfile = this.canLinkToProfile();
 		const tagName = canLinkToProfile ? 'a' : 'span';
 
@@ -71,12 +102,14 @@ class PeopleListItem extends React.PureComponent {
 					'moment',
 					'numberFormat',
 					'translate',
-					'type'
+					'type',
+					'requestingInviteResend',
+					'resendInvite'
 				) }
 				className={ classNames( 'people-list-item', className ) }
 				tagName={ tagName }
-				href={ this.getCardLink() }
-				onClick={ canLinkToProfile && this.navigateToUser }
+				//href={ this.getCardLink() }
+				//onClick={ canLinkToProfile && this.navigateToUser }
 			>
 				<div className="people-list-item__profile-container">
 					<PeopleProfile
@@ -95,9 +128,26 @@ class PeopleListItem extends React.PureComponent {
 						</button>
 					</div>
 				) }
+				<Button onClick={ this.onResend } busy={ requestingInviteResend } compact={ true }>
+					Resend Invite
+				</Button>
 			</CompactCard>
 		);
 	}
 }
 
-export default localize( PeopleListItem );
+export default connect(
+	( state, ownProps ) => {
+		const siteId = ownProps.site && ownProps.site.ID;
+		const inviteKey = ownProps.invite && ownProps.invite.invite_key;
+
+		if ( ! siteId ) {
+			return null;
+		}
+
+		return {
+			requestingInviteResend: isRequestingInviteResend( state, siteId, inviteKey ),
+		};
+	},
+	{ resendInvite }
+)( localize( PeopleListItem ) );
