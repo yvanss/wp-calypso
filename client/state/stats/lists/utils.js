@@ -275,6 +275,26 @@ function parseChartData( payload, nullAttributes = [] ) {
 	} );
 }
 
+function parseStoreReferrerData( payload ) {
+	if ( ! payload || ! payload.data ) {
+		return [];
+	}
+	const { fields } = payload;
+	return payload.data.map( record => {
+		return {
+			date: record.date,
+			data: record.data.map( referrer => {
+				const obj = {};
+				referrer.forEach( ( value, i ) => {
+					const key = fields[ i ];
+					obj[ key ] = value;
+				} );
+				return obj;
+			} ),
+		};
+	} );
+}
+
 /**
  * Return moment date object for the day or last day of the period.
  *
@@ -850,6 +870,10 @@ export const normalizers = {
 			data: parseOrdersChartData( payload ),
 			deltas: parseOrderDeltas( payload ),
 		};
+	},
+
+	statsStoreReferrers( payload ) {
+		return parseStoreReferrerData( payload );
 	},
 
 	statsTopSellers( payload ) {

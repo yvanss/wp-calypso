@@ -33,6 +33,7 @@ import {
 } from 'woocommerce/app/store-stats/constants';
 import { getUnitPeriod, getEndPeriod } from './utils';
 import QuerySiteStats from 'components/data/query-site-stats';
+import StoreStatsReferrerWidget from './store-stats-referrer-widget';
 
 class StoreStats extends Component {
 	static propTypes = {
@@ -61,10 +62,15 @@ class StoreStats extends Component {
 		};
 		const topWidgets = [ topProducts, topCategories, topCoupons ];
 		const widgetPath = `/${ unit }/${ slug }${ querystring ? '?' : '' }${ querystring || '' }`;
-
+		const referrerHeader = (
+			<SectionHeader href={ '/store/stats/orders/day/' } label={ 'Store Referrers' } />
+		);
 		return (
 			<Main className="store-stats woocommerce" wideLayout={ true }>
 				{ siteId && <QuerySiteStats statType="statsOrders" siteId={ siteId } query={ query } /> }
+				{ siteId && (
+					<QuerySiteStats statType="statsStoreReferrers" siteId={ siteId } query={ query } />
+				) }
 				<div className="store-stats__sidebar-nav">
 					<SidebarNavigation />
 				</div>
@@ -123,14 +129,14 @@ class StoreStats extends Component {
 							siteId={ siteId }
 							emptyMessage={ translate( 'No data found' ) }
 							query={ query }
-							statType="statsReferrers"
+							statType="statsStoreReferrers"
+							header={ referrerHeader }
 						>
-							<WidgetList
+							<StoreStatsReferrerWidget
 								siteId={ siteId }
 								query={ query }
+								statType="statsStoreReferrers"
 								selectedDate={ endSelectedDate }
-								statType="statsReferrers"
-								widgets={ sparkWidgets }
 							/>
 						</Module>
 					</div>
