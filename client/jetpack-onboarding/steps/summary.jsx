@@ -18,6 +18,8 @@ import DocumentHead from 'components/data/document-head';
 import FormattedHeader from 'components/formatted-header';
 import PageViewTracker from 'lib/analytics/page-view-tracker';
 import Spinner from 'components/spinner';
+import { addCalypsoEnvQueryArg } from 'jetpack-connect/utils';
+import { REMOTE_PATH_AUTH } from 'jetpack-connect/constants';
 import {
 	getJetpackOnboardingPendingSteps,
 	getJetpackOnboardingCompletedSteps,
@@ -63,7 +65,7 @@ class JetpackOnboardingSummaryStep extends React.PureComponent {
 		];
 		// If we're not connected, we cannot use selectors from `sites/selectors`.
 		const stepLinks = [
-			'/jetpack/connect?url=' + siteUrl,
+			addCalypsoEnvQueryArg( siteUrl + REMOTE_PATH_AUTH ),
 			// TODO: update the following with relevant links
 			siteUrl + '/wp-admin/themes.php',
 			siteUrl + '/wp-admin/post-new.php?post_type=page',
