@@ -287,7 +287,7 @@ class AboutStep extends Component {
 		//Site Goals
 		this.props.setSiteGoals( siteGoalsInput );
 		themeRepo = getThemeForSiteGoals( siteGoalsInput );
-		designType = getSiteTypeForSiteGoals( siteGoalsInput );
+		designType = getSiteTypeForSiteGoals( siteGoalsInput, this.props.flowName );
 
 		for ( let i = 0; i < siteGoalsArray.length; i++ ) {
 			this.props.recordTracksEvent( 'calypso_signup_actions_user_input', {
@@ -321,9 +321,7 @@ class AboutStep extends Component {
 		const isCountryAllowed =
 			includes( [ 'US', 'CA' ], this.props.countryCode ) || process.env.NODE_ENV === 'development';
 		const nextFlowName =
-			designType === DESIGN_TYPE_STORE && isCountryAllowed
-				? 'segmented-store-nux'
-				: this.props.flowName;
+			designType === DESIGN_TYPE_STORE && isCountryAllowed ? 'store-nux' : this.props.flowName;
 
 		//Pressable
 		if (
