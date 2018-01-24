@@ -46,6 +46,8 @@ import { isSiteUpgradeable, getSiteOptions, getSitesItems } from 'state/selector
  * @return {?Object}        Site object
  */
 export const getRawSite = ( state, siteId ) => {
+	// **
+	// shouldn't need to clearCache, getSitesItems should change.
 	return getSitesItems( state )[ siteId ] || null;
 };
 
@@ -80,6 +82,8 @@ let getSiteCache = new WeakMap();
  * @return {?Object}        Site object
  */
 export function getSite( state, siteIdOrSlug ) {
+
+	// **
 	const rawSite = getRawSite( state, siteIdOrSlug ) || getSiteBySlug( state, siteIdOrSlug );
 	if ( ! rawSite ) {
 		return null;
@@ -88,6 +92,7 @@ export function getSite( state, siteIdOrSlug ) {
 	// Use the rawSite object itself as a WeakMap key
 	const cachedSite = getSiteCache.get( rawSite );
 	if ( cachedSite ) {
+		// console.log( 'returning cachedSite' );
 		return cachedSite;
 	}
 
@@ -100,6 +105,7 @@ export function getSite( state, siteIdOrSlug ) {
 	// Once the `rawSite` object becomes outdated, i.e., state gets updated with a newer version
 	// and no more references are held, the key will be automatically removed from the WeakMap.
 	getSiteCache.set( rawSite, site );
+	// console.log( 'new site caching' );
 	return site;
 }
 

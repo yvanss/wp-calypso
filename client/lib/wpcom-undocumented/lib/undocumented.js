@@ -2511,6 +2511,7 @@ Undocumented.prototype.oauth2ClientId = function( clientId, fn ) {
  * @returns {Promise}  A promise
  */
 Undocumented.prototype.updateSiteName = function( siteId, newBlogName, discard ) {
+	console.log( newBlogName );
 	return this.wpcom.req.post(
 		{
 			path: `/sites/${ siteId }/site-rename`,

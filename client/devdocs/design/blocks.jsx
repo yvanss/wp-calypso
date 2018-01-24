@@ -82,6 +82,8 @@ import ConversationCaterpillar from 'blocks/conversation-caterpillar/docs/exampl
 import ConversationFollowButton from 'blocks/conversation-follow-button/docs/example';
 import ColorSchemePicker from 'blocks/color-scheme-picker/docs/example';
 
+import SiteRename from 'blocks/simple-site-rename-form/docs/example';
+
 export default class AppComponents extends React.Component {
 	static displayName = 'AppComponents';
 	state = { filter: '' };
@@ -115,6 +117,7 @@ export default class AppComponents extends React.Component {
 					filter={ this.state.filter }
 					section="blocks"
 				>
+					<SiteRename />
 					<AuthorSelector />
 					<CalendarButton />
 					<CalendarPopover />

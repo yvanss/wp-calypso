@@ -62,6 +62,11 @@ const DomainManagementData = createReactClass( {
 		const { selectedSite: nextSite } = nextProps;
 
 		if ( nextSite !== prevSite ) {
+			if ( ! nextSite || !nextSite.ID ) {
+				debugger;
+			}
+
+			// no ID found
 			upgradesActions.fetchDomains( nextSite.ID );
 		}
 	},

@@ -24,6 +24,8 @@ import VerticalNavItem from 'components/vertical-nav/item';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { requestSiteRename } from 'state/site-rename/actions';
 
+import SiteRenamer from 'blocks/simple-site-rename-form';
+
 // Currently the changes here are just for conveniently testing the call & state changes.
 // These changes will be rebased away before more specific UI changes are added.
 
@@ -85,6 +87,7 @@ const WpcomDomain = createReactClass( {
 						</Property>
 					</Card>
 				</div>
+				<SiteRenamer />
 				{ this.getEditSiteAddressBlock() }
 			</div>
 		);
@@ -94,9 +97,14 @@ const WpcomDomain = createReactClass( {
 export default flow(
 	localize,
 	connect(
-		state => ( {
-			siteId: getSelectedSiteId( state ),
-		} ),
+		state => {
+			const siteId = getSelectedSiteId( state );
+
+			return {
+
+				siteId,
+			};
+		},
 		dispatch =>
 			bindActionCreators(
 				{

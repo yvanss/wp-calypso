@@ -26,10 +26,28 @@ import WpcomDomain from './wpcom-domain';
 
 class Edit extends React.Component {
 	render() {
-		const domain = this.props.domains && getSelectedDomain( this.props ),
+		const { domains, selectedDomainName, isTransfer } = this.props;
+
+		const domain = this.props.domains && getSelectedDomain( {
+			domains,
+			isTransfer,
+			selectedDomainName,
+		} ),
 			Details = this.getDetailsForType( domain && domain.type );
 
 		if ( ! domain || ! Details ) {
+			console.log( 'showing main-placeholder', {
+				domains: this.props.domains,
+				selected: getSelectedDomain( {
+					domains,
+					isTransfer,
+					selectedDomainName,
+				} ),
+				domains,
+				isTransfer,
+				selectedDomainName,
+			} );
+
 			return <DomainMainPlaceholder goBack={ this.goToDomainManagement } />;
 		}
 
@@ -39,7 +57,7 @@ class Edit extends React.Component {
 					onClick={ this.goToDomainManagement }
 					selectedDomainName={ this.props.selectedDomainName }
 				>
-					{ this.props.translate( 'Domain Settings' ) }
+					{ this.props.translate( 'Domain Settingssss' ) }
 				</Header>
 				{ this.renderDetails( domain, Details ) }
 			</Main>
@@ -68,6 +86,8 @@ class Edit extends React.Component {
 		}
 	};
 
+	// /Users/spen/projects/wp-calypso/client/my-sites/domains/domain-management/edit
+
 	renderDetails = ( domain, Details ) => {
 		const { MAINTENANCE } = registrarNames;
 		const { REGISTERED, TRANSFER } = domainTypes;
@@ -78,6 +98,7 @@ class Edit extends React.Component {
 
 		return (
 			<Details
+				className="helllllllo"
 				domain={ domain }
 				selectedSite={ this.props.selectedSite }
 				settingPrimaryDomain={ this.props.domains.settingPrimaryDomain }

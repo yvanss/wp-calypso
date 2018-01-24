@@ -37,6 +37,7 @@ const setPrimaryDomain = ( siteId, domainName, onComplete = noop ) => dispatch =
 	} );
 	wpcom.setPrimaryDomain( siteId, domainName, ( error, data ) => {
 		if ( error ) {
+			console.log( 'setPrimaryDomain', error );
 			Dispatcher.handleServerAction( {
 				type: ActionTypes.PRIMARY_DOMAIN_SET_FAILED,
 				error:
@@ -53,6 +54,7 @@ const setPrimaryDomain = ( siteId, domainName, onComplete = noop ) => dispatch =
 		}
 
 		requestSite( siteId )( dispatch ).then( () => {
+			console.log( 'requestSite( siteId )', error );
 			Dispatcher.handleServerAction( {
 				type: ActionTypes.PRIMARY_DOMAIN_SET_COMPLETED,
 				siteId,

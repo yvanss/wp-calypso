@@ -24,12 +24,12 @@ import {
 export const requesting = createReducer(
 	{},
 	{
-		[ SITE_RENAME_REQUEST ]: ( state, { siteId } ) => ( { ...state, [ siteId ]: true } ),
-		[ SITE_RENAME_REQUEST_SUCCESS ]: ( state, { siteId } ) => ( {
+		[ SITE_RENAME_REQUEST ]: ( state, { siteId } ) => console.log( SITE_RENAME_REQUEST, siteId ) || ( { ...state, [ siteId ]: true } ),
+		[ SITE_RENAME_REQUEST_SUCCESS ]: ( state, { siteId } ) => console.log( SITE_RENAME_REQUEST_SUCCESS, siteId ) || ( {
 			...state,
 			[ siteId ]: false,
 		} ),
-		[ SITE_RENAME_REQUEST_FAILURE ]: ( state, { siteId } ) => ( {
+		[ SITE_RENAME_REQUEST_FAILURE ]: ( state, { siteId } ) => console.log( SITE_RENAME_REQUEST_FAILURE, siteId ) || ( {
 			...state,
 			[ siteId ]: false,
 		} ),

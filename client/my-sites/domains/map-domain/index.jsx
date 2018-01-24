@@ -75,6 +75,7 @@ export class MapDomain extends Component {
 	};
 
 	handleMapDomain = domain => {
+		////
 		const { selectedSite, selectedSiteSlug } = this.props;
 
 		this.setState( { errorMessage: null } );

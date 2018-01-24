@@ -61,7 +61,12 @@ export default {
 		);
 
 		const isTransfer = includes( pageContext.path, '/transfer/in/' );
+		// /domain-management/edit'
 		const component = isTransfer ? DomainManagement.TransferIn : DomainManagement.Edit;
+
+		// seems thatpageContext.params.domain is not defined after making the change.
+
+		console.log( pageContext );
 
 		pageContext.primary = (
 			<DomainManagementData

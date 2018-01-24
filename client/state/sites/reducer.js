@@ -60,6 +60,7 @@ export function items( state = null, action ) {
 	if ( state === null && action.type !== SITE_RECEIVE && action.type !== SITES_RECEIVE ) {
 		return null;
 	}
+
 	switch ( action.type ) {
 		case WORDADS_SITE_APPROVE_REQUEST_SUCCESS:
 			const prevSite = state[ action.siteId ];
@@ -72,6 +73,7 @@ export function items( state = null, action ) {
 
 		case SITE_RECEIVE:
 		case SITES_RECEIVE:
+			console.log( SITES_RECEIVE, { action } );
 			// Normalize incoming site(s) to array
 			const sites = action.site ? [ action.site ] : action.sites;
 

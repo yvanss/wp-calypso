@@ -10,6 +10,16 @@ import {
 } from 'state/action-types';
 import { fetchDomains } from 'lib/upgrades/actions';
 
+import page from 'page';
+
+import { requestSite } from 'state/sites/actions';
+
+import { getSite } from 'state/sites/selectors';
+
+import { setPrimaryDomain } from 'lib/upgrades/actions/domain-management';
+
+import { domainManagementList } from 'my-sites/domains/paths';
+
 /* possible outcomes:
 	SUCCESS
 		Domains are a flux store - need to refetch this data and update the UI on success
@@ -22,21 +32,56 @@ import { fetchDomains } from 'lib/upgrades/actions';
 		General failure? (Server error etc.)
 */
 
+
+
 export const requestSiteRename = ( siteId, newBlogName, discard ) => dispatch => {
+	console.log( siteId, newBlogName, discard );
 	dispatch( {
 		type: SITE_RENAME_REQUEST,
 		siteId,
 	} );
 
+	setTimeout( () => {
+		// dispatch( {
+		// 	type: SITE_RENAME_REQUEST_SUCCESS,
+		// 	newSlug: 'bleb',
+		// 	siteId,
+		// } );
+
+		// dispatch( {
+		// 	type: SITE_RENAME_REQUEST_SUCCESS,
+		// 	newSlug: 'bleb',
+		// 	siteId,
+		// } );
+	}, 800 );
+
 	return wpcom
 		.undocumented()
 		.updateSiteName( siteId, newBlogName, discard )
-		.then( ( { new_slug } ) => {
-			fetchDomains( siteId );
+		.then( ( { ...data } ) => {
+			console.log( 'updateSiteName success, clear cache and requestSite' );
+			// getSite.clearCache();
+
+			console.log( domainManagementList( newBlogName + '.wordpress.com' ) );
+
+			dispatch( requestSite( siteId ) );
+
+			// dispatch( setPrimaryDomain( siteId, newBlogName ) );
+
+			// dispatch( setPrimaryDomain( siteId, newBlogName, () => {
+			// 	fetchDomains( siteId );
+			// } ) );
+			setTimeout( () => {
+				page.replace( domainManagementList( newBlogName ) );
+			}, 1200 )
+
+
+			// setPrimaryDomain( domainName ) {
+
 
 			dispatch( {
 				type: SITE_RENAME_REQUEST_SUCCESS,
-				newSlug: new_slug,
+				newSlug: data.new_slug,
 				siteId,
 			} );
 		} )

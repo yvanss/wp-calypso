@@ -91,12 +91,14 @@ export function requestSites() {
 					'is_mapped_domain,unmapped_url,admin_url,is_redirect,is_automated_transfer,allowed_file_types,show_on_front,main_network_site,jetpack_version,software_version,default_post_format,created_at,frame_nonce,publicize_permanently_disabled,page_on_front,page_for_posts,advanced_seo_front_page_description,advanced_seo_title_formats,verification_services_codes,podcasting_archive,is_domain_only,default_sharing_status,default_likes_enabled,wordads,upgraded_filetypes_enabled,videopress_enabled,permalink_structure,gmt_offset,is_wpcom_store,signup_is_store,has_pending_automated_transfer,woocommerce_is_active,design_type', //eslint-disable-line max-len
 			} )
 			.then( response => {
+				console.log( 'success', { response } )
 				dispatch( receiveSites( response.sites ) );
 				dispatch( {
 					type: SITES_REQUEST_SUCCESS,
 				} );
 			} )
 			.catch( error => {
+				console.log( 'error', { error } )
 				dispatch( {
 					type: SITES_REQUEST_FAILURE,
 					error,
@@ -114,6 +116,7 @@ export function requestSites() {
  */
 export function requestSite( siteId ) {
 	return dispatch => {
+		console.log('------ requestSite...');
 		dispatch( {
 			type: SITE_REQUEST,
 			siteId,
@@ -123,6 +126,8 @@ export function requestSite( siteId ) {
 			.site( siteId )
 			.get()
 			.then( site => {
+				console.log( 'site success', { site } )
+
 				dispatch( receiveSite( omit( site, '_headers' ) ) );
 				dispatch( {
 					type: SITE_REQUEST_SUCCESS,
@@ -130,6 +135,7 @@ export function requestSite( siteId ) {
 				} );
 			} )
 			.catch( error => {
+				console.log( 'site error', { error } )
 				dispatch( {
 					type: SITE_REQUEST_FAILURE,
 					siteId,
