@@ -14,6 +14,7 @@ import { first, get, groupBy, includes, isEmpty, isNull, last, range, sortBy } f
  * Internal dependencies
  */
 import ActivityLogUpgradeNotice from '../activity-log-upgrade-notice';
+import ActivityLogSwitch from '../activity-log-switch';
 import ActivityLogDay from '../activity-log-day';
 import ActivityLogDayPlaceholder from '../activity-log-day/placeholder';
 import Banner from 'components/banner';
@@ -512,6 +513,7 @@ class ActivityLog extends Component {
 				<SidebarNavigation />
 				<StatsNavigation selectedItem={ 'activity' } siteId={ siteId } slug={ slug } />
 				{ siteId && <ActivityLogUpgradeNotice siteId={ siteId } /> }
+				{ siteId && <ActivityLogSwitch siteId={ siteId } /> }
 				{ 'awaitingCredentials' === rewindState.state && (
 					<Banner
 						icon="history"
