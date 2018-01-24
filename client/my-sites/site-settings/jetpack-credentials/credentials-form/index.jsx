@@ -171,7 +171,7 @@ export class CredentialsForm extends Component {
 				</div>
 
 				<FormFieldset>
-					<FormLabel htmlFor="wordpress-path">{ translate( 'Upload Path' ) }</FormLabel>
+					<FormLabel htmlFor="wordpress-path">{ translate( 'WordPress Install Path' ) }</FormLabel>
 					<FormTextInput
 						name="abspath"
 						id="wordpress-path"
