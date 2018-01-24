@@ -123,8 +123,6 @@ const Checkout = createReactClass( {
 			this.setState( { previousCart: nextCart } );
 		}
 
-		// Although this is a part of the gsuiteUpsellTake2 A/B test,
-		// the `abtest()` is not called here to make the data more accurate.
 		if (
 			this.props.isNewlyCreatedSite &&
 			this.props.contactDetails &&
@@ -310,7 +308,7 @@ const Checkout = createReactClass( {
 			return `/checklist/${ selectedSiteSlug }/paid`;
 		}
 
-		if ( domainReceiptId && receiptId && abtest( 'gsuiteUpsellV2' ) === 'modified' ) {
+		if ( domainReceiptId && receiptId ) {
 			return `/checkout/thank-you/${ selectedSiteSlug }/${ domainReceiptId }/with-gsuite/${ receiptId }`;
 		}
 
@@ -324,7 +322,7 @@ const Checkout = createReactClass( {
 				canAddGoogleApps( meta )
 			);
 
-			if ( domainsForGsuite.length && abtest( 'gsuiteUpsellV2' ) === 'modified' ) {
+			if ( domainsForGsuite.length ) {
 				return `/checkout/${ selectedSiteSlug }/with-gsuite/${
 					domainsForGsuite[ 0 ].meta
 				}/${ receiptId }`;
