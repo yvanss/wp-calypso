@@ -428,4 +428,12 @@ sections.push( {
 	isomorphic: false,
 } );
 
+sections.push( {
+	name: 'support-user',
+	paths: [ '/support-user' ],
+	module: 'support',
+	secondary: false,
+	enableLoggedOut: false,
+} );
+
 module.exports = sections;
