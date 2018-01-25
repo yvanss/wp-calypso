@@ -144,7 +144,7 @@ User.prototype.fetch = function() {
 			return;
 		}
 
-		const userData = userUtils.filterUserObject( data );
+		const userData = filterUserObject( data );
 		this.handleFetchSuccess( userData );
 	} );
 };
