@@ -18,7 +18,7 @@ import { getSite } from 'state/sites/selectors';
 
 import { setPrimaryDomain } from 'lib/upgrades/actions/domain-management';
 
-import { domainManagementList } from 'my-sites/domains/paths';
+import { domainManagementList, domainManagementEdit } from 'my-sites/domains/paths';
 
 /* possible outcomes:
 	SUCCESS
@@ -72,7 +72,8 @@ export const requestSiteRename = ( siteId, newBlogName, discard ) => dispatch =>
 			// 	fetchDomains( siteId );
 			// } ) );
 			setTimeout( () => {
-				page.replace( domainManagementList( newBlogName ) );
+				page( domainManagementEdit( newBlogName + '.wordpress.com', newBlogName + '.wordpress.com' ) );
+				// page( domainManagementList( newBlogName + '.wordpress.com', newBlogName + '.wordpress.com' ) );
 			}, 1200 )
 
 

@@ -66,7 +66,7 @@ export default {
 
 		// seems thatpageContext.params.domain is not defined after making the change.
 
-		console.log( pageContext );
+		console.log( {pageContext} );
 
 		pageContext.primary = (
 			<DomainManagementData

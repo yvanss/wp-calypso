@@ -404,7 +404,9 @@ export class List extends React.Component {
 	}
 
 	goToEditDomainRoot = domain => {
+		// here....
 		if ( domain.type !== type.TRANSFER ) {
+			console.log( '-----=', this.props.selectedSite.slug, domain.name );
 			page( domainManagementEdit( this.props.selectedSite.slug, domain.name ) );
 		} else {
 			page( domainManagementTransferIn( this.props.selectedSite.slug, domain.name ) );

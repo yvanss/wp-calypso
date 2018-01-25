@@ -40,10 +40,11 @@ class ListItem extends React.PureComponent {
 		return (
 			<CompactCard className={ cardClass }>
 				{ this.selectionRadio() }
-				{ ( this.props.enableSelection && (
-					<label htmlFor={ this.getInputId() }>{ this.content() }</label>
-				) ) ||
-					this.content() }
+				{
+					this.props.enableSelection
+						? <label htmlFor={ this.getInputId() }>{ this.content() }</label>
+						: this.content()
+				}
 			</CompactCard>
 		);
 	}
