@@ -18,16 +18,7 @@
 		"transform-export-extensions",
 		"transform-react-display-name",
 		"transform-react-jsx",
-		"transform-runtime",
-		[
-			"transform-imports",
-			{
-				"state/selectors": {
-					"transform": "state/selectors/${member}",
-					"kebabCase": true
-				}
-			}
-		]
+		"transform-runtime"
 	],
 	"env": {
 		"test": {
