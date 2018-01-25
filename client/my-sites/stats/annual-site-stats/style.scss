@@ -88,5 +88,15 @@
 		background: $white;
 		position: fixed;
 		z-index: z-index('root', '.module-content-table tbody th:first-child');
+		vertical-align: initial;
+	}
+
+	table,
+	tbody,
+	thead,
+	tr,
+	th,
+	td {
+		vertical-align: bottom;
 	}
 }
