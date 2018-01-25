@@ -17,6 +17,7 @@ import Card from 'components/card';
 import SectionHeader from 'components/section-header';
 import { getSelectedSiteId } from 'state/ui/selectors';
 import { getSiteStatsNormalizedData } from 'state/stats/lists/selectors';
+import { getSiteSlug } from 'state/sites/selectors';
 import StatsModulePlaceholder from 'my-sites/stats/stats-module/placeholder';
 import ErrorPanel from 'my-sites/stats/stats-error';
 import QuerySiteStats from 'components/data/query-site-stats';
@@ -30,6 +31,7 @@ class AnnualSiteStats extends Component {
 		moment: PropTypes.func,
 		isWidget: PropTypes.bool,
 		siteId: PropTypes.number,
+		siteSlug: PropTypes.string,
 	};
 
 	static defaultProps = {
@@ -85,32 +87,34 @@ class AnnualSiteStats extends Component {
 	renderTable( data, strings ) {
 		const keys = Object.keys( strings );
 		return (
-			<div className="annual-site-stats__table-wrapper">
-				<table>
-					<thead>
-						<tr>
-							{ keys.map( key => (
-								<th scope="col" key={ key }>
-									{ strings[ key ] }
-								</th>
-							) ) }
-						</tr>
-					</thead>
-					<tbody>
-						{ data.map( ( row, i ) => (
-							<tr key={ i }>
-								{ keys.map( ( key, j ) => {
-									const Cell = j === 0 ? 'th' : 'td';
-									return (
-										<Cell scope={ j === 0 ? 'row' : null } key={ j }>
-											{ row[ key ] }
-										</Cell>
-									);
-								} ) }
+			<div className="annual-site-stats__table-wrapper module-content-table">
+				<div className="annual-site-stats__table-scroll module-content-table-scroll">
+					<table cellPadding="0" cellSpacing="0">
+						<thead>
+							<tr>
+								{ keys.map( key => (
+									<th scope="col" key={ key }>
+										{ strings[ key ] }
+									</th>
+								) ) }
 							</tr>
-						) ) }
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							{ data.map( ( row, i ) => (
+								<tr key={ i }>
+									{ keys.map( ( key, j ) => {
+										const Cell = j === 0 ? 'th' : 'td';
+										return (
+											<Cell scope={ j === 0 ? 'row' : null } key={ j }>
+												{ row[ key ] }
+											</Cell>
+										);
+									} ) }
+								</tr>
+							) ) }
+						</tbody>
+					</table>
+				</div>
 			</div>
 		);
 	}
@@ -130,7 +134,7 @@ class AnnualSiteStats extends Component {
 	}
 
 	render() {
-		const { years, translate, moment, isWidget, siteId } = this.props;
+		const { years, translate, moment, isWidget, siteId, siteSlug } = this.props;
 		const strings = this.getStrings();
 		const now = moment();
 		const currentYear = now.format( 'YYYY' );
@@ -152,7 +156,10 @@ class AnnualSiteStats extends Component {
 			<div>
 				{ ! isWidget && siteId && <QuerySiteStats siteId={ siteId } statType="statsInsights" /> }
 				{ isWidget && (
-					<SectionHeader label={ translate( 'Annual Site Stats', { args: [ currentYear ] } ) } />
+					<SectionHeader
+						href={ `/stats/annualstats/${ siteSlug }` }
+						label={ translate( 'Annual Site Stats', { args: [ currentYear ] } ) }
+					/>
 				) }
 				<Card className="stats-module">
 					<StatsModulePlaceholder isLoading={ isLoading } />
@@ -171,10 +178,12 @@ class AnnualSiteStats extends Component {
 export default connect( state => {
 	const statType = 'statsInsights';
 	const siteId = getSelectedSiteId( state );
+	const siteSlug = getSiteSlug( state, siteId );
 	const insights = getSiteStatsNormalizedData( state, siteId, statType, {} );
 
 	return {
 		years: insights.years,
 		siteId,
+		siteSlug,
 	};
 } )( localize( AnnualSiteStats ) );

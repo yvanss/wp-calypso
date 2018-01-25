@@ -78,17 +78,15 @@
 }
 
 .annual-site-stats__table-wrapper {
-	overflow-x: scroll;
-	width: 100%;
-	margin-left: 120px;
-
-	td,
-	th {
-		min-width: 120px;
+	.module-content-table-scroll {
+		margin-left: 70px;
 	}
 
 	th:first-child {
+		min-width: 34px;
+		transform: translateX(-70px);
+		background: $white;
 		position: fixed;
-		transform: translateX(-120px);
+		z-index: z-index('root', '.module-content-table tbody th:first-child');
 	}
 }
