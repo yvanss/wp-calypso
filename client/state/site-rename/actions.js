@@ -41,44 +41,22 @@ export const requestSiteRename = ( siteId, newBlogName, discard ) => dispatch =>
 		siteId,
 	} );
 
-	setTimeout( () => {
-		// dispatch( {
-		// 	type: SITE_RENAME_REQUEST_SUCCESS,
-		// 	newSlug: 'bleb',
-		// 	siteId,
-		// } );
-
-		// dispatch( {
-		// 	type: SITE_RENAME_REQUEST_SUCCESS,
-		// 	newSlug: 'bleb',
-		// 	siteId,
-		// } );
-	}, 800 );
-
 	return wpcom
 		.undocumented()
 		.updateSiteName( siteId, newBlogName, discard )
+		// .then( ( { ...data } ) => {
 		.then( ( { ...data } ) => {
-			console.log( 'updateSiteName success, clear cache and requestSite' );
-			// getSite.clearCache();
 
-			console.log( domainManagementList( newBlogName + '.wordpress.com' ) );
+			console.log( data );
 
-			dispatch( requestSite( siteId ) );
+			if ( data.new_slug ) {
+				console.log( '--__', data.new_slug )
+			}
 
-			// dispatch( setPrimaryDomain( siteId, newBlogName ) );
-
-			// dispatch( setPrimaryDomain( siteId, newBlogName, () => {
-			// 	fetchDomains( siteId );
-			// } ) );
-			setTimeout( () => {
-				page( domainManagementEdit( newBlogName + '.wordpress.com', newBlogName + '.wordpress.com' ) );
-				// page( domainManagementList( newBlogName + '.wordpress.com', newBlogName + '.wordpress.com' ) );
-			}, 1200 )
-
-
-			// setPrimaryDomain( domainName ) {
-
+			dispatch( requestSite( siteId ) )
+				.then(
+					() => page( domainManagementEdit( newBlogName + '.wordpress.com' ) )
+				)
 
 			dispatch( {
 				type: SITE_RENAME_REQUEST_SUCCESS,
